@@ -1,0 +1,3 @@
+Parameter Type,Object in the model,Parameter Base Value,Distribution,Mean or Mode,Std Dev,Min,Max
+Lights_WattsPerSpaceFloorArea,Office_Space_Type,15.17433543,Triangle Absolute,25,,0,50
+PlugLoad_WattsPerSpaceFloorArea,Office_Space_Type,8.072932813,Triangle Absolute,25,,0,50

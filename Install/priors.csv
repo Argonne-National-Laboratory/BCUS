@@ -1,0 +1,6 @@
+Parameter Type,Object in the model,Parameter Base Value,Distribution,Mean or Mode,Std Dev,Min,Max
+Infiltration,FlowPerExteriorArea,,Triangle Absolute,0.00095,,0.000319444,0.002894444
+Lights_WattsPerSpaceFloorArea,PNNL_Asset_Rating_Office_Space_Type,15.17433543,Normal Absolute,15.17433543,5,0,35
+PlugLoad_WattsPerSpaceFloorArea,PNNL_Asset_Rating_Office_Space_Type,8.072932813,Normal Absolute,8.072932813,5.14001398,0,20.56
+People_SpaceFloorAreaPerPerson,PNNL_Asset_Rating_Office_Space_Type,18.58060872,Normal Absolute,18.58060872,3,0,10
+DesignSpecificOutdoorAirFlowPerZoneFloorArea,PNNL_Asset_Rating_Office_Outdoor_Air,0.0004318,Normal Absolute,0.0004318,5,0,25

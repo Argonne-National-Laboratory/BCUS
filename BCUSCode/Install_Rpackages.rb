@@ -1,16 +1,8 @@
-# BCUS
-BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set of Ruby and R scripts to support sensitivity analysis, uncertainty analysis, and Bayesian calibration of OpenStudio energy models.
-
-Tutorials explaining installation and use of BCUS are found within the tutorials directory
-
-The software has been developed in Windows 7 and has been tested on OS-X El Capitan
-
-
-
-Copyright © 2016 , UChicago Argonne, LLC
+=begin of comments
+Copyright © 201? , UChicago Argonne, LLC
 All Rights Reserved
-BCUS - Bayesian Calibration, Uncertainty and Sensitivity, Version 0.1]
-Ralph T. Muehleisen, Yuna Zhang, Yuming Sun, Matt E. Riddle
+ [Software Name, Version 1.x??]
+[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -33,3 +25,28 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
+
+
+Modified Date and By:
+- Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
+
+
+1. Introduction
+This is the script to install R packages required by BCUS. Using this should ensure that rinruby can find the packages because they are installed by it 
+
+
+=end
+
+# script to install R packages required by BCUS
+# using this should ensure that rinruby can find the packages because they are installed by it
+# 10-Aug-2015 Ralph Muehleisen
+
+require_relative 'rinruby'
+R.eval <<EOF
+install.packages("sensitivity")
+install.packages("ggplot2")
+install.packages("triangle")
+install.packages("gridExtra")
+install.packages("lhs")
+install.packages("car")
+EOF

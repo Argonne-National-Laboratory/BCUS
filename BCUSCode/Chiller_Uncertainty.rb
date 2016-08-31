@@ -1,16 +1,8 @@
-# BCUS
-BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set of Ruby and R scripts to support sensitivity analysis, uncertainty analysis, and Bayesian calibration of OpenStudio energy models.
-
-Tutorials explaining installation and use of BCUS are found within the tutorials directory
-
-The software has been developed in Windows 7 and has been tested on OS-X El Capitan
-
-
-
-Copyright © 2016 , UChicago Argonne, LLC
+=begin of comments
+Copyright © 201? , UChicago Argonne, LLC
 All Rights Reserved
-BCUS - Bayesian Calibration, Uncertainty and Sensitivity, Version 0.1]
-Ralph T. Muehleisen, Yuna Zhang, Yuming Sun, Matt E. Riddle
+ [Software Name, Version 1.x??]
+[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -33,3 +25,56 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
+
+
+Modified Date and By:
+- Created on July 2015 by Yuna Zhang from Argonne National Laboratory
+
+
+1. Introduction
+This is the subfunction called by Uncertain_Parameters to generate chiller efficiency uncertainty distribution.
+
+=end
+
+
+class ChillerUncertainty < OpenStudio::Model::Model
+  attr_reader :chiller_name
+  attr_reader :chiller_Reference_COP
+
+  def initialize
+    @chiller_name = Array.new
+    @chiller_Reference_COP =Array.new
+  end
+
+  def chiller_find(model)
+    #loop through to find water boiler
+    model.getLoops.each do |loop|
+      loop.supplyComponents.each do |supply_component|
+        unless supply_component.to_ChillerElectricEIR.empty?
+          chiller = supply_component.to_ChillerElectricEIR.get
+          @chiller_name << chiller.name.to_s
+          @chiller_Reference_COP << chiller.referenceCOP.to_f
+        end
+      end
+    end
+  end
+
+
+  # find thermal efficiency for boiler
+  def chiller_method(model, parameter_types, parameter_names, parameter_value)
+    parameter_types.each_with_index do |type, index|
+      if type =~ /ChillerElectricEIRReferenceCOP/
+        model.getLoops.each do |loop|
+          loop.supplyComponents.each do |supply_component|
+            unless supply_component.to_ChillerElectricEIR.empty?
+              chiller = supply_component.to_ChillerElectricEIR.get
+              chiller.setReferenceCOP(parameter_value[index])
+
+            end
+          end
+        end
+      end
+    end
+  end
+
+end
