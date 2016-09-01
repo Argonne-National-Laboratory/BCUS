@@ -7,7 +7,7 @@ The software has been developed in Windows 7 and has been tested on OS-X El Capi
 
 ## Installation
 
-###BCUS has the following dependencies
+#### BCUS has the following dependencies
 
 * OpenStudio (>=1.11) with Ruby 2.0 bindings and EnergyPlus
 * Ruby 2.0
@@ -22,52 +22,43 @@ The software has been developed in Windows 7 and has been tested on OS-X El Capi
 For windows users it is recommended to use RubyInstaller obtained from 
 http://rubyinstaller.org/downloads/
 
-For OSX and Linux users it is recommended that you use 
+For OSX and Linux users it is recommended that you use the ruby version manager (rvm) 
 
-Intall the ruby gem rubyXL with the command
-
-gem install rubyXL
+Intall the ruby gem rubyXL with the command:   
+`gem install rubyXL`
 
 
 #### R Install
 You can obtain an R install from the Comprehensive R Archive Network (http:/cran.r-project.org) but for higher performance, you may prefer to install Microsoft R Open with MKL extensions (https://mran.revolutionanalytics.com/download/)
 
-
-
-Note: It is recommended that even if you have those R packages installed on your system, you should run the install_RPackages.rb as described below to ensure that the R packages are accessible from RinRuby
-
-Once Ruby and R are installed you can install rubyXL and the R pacakges using the commands
-
-gem install rubyXL
+__Note: It is recommended that even if you have those R packages listed above in the dependencies installed on your system, you should run the install_RPackages.rb included with BCUS as described below after setting the environmental variables to ensure that the R packages are accessible from `rinruby` which is used by BCUS to call R from Ruby__
 
 
 
-### Basic Installation
-* Copy the BCUSCode directory to your location of choice and set the "BCUSCODE" to that directory
+
+#### BCUS Installation
+* Copy the BCUSCode directory to your location of choice and set the environmental variable "BCUSCODE" to that directory
 * add the same directory to your RUBYPATH
 
-For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following
+    For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following:  
 
-set BCUSCODE=C:\BCUS\BCUSCode
+    `set BCUSCODE=C:\BCUS\BCUSCode`  
+    `set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%`  
 
-set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%
+    __NOTE: In windows, to permanently set the environmental variables you also need to use the setx command in addition to the set command as described above__
 
+* Install R packages  
+Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra using the ruby script install_Rpackages.rb.  This script calls the RinRuby included in BCUS to install the R packages in a manner that they are accessible by `rinruby` as needed by BCUS.  To do that, open a command window and type the following command
 
+    `ruby -S install_Rpackages.rb`  (the -S tells ruby to search %RUBYPATH%)
 
-
+    If your environmental variables are set up properly, this ruby script will install (or re-install) the required R packages.
+	
+### Testing the installation
+You can do a basic test of the installation by downloading the TestInstall directory, opening a command line, and running the TestInstall.bat or TestInstall.sh file
 
 * Test installation by downloading the TestInstall directory and running the TestInstall.bat file
 
-### Environmental Variables
-You need to set up ruby to 
-
-set the environmental variable "BCUSCODE" to the path to the directory BCUSCode and add the same directory to your rubypath
-
-For example.  On a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following
-
-set BCUSCODE=C:\BCUS\BCUSCode
-
-set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%
 
 ## Documentation
 
@@ -78,7 +69,7 @@ Instructions on how to use/run/modify are in the Tutorials directory
 Use the example directory as a base for your project.  Modify the files as discussed in the tutorials.
 
 
-## Testing
+
 
 ## Caveats and Todos
 
