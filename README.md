@@ -1,4 +1,4 @@
-# BCUS Bayesian Calibration, Uncertainty, and Sensitivity
+# BCUS: Bayesian Calibration, Uncertainty, and Sensitivity
 BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set of Ruby and R scripts to support sensitivity analysis, uncertainty analysis, and Bayesian calibration of OpenStudio energy models.
 
 Tutorials explaining installation and use of BCUS are found within the tutorials directory
@@ -27,7 +27,9 @@ You need to set up ruby to
 set the environmental variable "BCUSCODE" to the path to the directory BCUSCode and add the same directory to your rubypath
 
 For example.  On a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following
+
 set BCUSCODE=C:\BCUS\BCUSCode
+
 set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%
 
 ## Usage
