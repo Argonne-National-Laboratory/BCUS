@@ -15,11 +15,48 @@ The software has been developed in Windows 7 and has been tested on OS-X El Capi
 * R (>=3.1.0)
 * R packages: sensitivity, ggplot2, lhs, car, triangle, gridextra 
 
+* BCUS makes use of .xlsx spreadsheets.  While these can be read and written using OpenOffice or LibreOffice, some of the 
+
+
+#### Ruby Install
+For windows users it is recommended to use RubyInstaller obtained from 
+http://rubyinstaller.org/downloads/
+
+For OSX and Linux users it is recommended that you use 
+
+Intall the ruby gem rubyXL with the command
+
+gem install rubyXL
+
+
+#### R Install
+You can obtain an R install from the Comprehensive R Archive Network (http:/cran.r-project.org) but for higher performance, you may prefer to install Microsoft R Open with MKL extensions (https://mran.revolutionanalytics.com/download/)
+
+
+
+Note: It is recommended that even if you have those R packages installed on your system, you should run the install_RPackages.rb as described below to ensure that the R packages are accessible from RinRuby
+
+Once Ruby and R are installed you can install rubyXL and the R pacakges using the commands
+
+gem install rubyXL
+
+
+
 ### Basic Installation
-* Copy the BCUSCode directory to your location of choice and set the environmental variables as described below
-* Copy the Example folder and modify the files for your particular project
+* Copy the BCUSCode directory to your location of choice and set the "BCUSCODE" to that directory
+* add the same directory to your RUBYPATH
+
+For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following
+
+set BCUSCODE=C:\BCUS\BCUSCode
+
+set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%
 
 
+
+
+
+* Test installation by downloading the TestInstall directory and running the TestInstall.bat file
 
 ### Environmental Variables
 You need to set up ruby to 
@@ -32,7 +69,14 @@ set BCUSCODE=C:\BCUS\BCUSCode
 
 set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%
 
+## Documentation
+
+Instructions on how to use/run/modify are in the Tutorials directory
+
 ## Usage
+
+Use the example directory as a base for your project.  Modify the files as discussed in the tutorials.
+
 
 ## Testing
 
