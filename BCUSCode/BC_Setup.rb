@@ -252,8 +252,9 @@ for k in 2..samples[0].length-1
   # new edit start from here Yuna add for thermostat algorithm
   out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
   model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
-  # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
+  # TODO: Fix bug in thermostat adjust.  For now comment it out
+  #uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
   puts "Sample#{k-1} is saved to the folder of Models" if verbose
 end

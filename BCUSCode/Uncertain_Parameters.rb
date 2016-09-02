@@ -400,6 +400,15 @@ class UncertainParameters
 			csv << ['Parameter Type', 'Object in the model', 'Parameter Base Value', 'Adjusted Value']
 		end
 
+    puts(uq_table)
+
+    puts model_output_path
+    puts parameter_types
+    puts parameter_value
+
+
+    puts(uq_table)
+
 		CSV.open("#{out_file_path_name}", 'a+') do |csv|
 			uq_table.each do |uq_parameter|
 				unless uq_parameter[3] =='Off'
