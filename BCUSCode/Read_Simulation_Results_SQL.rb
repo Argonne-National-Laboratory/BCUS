@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,13 +24,11 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
-
 Modified Date and By:
 - Created on Feb 27 by Yuming Sun from Argonne National Laboratory
 
 1. Introduction
 This function reads simulation results generated in SQL.
-
 
 =end
 
@@ -48,18 +44,18 @@ module OutPut
 # Find the path of sql
     workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
     #output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
-		
-  output_table = Array.new
-   output_table_row = Array.new
-  workbook['TotalEnergy'].each { |row|
-   output_table_row = []
-   row.cells.each { |cell|     
-   output_table_row.push(cell.value)
-   }
-    output_table.push(output_table_row)	
-   } 
-	 
-	
+
+    output_table = Array.new
+    output_table_row = Array.new
+    workbook['TotalEnergy'].each { |row|
+      output_table_row = []
+      row.cells.each { |cell|
+        output_table_row.push(cell.value)
+      }
+      output_table.push(output_table_row)
+    }
+
+
     total_site_energy = []
     total_source_energy = []
     electricity_total_end_uses = []
@@ -219,7 +215,7 @@ module OutPut
       }
     }
 
-# put all output array to final_output
+    # put all output array to final_output
 
     final_output = []
     header = []
@@ -291,7 +287,7 @@ module OutPut
       end
     }
 
-# Save to final_output to csv files
+    # Save to final_output to csv files
     table = final_output.transpose
     CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
       csv << header
@@ -306,16 +302,16 @@ module OutPut
 
     workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
     # meters_table = workbook['Meters'].extract_data  outdated by June 28th
-	meters_table = Array.new
-  meters_table_row = Array.new
-  workbook['Meters'].each { |row|
-   meters_table_row = []
-   row.cells.each { |cell|     
-   meters_table_row.push(cell.value)
-   }
-    meters_table.push(meters_table_row)	
-   }
-  
+    meters_table = Array.new
+    meters_table_row = Array.new
+    workbook['Meters'].each { |row|
+      meters_table_row = []
+      row.cells.each { |cell|
+        meters_table_row.push(cell.value)
+      }
+      meters_table.push(meters_table_row)
+    }
+
 
     (1..(meters_table.length-1)).each { |meter_index|
       var_value = []
@@ -378,7 +374,7 @@ module OutPut
       weather_var << []
     end
 
-# Query Horizontal Solar Irradiation
+    # Query Horizontal Solar Irradiation
     query_var_index = "SELECT ReportVariableDataDictionaryIndex FROM ReportVariableDataDictionary
            WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area' AND
            ReportingFrequency = 'Monthly'"
@@ -396,7 +392,6 @@ module OutPut
     end
 
     weather_out = (weather_var.transpose)*num_of_runs
-
 
     CSV.open("#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'wb') do |csv|
       csv << ['Monthly DryBuld Temp [C]', 'Monthly Horizontal Solar [W/m^2]']

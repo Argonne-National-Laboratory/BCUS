@@ -1,8 +1,7 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
+
 
 # Redistribution and use in source and binary forms, with or without modification,
 # are permitted provided that the following conditions are met:
@@ -88,21 +87,21 @@
 #===============================================================#
 
 gaspcovFromTri <- function(n, odut, odlt, lam, tri){
-  
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Specify size of covariance matrix corresponding to design matrix
   sigma <- matrix (0, nrow = n, ncol=n);    #indi=zeros(inds,1);
-  
+
   # Set upper triangle of C(x,x')
   sigma[odut] = tri;
-  
+
   # Set lower triangle of C(x,x')
   sigma[odlt] = tri;
-  
+
   # Set diagonal elements of C(x,x')
   diags = 1:n
   diags <- diags * (n+1) - n
   sigma[diags] = 1/lam;
-  
+
   return(sigma)
 }

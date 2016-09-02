@@ -70,7 +70,7 @@ class UncertainParameters
 		@thermostat_uncertainty = ThermostatUncertainty.new
 	end
 
-  def find(model, uq_table, out_file_path_name, verbose = false) #write into the uq cvs the uncertainty distribution information
+	def find(model, uq_table, out_file_path_name, verbose = false) #write into the uq cvs the uncertainty distribution information
 		@envelop_uncertainty.material_find(model)
 		@operation_uncertainty.operation_parameters_find(model)
 		@boiler_uncertainty.boiler_find(model)
@@ -88,7 +88,7 @@ class UncertainParameters
 		#write in the created csv file (take input from uncertainty)
 		CSV.open("#{out_file_path_name}", 'a+') do |csv|
 			uq_table.each do |uq_parameter|
-        unless uq_parameter[3] =='Off'
+        unless uq_parameter[3] =="Off"
           case uq_parameter[1]
             when /StandardOpaqueMaterial/
               case uq_parameter[2]
@@ -214,9 +214,6 @@ class UncertainParameters
                     csv << ['Lights_WattsPerSpaceFloorArea', spacetype, @operation_uncertainty.lights_watts_per_floor_area[index],
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-                else
-                  puts "UQ parameter Lights #{uq_parameter[2]}  was not found"
-                  abort("UQ parameter Lights #{uq_parameter[2]} was not found")
               end
             when /PlugLoad/
               case uq_parameter[2]
@@ -225,9 +222,6 @@ class UncertainParameters
                     csv << ['PlugLoad_WattsPerSpaceFloorArea', spacetype, @operation_uncertainty.plugload_watts_per_floor_area[index],
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-                else
-                  puts "UQ parameter PlugLoad #{uq_parameter[2]}  was not found"
-                  abort("UQ parameter PlugLoad #{uq_parameter[2]} was not found")
               end
             when /People/
               case uq_parameter[2]
@@ -377,6 +371,7 @@ class UncertainParameters
 			end
 		end
 		puts "#{out_file_path_name} has been generated." if verbose
+
 	end
 
 	def apply(model, parameter_types, parameter_names, parameter_value)
@@ -402,7 +397,7 @@ class UncertainParameters
 
 		CSV.open("#{out_file_path_name}", 'a+') do |csv|
 			uq_table.each do |uq_parameter|
-				unless uq_parameter[3] =='Off'
+				unless uq_parameter[3] =="Off"
 					case uq_parameter[1]
 						when /ThermostatSettings/
 							case uq_parameter[2]

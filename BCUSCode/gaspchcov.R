@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -112,42 +110,42 @@
 
 gaspchcov <- function(distz, hyperparams, params, sigma_eta_tri){
 
-  beta_eta = hyperparams$beta_eta;
-  lambda_eta = hyperparams$lambda_eta;
-  lambda_en = hyperparams$lambda_en;
-  beta_b = hyperparams$beta_b;
-  lambda_b = hyperparams$lambda_b;
-  lambda_e = hyperparams$lambda_e;
-  m = params$m;
-  n = params$n;
-  nm = params$nm;
-  distx = params$distx;
-  distz_odut = params$distz_odutUT;
-  distz_odlt = params$distz_odutLT;
-  distx_odut = params$distx_odut;
-  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # Evaluate (n+m) x (n+m) covariance matrix sigma_eta
-  # triangular covariance matrix has already been calculated as vector - just need to put it
-  # in matrix form
-  sigma_eta = gaspcovFromTri(distz$n, distz_odut, distz_odlt, lambda_eta, sigma_eta_tri);
-  # Evaluate (m x m) covariance matrix sigma_en, in vector form to save calculation time
-  #sigma_en = diag(1/lambda_en, m);
-  sigma_enVec = rep(1/lambda_en, times = m)
-  # Evalute (n x n) covariance matrix sigma_b
-  sigma_b = gaspcov(distx, distx_odut, beta_b, lambda_b);
-  
-  # Evaluate (n x n) covariance matrix sigma_e
-  sigma_e = diag(1/lambda_e, n);
-  
-  # Evaluate (n+m) x (n+m) covariance matrix sigma_y
-  sigma_y = sigma_eta;
-  sigma_y[1:n,1:n] = sigma_y[1:n,1:n] + sigma_b + sigma_e;
-  #add sigma_en to bottom right diagonal
-  diagIndsBR <- (n+1):nm + nm*(((n+1):nm)-1)
-  sigma_y[diagIndsBR] = sigma_y[diagIndsBR] + sigma_enVec
+    beta_eta = hyperparams$beta_eta;
+    lambda_eta = hyperparams$lambda_eta;
+    lambda_en = hyperparams$lambda_en;
+    beta_b = hyperparams$beta_b;
+    lambda_b = hyperparams$lambda_b;
+    lambda_e = hyperparams$lambda_e;
+    m = params$m;
+    n = params$n;
+    nm = params$nm;
+    distx = params$distx;
+    distz_odut = params$distz_odutUT;
+    distz_odlt = params$distz_odutLT;
+    distx_odut = params$distx_odut;
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Evaluate (n+m) x (n+m) covariance matrix sigma_eta
+    # triangular covariance matrix has already been calculated as vector - just need to put it
+    # in matrix form
+    sigma_eta = gaspcovFromTri(distz$n, distz_odut, distz_odlt, lambda_eta, sigma_eta_tri);
+    # Evaluate (m x m) covariance matrix sigma_en, in vector form to save calculation time
+    #sigma_en = diag(1/lambda_en, m);
+    sigma_enVec = rep(1/lambda_en, times = m)
+    # Evalute (n x n) covariance matrix sigma_b
+    sigma_b = gaspcov(distx, distx_odut, beta_b, lambda_b);
 
-  # Return Cholesky factorization of covariance matrix sigma_y
-  sigmayCh <- chol(sigma_y);
-  
-  return(sigmayCh)
+    # Evaluate (n x n) covariance matrix sigma_e
+    sigma_e = diag(1/lambda_e, n);
+
+    # Evaluate (n+m) x (n+m) covariance matrix sigma_y
+    sigma_y = sigma_eta;
+    sigma_y[1:n,1:n] = sigma_y[1:n,1:n] + sigma_b + sigma_e;
+    #add sigma_en to bottom right diagonal
+    diagIndsBR <- (n+1):nm + nm*(((n+1):nm)-1)
+    sigma_y[diagIndsBR] = sigma_y[diagIndsBR] + sigma_enVec
+
+    # Return Cholesky factorization of covariance matrix sigma_y
+    sigmayCh <- chol(sigma_y);
+
+    return(sigmayCh)
 }

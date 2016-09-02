@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,

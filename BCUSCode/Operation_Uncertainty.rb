@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -35,8 +33,6 @@ Modified Date and By:
 This is the subfunction called by Uncertain_Parameters to set uncertainty for operational parameters
 
 =end
-
-
 
 class OperationUncertainty < OpenStudio::Model::Model
 

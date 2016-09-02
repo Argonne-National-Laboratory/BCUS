@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -36,7 +34,6 @@ This is the subfunction called by Uncertain_Parameters to generate chiller effic
 
 =end
 
-
 class ChillerUncertainty < OpenStudio::Model::Model
   attr_reader :chiller_name
   attr_reader :chiller_Reference_COP
@@ -58,7 +55,6 @@ class ChillerUncertainty < OpenStudio::Model::Model
       end
     end
   end
-
 
   # find thermal efficiency for boiler
   def chiller_method(model, parameter_types, parameter_names, parameter_value)

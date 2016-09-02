@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -88,18 +86,18 @@
 #===============================================================#
 
 gaspcovTri <- function(d, beta, lam){
-    
+
   #n = dist$n;
   #d = dist$d;
   #odut = dist$odut;
-  
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Specify size of covariance matrix corresponding to design matrix
   #sigma <- matrix (0, nrow = n, ncol=n);    #indi=zeros(inds,1);
-  
+
   #temp1 <- exp(-d%*%beta)/lam
   # Set upper triangle of C(x,x')
   sigmaTri = exp(-d%*%beta)/lam;
-  
+
   return(sigmaTri)
 }

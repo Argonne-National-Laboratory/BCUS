@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -102,7 +100,7 @@
 # logposterior ~ loglikelihood + logprior
 
 #===============================================================%
-  
+
 loglikelihood = function(sigmayCh, y){
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Compute log likelihood
@@ -114,10 +112,10 @@ loglikelihood = function(sigmayCh, y){
   Q = t(u)%*%u
   logdet = sum(log(diag(sigmayCh)));
   loglik = -logdet - .5*Q;
-  
+
   lpost <- c(loglik, loglik)
   return(lpost)
-} 
+}
 
 logprior = function(hyperparams){
   lambda_eta = hyperparams$lambda_eta;
@@ -126,18 +124,18 @@ logprior = function(hyperparams){
   beta_b = hyperparams$beta_b;
   lambda_e = hyperparams$lambda_e;
   lambda_b = hyperparams$lambda_b;
-  
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX%
   # SPECIFY BOUNDS ON PARAMETERS HERE!!! %
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX%
-  
+
   # OPTION: check for invalid conditions
   # Make log posterior density very unlikely if conditions not met
   if ((lambda_eta < .3) || (lambda_en > 2e5) || (lambda_en < 100.0)){
     lpost = -9e99;
   } else{
-    
+
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#
     # SPECIFY PRIOR DISTRIBUTIONS HERE!!!#
@@ -186,15 +184,15 @@ logpriortheta = function(theta, theta_info){
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX%
   # SPECIFY BOUNDS ON PARAMETERS HERE!!! %
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX%
-  
-    
+
+
   # Prior for theta
   num_theta = length(theta_info);
   logprior = 0
   for (ti in 1:num_theta){
     logprior = logprior + log(density2(theta_info[[ti]]$prior, theta[1,ti]));
   }
-  
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Compute log posterior
   lpost <- c(logprior, 0)

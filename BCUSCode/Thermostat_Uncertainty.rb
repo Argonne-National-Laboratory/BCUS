@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -40,135 +38,133 @@ Refer to 'Function Call Structure_UA.pptx'
 =end
 
 
-
 class ThermostatUncertainty < OpenStudio::Model::Model
-    attr_reader :clg_set_schs_name
-    attr_reader :htg_set_schs_name
-	attr_reader :clg_sch_set_values
-    attr_reader :htg_sch_set_values
-	
-    def initialize
-        @clg_set_schs_name = Array.new       
-		@clg_sch_set_values = Array.new
-		@htg_set_schs_name = Array.new
-		@htg_sch_set_values = Array.new
+  attr_reader :clg_set_schs_name
+  attr_reader :htg_set_schs_name
+  attr_reader :clg_sch_set_values
+  attr_reader :htg_sch_set_values
+
+  def initialize
+    @clg_set_schs_name = Array.new
+    @clg_sch_set_values = Array.new
+    @htg_set_schs_name = Array.new
+    @htg_sch_set_values = Array.new
+  end
+
+
+  def cooling_method(model, adjust_value_cooling, model_output_path)
+    #push schedules to hash to avoid making unnecessary duplicates
+    clg_set_schs = {}
+
+    #get thermostats and setpoint schedules
+    thermostats = model.getThermostatSetpointDualSetpoints
+    thermostats.each do |thermostat|
+      #setup new cooling setpoint schedule
+      clg_set_sch = thermostat.coolingSetpointTemperatureSchedule
+      if not clg_set_sch.empty?
+        # clone of not alredy in hash
+        if clg_set_schs.has_key?(clg_set_sch.get.name.to_s)
+          new_clg_set_sch = clg_set_schs[clg_set_sch.get.name.to_s]
+        else
+          new_clg_set_sch = clg_set_sch.get.clone(model)
+          new_clg_set_sch = new_clg_set_sch.to_Schedule.get
+          new_clg_set_sch_name = new_clg_set_sch.setName("#{new_clg_set_sch.name} adjusted")
+          #add to the hash
+          clg_set_schs[clg_set_sch.get.name.to_s] = new_clg_set_sch
+        end
+        #hook up clone to thermostat
+        thermostat.setCoolingSetpointTemperatureSchedule(new_clg_set_sch)
+      end #end if not clg_set_sch.empty?
+    end
+    clg_set_schs.each do |k, v| #old name and new object for schedule
+
+      clg_set_schedules_name = v.name.to_s
+
+      if not v.to_ScheduleRuleset.empty?
+        #array to store profiles inules.each do |rule|
+        profiles = []
+        schedule = v.to_ScheduleRuleset.get
+        #push default profiles to array
+        default_rule = schedule.defaultDaySchedule
+        profiles << default_rule
+        #push profiles to array
+        rules = schedule.scheduleRules
+        rules.each do |rule|
+          day_sch = rule.daySchedule
+          profiles << day_sch
+        end
+
+        profiles.each do |sch_day|
+          day_time_vector = sch_day.times
+          day_value_vector = sch_day.values
+          for i in 0..(day_time_vector.size - 1)
+            @clg_set_schs_name << "#{clg_set_schedules_name}time #{i}"
+            @clg_sch_set_values << day_value_vector[i].to_f
+            target_value = day_value_vector[i] - adjust_value_cooling
+            sch_day.addValue(day_time_vector[i], target_value)
+          end
+
+
+        end #end of profiles.each do
+
+
+      end # end of if not
+    end #end clg_set_schs.each do
+    model.save("#{model_output_path}", true)
+  end
+
+  def heating_method(model, adjust_value_heating, model_output_path)
+    htg_set_schs = {}
+    thermostats = model.getThermostatSetpointDualSetpoints
+    thermostats.each do |thermostat|
+      #setup new heating setpoint schedule
+      htg_set_sch = thermostat.heatingSetpointTemperatureSchedule
+      if not htg_set_sch.empty?
+        # clone of not alredy in hash
+        if htg_set_schs.has_key?(htg_set_sch.get.name.to_s)
+          new_htg_set_sch = htg_set_schs[htg_set_sch.get.name.to_s]
+        else
+          new_htg_set_sch = htg_set_sch.get.clone(model)
+          new_htg_set_sch = new_htg_set_sch.to_Schedule.get
+          new_htg_set_sch_name = new_htg_set_sch.setName("#{new_htg_set_sch.name} adjusted")
+
+          #add to the hash
+          htg_set_schs[htg_set_sch.get.name.to_s] = new_htg_set_sch
+        end
+        #hook up clone to thermostat
+        thermostat.setHeatingSetpointTemperatureSchedule(new_htg_set_sch)
+      end #end if not htg_set_sch.empty?
     end
 
-  
-  
-    def cooling_method(model, adjust_value_cooling,  model_output_path)
-        #push schedules to hash to avoid making unnecessary duplicates	
-        clg_set_schs = {}    
-		
-		#get thermostats and setpoint schedules
-        thermostats = model.getThermostatSetpointDualSetpoints
-		thermostats.each do |thermostat|
-            #setup new cooling setpoint schedule
-            clg_set_sch = thermostat.coolingSetpointTemperatureSchedule
-            if not clg_set_sch.empty?
-                # clone of not alredy in hash
-                if clg_set_schs.has_key?(clg_set_sch.get.name.to_s)
-                    new_clg_set_sch = clg_set_schs[clg_set_sch.get.name.to_s]
-                else
-                    new_clg_set_sch = clg_set_sch.get.clone(model)
-                    new_clg_set_sch = new_clg_set_sch.to_Schedule.get
-                    new_clg_set_sch_name = new_clg_set_sch.setName("#{new_clg_set_sch.name} adjusted")
-                #add to the hash
-                    clg_set_schs[clg_set_sch.get.name.to_s] = new_clg_set_sch
-                end
-               #hook up clone to thermostat
-               thermostat.setCoolingSetpointTemperatureSchedule(new_clg_set_sch)
-            end #end if not clg_set_sch.empty? 
-		end	
-	    clg_set_schs.each do |k,v| #old name and new object for schedule
+    htg_set_schs.each do |k, v| #old name and new object for schedule
+      htg_set_schedules_name = v.name.to_s
+      if not v.to_ScheduleRuleset.empty?
+        profiles_1 = []
+        schedule = v.to_ScheduleRuleset.get
+        #push default profiles to array
+        default_rule = schedule.defaultDaySchedule
+        profiles_1 << default_rule
+        #push profiles to array
+        rules = schedule.scheduleRules
+        rules.each do |rule|
+          day_sch = rule.daySchedule
+          profiles_1 << day_sch
+        end
 
-			clg_set_schedules_name = v.name.to_s				
-
-		    if not v.to_ScheduleRuleset.empty?
-                #array to store profiles inules.each do |rule|
-				profiles = []
-				schedule = v.to_ScheduleRuleset.get
-			    #push default profiles to array
-                default_rule = schedule.defaultDaySchedule
-                profiles << default_rule
-			    #push profiles to array
-                rules = schedule.scheduleRules
-                rules.each do |rule|
-                   day_sch = rule.daySchedule
-                    profiles << day_sch
-                end	       		
-				
-                profiles.each do |sch_day|
-                    day_time_vector = sch_day.times
-                    day_value_vector = sch_day.values	                    
-			        for i in 0..(day_time_vector.size - 1) 
-                        @clg_set_schs_name << "#{clg_set_schedules_name}time #{i}"	
-						@clg_sch_set_values << day_value_vector[i].to_f
-						target_value = day_value_vector[i] - adjust_value_cooling
-                        sch_day.addValue(day_time_vector[i],target_value)
-                    end 
-
-
-                 end #end of profiles.each do 	
-				
-				
-			end # end of if not	
-        end #end clg_set_schs.each do
+        profiles_1.each do |sch_day|
+          day_time_vector = sch_day.times
+          day_value_vector = sch_day.values
+          for i in 0..(day_time_vector.size - 1)
+            @htg_set_schs_name << "#{htg_set_schedules_name}time #{i}"
+            @htg_sch_set_values << day_value_vector[i].to_f
+            target_value = day_value_vector[i] + adjust_value_heating
+            sch_day.addValue(day_time_vector[i], target_value)
+          end
+        end #end of profiles.each do
+      end # end of if not
+    end #end htg_set_schs.each do
     model.save("#{model_output_path}", true)
-    end	
-	
-    def heating_method(model, adjust_value_heating, model_output_path)
-	    htg_set_schs = {}  
-	    thermostats = model.getThermostatSetpointDualSetpoints
-		thermostats.each do |thermostat|           
-			#setup new heating setpoint schedule
-			htg_set_sch = thermostat.heatingSetpointTemperatureSchedule
-            if not htg_set_sch.empty?
-                # clone of not alredy in hash
-                if htg_set_schs.has_key?(htg_set_sch.get.name.to_s)
-                    new_htg_set_sch = htg_set_schs[htg_set_sch.get.name.to_s]
-                else
-                    new_htg_set_sch = htg_set_sch.get.clone(model)
-                    new_htg_set_sch = new_htg_set_sch.to_Schedule.get
-                    new_htg_set_sch_name = new_htg_set_sch.setName("#{new_htg_set_sch.name} adjusted")
 
-                #add to the hash
-                    htg_set_schs[htg_set_sch.get.name.to_s] = new_htg_set_sch
-                end
-               #hook up clone to thermostat
-               thermostat.setHeatingSetpointTemperatureSchedule(new_htg_set_sch)
-            end #end if not htg_set_sch.empty? 
-		end		  
-
-		htg_set_schs.each do |k,v| #old name and new object for schedule
-			htg_set_schedules_name = v.name.to_s				
-		    if not v.to_ScheduleRuleset.empty?
-			    profiles_1 = []
-				schedule = v.to_ScheduleRuleset.get	
-				#push default profiles to array
-                default_rule = schedule.defaultDaySchedule
-                profiles_1 << default_rule				
-			    #push profiles to array
-                rules = schedule.scheduleRules
-                rules.each do |rule|
-                   day_sch = rule.daySchedule
-                    profiles_1 << day_sch
-                end	
-
-                profiles_1.each do |sch_day|
-                    day_time_vector = sch_day.times
-                    day_value_vector = sch_day.values		                    
-			        for i in 0..(day_time_vector.size - 1) 
-                        @htg_set_schs_name << "#{htg_set_schedules_name}time #{i}"	
-						@htg_sch_set_values << day_value_vector[i].to_f
-						target_value = day_value_vector[i] + adjust_value_heating
-                        sch_day.addValue(day_time_vector[i],target_value)
-                    end 
-                 end #end of profiles.each do 									
-			end # end of if not	
-        end #end htg_set_schs.each do
-    model.save("#{model_output_path}", true)
-    
-    end 
+  end
 
 end

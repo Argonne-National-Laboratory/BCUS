@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -55,21 +53,18 @@ module OutPut
 # Find the path of sql
     workbook = RubyXL::Parser.parse(meter_set_file)
     # output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
-     
-	 output_table = Array.new
-   output_table_row = Array.new
-  workbook['TotalEnergy'].each { |row|
-   output_table_row = []
-   row.cells.each { |cell|     
-   output_table_row.push(cell.value)
-   }
-    output_table.push(output_table_row)	
-   } 
-	 
-	 
-	 
-	 
-	 
+
+    output_table = Array.new
+    output_table_row = Array.new
+    workbook['TotalEnergy'].each { |row|
+      output_table_row = []
+      row.cells.each { |cell|
+        output_table_row.push(cell.value)
+      }
+      output_table.push(output_table_row)
+    }
+
+
     total_site_energy = []
     total_source_energy = []
     electricity_total_end_uses = []
@@ -224,7 +219,7 @@ module OutPut
       end
     }
 
-# put all output array to final_output
+    # put all output array to final_output
 
     final_output = []
     header = []
@@ -296,7 +291,7 @@ module OutPut
       end
     }
 
-# Save to final_output to csv files
+    # Save to final_output to csv files
     table = final_output.transpose
     CSV.open("#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
       csv << header
@@ -310,15 +305,15 @@ module OutPut
 
     workbook = RubyXL::Parser.parse(meter_set_file)
     # meters_table = workbook['Meters'].extract_data outdated by June 28th
-  meters_table = Array.new
-  meters_table_row = Array.new
-  workbook['Meters'].each { |row|
-   meters_table_row = []
-   row.cells.each { |cell|     
-   meters_table_row.push(cell.value)
-   }
-    meters_table.push(meters_table_row)	
-   }
+    meters_table = Array.new
+    meters_table_row = Array.new
+    workbook['Meters'].each { |row|
+      meters_table_row = []
+      row.cells.each { |cell|
+        meters_table_row.push(cell.value)
+      }
+      meters_table.push(meters_table_row)
+    }
 
     (1..(meters_table.length-1)).each { |meter_index|
       var_value = []

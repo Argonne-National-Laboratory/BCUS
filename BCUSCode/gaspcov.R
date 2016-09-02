@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -91,27 +89,27 @@
 #===============================================================#
 
 gaspcov <- function(dist, odut, beta, lam){
-    
+
   n = dist$n;
   d = dist$d;
   #odut = dist$odut;
-  
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Specify size of covariance matrix corresponding to design matrix
   sigma <- matrix (0, nrow = n, ncol=n);    #indi=zeros(inds,1);
-  
+
   #temp1 <- exp(-d%*%beta)/lam
   # Set upper triangle of C(x,x')
   sigma[odut] = exp(-d%*%beta)/lam;
-  
+
   # Set lower triangle of C(x,x')
   sigma <- sigma + t(sigma);
-  
+
   # Set diagonal elements of C(x,x')
   diags = 1:n
   diags <- diags * (n+1) - n
   #diags = [0:n:n*(n-1)] + [1:n];
   sigma[diags] = 1/lam;
-  
+
   return(sigma)
 }

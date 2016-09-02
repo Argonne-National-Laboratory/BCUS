@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,10 +24,8 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
-
 Modified Date and By:
 - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-
 
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to generate fan and pump uncertainty distribution.
@@ -85,7 +81,6 @@ class FanPumpUncertainty
           @fan_VariableVolume_efficiency << hVACComponent.fanEfficiency.to_f
           @fan_VariableVolume_motorEfficiency << hVACComponent.motorEfficiency.to_f
         end
-
       end
     end
   end
@@ -110,7 +105,6 @@ class FanPumpUncertainty
         end
       end
     end
-
   end
 
   def fan_method(model, parameter_types, parameter_names, parameter_value)
@@ -178,6 +172,5 @@ class FanPumpUncertainty
       end
     end
   end
-
 
 end

@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -97,16 +95,16 @@
 #===============================================================%
 
 graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_output_folder){
-  
-  #the following can be used for testing:
-  #pvals_filename = "../Output/pvals.csv"
-  #params_filename = "../Input/Calibration_Parameters_Prior.csv"
-  #burnin = 1
-  
-  source("readFromParamFile.R")
-  source("density.R")
-  theta_info <- readFromParamFile(params_filename)
-	
+
+	#the following can be used for testing:
+	#pvals_filename = "../Output/pvals.csv"
+	#params_filename = "../Input/Calibration_Parameters_Prior.csv"
+	#burnin = 1
+
+	source("readFromParamFile.R")
+	source("density.R")
+	theta_info <- readFromParamFile(params_filename)
+
 	num_theta = length (theta_info);
 	pvals = read.csv(pvals_filename);
 	pvals = tail(pvals, nrow(pvals[1])-burnin); # significant difference when showing burnin-data
@@ -121,157 +119,157 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 
 	plots  = list(); # List of plots, later to be up in grid
 	plots2 = list(); # List of plots, later to be up in grid
-	Vs		 = list(); # List of V1,V2, ... Vn
+	Vs         = list(); # List of V1,V2, ... Vn
 
-  for (i in 1:num_theta)
+	for (i in 1:num_theta)
 	{
-	 i<<-i; # make it global
-	 max_x = theta_info [[i]]$max;
-	 min_x = theta_info [[i]]$min;
-	 rang_x =  max_x - min_x;
-	 pvals[[i]] = pvals[[i]] * rang_x + min_x; # normalize pvals between min_x and max_x
-	 #message("adjusted pvals")
+		i<<-i; # make it global
+		max_x = theta_info [[i]]$max;
+		min_x = theta_info [[i]]$min;
+		rang_x =  max_x - min_x;
+		pvals[[i]] = pvals[[i]] * rang_x + min_x; # normalize pvals between min_x and max_x
+		#message("adjusted pvals")
 
-	 histo = hist(pvals[[i]], breaks=seq(min_x, max_x, l=nBins), plot=FALSE); # good: 50 bins
-	 #message("created histogram")
+		histo = hist(pvals[[i]], breaks=seq(min_x, max_x, l=nBins), plot=FALSE); # good: 50 bins
+		#message("created histogram")
 
-	 pvals<<-pvals; # make it global
+		pvals<<-pvals; # make it global
 
-										   # histo = histogram of pvals[i]
-										   # get total area of histogram
-	 pval_area = 0;
-	 delta_x = histo$mids[2] - histo$mids[1]; # width of histogram bars
-	 delta_x <<- delta_x; # make it global?
-	 for (c in 1:length (histo$counts))
-	 {
-		 pval_area = pval_area + histo$counts[c] * delta_x;
-	 }
+		# histo = histogram of pvals[i]
+		# get total area of histogram
+		pval_area = 0;
+		delta_x = histo$mids[2] - histo$mids[1]; # width of histogram bars
+		delta_x <<- delta_x; # make it global?
+		for (c in 1:length (histo$counts))
+		{
+			pval_area = pval_area + histo$counts[c] * delta_x;
+		}
 
-										   # create triangular distribution
+		# create triangular distribution
 
-	x = seq (min_x, max_x, length.out=100); # good: 100 for straighter lines
-	#y = dtriangle (x, theta_info[[i]]$prior$min, theta_info[[i]]$prior$max,
-	#				  theta_info[[i]]$prior$mode);
+		x = seq (min_x, max_x, length.out=100); # good: 100 for straighter lines
+		#y = dtriangle (x, theta_info[[i]]$prior$min, theta_info[[i]]$prior$max,
+		#				  theta_info[[i]]$prior$mode);
 
-  y <- c()
-  for (xi in 1:length(x)){
-    y = c(y, density2(theta_info[[i]]$prior, x[xi]))
-  }
-	 #message("generated trangle ys")
+		y <- c()
+		for (xi in 1:length(x)){
+			y = c(y, density2(theta_info[[i]]$prior, x[xi]))
+		}
+		#message("generated trangle ys")
 
-														# Area of triangle is 1, scale it's height so that
-														# the area becames the area of the original histogram.
+		# Area of triangle is 1, scale it's height so that
+		# the area becames the area of the original histogram.
 
-	ty = y * pval_area; # = altitude of ttiangle
-	prior = data.frame (x, ty); # the prior (triangular) distribution
-	#message("made triangle data frame")
+		ty = y * pval_area; # = altitude of ttiangle
+		prior = data.frame (x, ty); # the prior (triangular) distribution
+		#message("made triangle data frame")
 
-	Vs = c(Vs, pvals[[i]]); #---
+		Vs = c(Vs, pvals[[i]]); #---
 
-	# plot the histogram and triangular dist
+		# plot the histogram and triangular dist
 
-	 figureName <- paste(sprintf("%s/PosteriorVsPrior", graphs_output_folder), as.character(i), ".pdf")
-     pdf(figureName)
-     	 plot1 <- ggplot() +
-     		  geom_histogram (data=pvals, aes(x=pvals[[i]]), binwidth=delta_x) +
-     		   geom_line (data=prior, aes(x=x, y=ty),  color="red", size=1) +
-     			xlim (min(pvals[i], min_x),max(pvals[i], max_x)) +
-     		  labs (x=theta_info[[i]]$name);
+		figureName <- paste(sprintf("%s/PosteriorVsPrior", graphs_output_folder), as.character(i), ".pdf")
+		pdf(figureName)
+		plot1 <- ggplot() +
+		geom_histogram (data=pvals, aes(x=pvals[[i]]), binwidth=delta_x) +
+		geom_line (data=prior, aes(x=x, y=ty),  color="red", size=1) +
+		xlim (min(pvals[i], min_x),max(pvals[i], max_x)) +
+		labs (x=theta_info[[i]]$name);
 
 
-	 print (plot1);
-	 #dev.off()
-	 #message ("--- generated plot ", i, " ---");
-	 #message ("pval_area = ", pval_area);
-	 #message ("nBins = ", nBins);
-	 #message ("x range: ", min_x, " to ", max_x);
+		print (plot1);
+		#dev.off()
+		#message ("--- generated plot ", i, " ---");
+		#message ("pval_area = ", pval_area);
+		#message ("nBins = ", nBins);
+		#message ("x range: ", min_x, " to ", max_x);
 	}
 
 
 	#------------------------------
-  scatter1Filename = sprintf("%s/posteriorScatterPlotsV1.pdf", graphs_output_folder)
-  scatter2Filename = sprintf("%s/posteriorScatterPlotsV2.pdf", graphs_output_folder)
+	scatter1Filename = sprintf("%s/posteriorScatterPlotsV1.pdf", graphs_output_folder)
+	scatter2Filename = sprintf("%s/posteriorScatterPlotsV2.pdf", graphs_output_folder)
 
-  # scatter1Filename = "../Output/posteriorScatterPlotsV1.pdf"
-  #	scatter2Filename = "../Output/posteriorScatterPlotsV2.pdf"
+	# scatter1Filename = "../Output/posteriorScatterPlotsV1.pdf"
+	#	scatter2Filename = "../Output/posteriorScatterPlotsV2.pdf"
 	if (num_theta == 2)  # include for Matt R. delivery
 	{
-    pdf(scatter1Filename)
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN. 
-	  scatterplotMatrix(~V1+V2, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
-						col="black", reg.line=FALSE, var.labels=NULL); # main="title"
-    pdf(scatter2Filename)
-    #dev.off()
-    var_labels = rep(0, times = num_theta)
-	  for (i2 in 1:num_theta){
-	    var_labels[i2] = theta_info[[i2]]$name
-	  }
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2, data=pvals, smoother=FALSE, diagonal="density", pch='.',
-						reg.line=FALSE,
-						var.labels=var_labels);
-    #dev.off()
+		pdf(scatter1Filename)
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
+		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		pdf(scatter2Filename)
+		#dev.off()
+		var_labels = rep(0, times = num_theta)
+		for (i2 in 1:num_theta){
+			var_labels[i2] = theta_info[[i2]]$name
+		}
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2, data=pvals, smoother=FALSE, diagonal="density", pch='.',
+		reg.line=FALSE,
+		var.labels=var_labels);
+		#dev.off()
 	} else if (num_theta == 3){
-    pdf(scatter1Filename)
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
-						col="black", reg.line=FALSE, var.labels=NULL); # main="title"
-    #dev.off()
-    pdf(scatter2Filename)
-	  var_labels = rep(0, times = num_theta)
-	  for (i2 in 1:num_theta){
-	    var_labels[i2] = theta_info[[i2]]$name
-	  }
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3, data=pvals, smoother=FALSE, diagonal="density", pch='.',
-						reg.line=FALSE,
-						var.labels=var_labels);
-    #dev.off()
+		pdf(scatter1Filename)
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
+		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		#dev.off()
+		pdf(scatter2Filename)
+		var_labels = rep(0, times = num_theta)
+		for (i2 in 1:num_theta){
+			var_labels[i2] = theta_info[[i2]]$name
+		}
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3, data=pvals, smoother=FALSE, diagonal="density", pch='.',
+		reg.line=FALSE,
+		var.labels=var_labels);
+		#dev.off()
 	} else if (num_theta == 4){
-    pdf(scatter1Filename)
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
-						col="black", reg.line=FALSE, var.labels=NULL); # main="title"
-    #dev.off()
-    pdf(scatter2Filename)
-    var_labels = rep(0, times = num_theta)
-	  for (i2 in 1:num_theta){
-	    var_labels[i2] = theta_info[[i2]]$name
-	  }
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4, data=pvals, smoother=FALSE, diagonal="density", pch='.',
-						reg.line=FALSE,
-						var.labels=var_labels);
-    #dev.off()
+		pdf(scatter1Filename)
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
+		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		#dev.off()
+		pdf(scatter2Filename)
+		var_labels = rep(0, times = num_theta)
+		for (i2 in 1:num_theta){
+			var_labels[i2] = theta_info[[i2]]$name
+		}
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4, data=pvals, smoother=FALSE, diagonal="density", pch='.',
+		reg.line=FALSE,
+		var.labels=var_labels);
+		#dev.off()
 	} else if (num_theta == 5){
-	  pdf(scatter1Filename)
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
-	                    col="black", reg.line=FALSE, var.labels=NULL); # main="title"
-	  pdf(scatter2Filename)
-	  var_labels = rep(0, times = num_theta)
-	  for (i2 in 1:num_theta){
-	    var_labels[i2] = theta_info[[i2]]$name
-	  }
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="density", pch='.',
-	                    reg.line=FALSE,
-	                    var.labels=var_labels);
+		pdf(scatter1Filename)
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
+		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		pdf(scatter2Filename)
+		var_labels = rep(0, times = num_theta)
+		for (i2 in 1:num_theta){
+			var_labels[i2] = theta_info[[i2]]$name
+		}
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="density", pch='.',
+		reg.line=FALSE,
+		var.labels=var_labels);
 	} else if (num_theta == 6){
-	  pdf(scatter1Filename)
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4+V5+V6, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
-	                    col="black", reg.line=FALSE, var.labels=NULL); # main="title"
-	  pdf(scatter2Filename)
-	  var_labels = rep(0, times = num_theta)
-	  for (i2 in 1:num_theta){
-	    var_labels[i2] = theta_info[[i2]]$name
-	  }
-	  #if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
-	  scatterplotMatrix(~V1+V2+V3+V4+V5+V6, data=pvals, smoother=FALSE, diagonal="density", pch='.',
-	                    reg.line=FALSE,
-	                    var.labels=var_labels);
+		pdf(scatter1Filename)
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4+V5+V6, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
+		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		pdf(scatter2Filename)
+		var_labels = rep(0, times = num_theta)
+		for (i2 in 1:num_theta){
+			var_labels[i2] = theta_info[[i2]]$name
+		}
+		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
+		scatterplotMatrix(~V1+V2+V3+V4+V5+V6, data=pvals, smoother=FALSE, diagonal="density", pch='.',
+		reg.line=FALSE,
+		var.labels=var_labels);
 	} else{
-	  message("scatter plot matrices not generated because scatterplotMatrix command is only set up for 2-6 parameters")
+		message("scatter plot matrices not generated because scatterplotMatrix command is only set up for 2-6 parameters")
 	}
 }

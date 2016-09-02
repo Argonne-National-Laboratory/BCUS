@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,11 +24,9 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
-
 Modified Date and By:
 - August 2016 by Yuna Zhang
 - Created on Feb 15 2015 by Yuming Sun from Argonne National Laboratory
-
 
 1. Introduction
 This is the main code used for running Bayesian calibration to generate posterior distributions and graphing results
@@ -38,8 +34,6 @@ This is the main code used for running Bayesian calibration to generate posterio
 2. Call structure
 Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 =end
-
-
 
 #===============================================================%
 #     author: Yuming Sun and Matt Riddle										    %
@@ -143,7 +137,6 @@ parser = OptionParser.new do |opts|
     options[:epwName] = epwName
   end
 
-
   options[:comFile]='cal_sim_runs.txt'
   opts.on('--comFile comFile', 'Filename of simulation outputs (default = "cal_sim_runs.txt")') do |comFile|
     options[:comFile] = comFile
@@ -194,12 +187,10 @@ parser = OptionParser.new do |opts|
     options[:randseed] = seednum
   end
 
-
   options[:noRunCal] = false
   opts.on('--noRunCal', 'Do not run the calibrated model when complete') do
     options[:noRunCal] = true
   end
-
 
   options[:noCleanup] = false
   opts.on('-n', '--noCleanup', 'Do not clean up intermediate files') do

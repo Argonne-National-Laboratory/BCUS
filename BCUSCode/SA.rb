@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -25,8 +23,6 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
-
-
 
 Modified Date and By:
 
@@ -213,12 +209,12 @@ if File.exist?("#{uqrepo_path}")
   uq_table = Array.new
   uq_table_row = Array.new
   workbook['UQ'].each { |row|
-   uq_table_row = []
-   row.cells.each { |cell|     
-   uq_table_row.push(cell.value)
-   }
-    uq_table.push(uq_table_row)	
-   }
+    uq_table_row = []
+    row.cells.each { |cell|
+      uq_table_row.push(cell.value)
+    }
+    uq_table.push(uq_table_row)
+  }
 else
   puts "#{uqrepo_path} was NOT found!"
   abort
@@ -227,17 +223,16 @@ end
 if File.exist?("#{outfile_path}")
   puts "Using Output Settings = #{outfile_path}" if verbose
   workbook = RubyXL::Parser.parse("#{outfile_path}")
-  # meters_table = workbook['Meters'].extract_data  outdated by June 28th
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
-   meters_table_row = []
-   row.cells.each { |cell|     
-   meters_table_row.push(cell.value)
-   }
-    meters_table.push(meters_table_row)	
-   }
-   
+    meters_table_row = []
+    row.cells.each { |cell|
+      meters_table_row.push(cell.value)
+    }
+    meters_table.push(meters_table_row)
+  }
+
 else
   puts "#{outfile_path}was NOT found!"
   abort
@@ -260,14 +255,15 @@ uncertainty_parameters = UncertainParameters.new
 
 Dir.mkdir "#{path}/SA_Output" unless Dir.exist?("#{path}/SA_Output")
 
-puts 'Step 1: Generate uncertainty parameters distributions' if verbose
+if verbose
+  puts 'Step 1: Generate uncertainty parameters distributions'
+end
 
 file_name = "#{path}/SA_Output/UQ_#{building_name}.csv"
 uncertainty_parameters.find(model, uq_table, file_name, verbose)
 
 morris = Morris.new
 file_path = "#{path}/SA_Output"
-#morris.design_matrix(file_path, file_name)
 morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed)
 
 # Step 3: Run Simulations
@@ -307,14 +303,14 @@ for k in 2..samples[0].length-1
   variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
   variable.setReportingFrequency('Monthly')
 
-# meters saved to sql file
+  # meters saved to sql file
   model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
-  
- # new edit start from here Yuna add for thermostat algorithm
- out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
- model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
- uncertainty_parameters.thermostat_adjust(model,uq_table,out_file_path_name_thermostat,model_output_path,parameter_types,parameter_value)
-  
+
+  # new edit start from here Yuna add for thermostat algorithm
+  out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
+  model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
+  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+
   puts "Sample#{k-1} is saved to the folder of Models" if verbose
 end
 

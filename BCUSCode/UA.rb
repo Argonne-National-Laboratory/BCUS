@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -25,7 +23,6 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
-
 
 Modified Date and By:
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
@@ -206,12 +203,12 @@ if File.exist?("#{uqrepo_path}")
   uq_table = Array.new
   uq_table_row = Array.new
   workbook['UQ'].each { |row|
-   uq_table_row = []
-   row.cells.each { |cell|     
-   uq_table_row.push(cell.value)
-   }
-    uq_table.push(uq_table_row)	
-   }
+    uq_table_row = []
+    row.cells.each { |cell|
+      uq_table_row.push(cell.value)
+    }
+    uq_table.push(uq_table_row)
+  }
 else
   puts "#{uqrepo_path} was NOT found!"
   abort
@@ -223,16 +220,14 @@ if File.exist?("#{outfile_path}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
-   meters_table_row = []
-   row.cells.each { |cell|     
-   meters_table_row.push(cell.value)
-   }
-    meters_table.push(meters_table_row)	
-   }
-  
-  
-  
-  
+    meters_table_row = []
+    row.cells.each { |cell|
+      meters_table_row.push(cell.value)
+    }
+    meters_table.push(meters_table_row)
+  }
+
+
 else
   puts "#{outfile_path}was NOT found!"
   abort
@@ -263,7 +258,6 @@ outputfilePath = "#{path}/UA_Output"
 
 # Generate LHS samples
 lhs = LHSGenerator.new
-
 lhs.lhs_samples_generator(uqtablefilePath, 'UQ_'+ building_name + '.csv', num_LHS_runs, outputfilePath, verbose, randseed)
 
 samples = CSV.read("#{path}/UA_Output/LHS_Samples.csv", headers: true)
@@ -282,7 +276,6 @@ if run_interactive
   wait_for_y
 end
 
-
 (2..samples[0].length-1).each { |k|
   model = OpenStudio::Model::Model::load(osm_path).get
   parameter_value = []
@@ -300,12 +293,12 @@ end
   variable.setReportingFrequency('Monthly')
   # meters saved to sql file
   model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
-  
- # new edit start from here Yuna add for thermostat algorithm
- out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
- model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
- uncertainty_parameters.thermostat_adjust(model,uq_table,out_file_path_name_thermostat,model_output_path,parameter_types,parameter_value)
-  
+
+  # new edit start from here Yuna add for thermostat algorithm
+  out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
+  model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
+  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+
   puts "Sample#{k-1} is saved to the folder of Models" if verbose
 }
 

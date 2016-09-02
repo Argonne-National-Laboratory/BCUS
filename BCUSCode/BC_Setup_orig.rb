@@ -1,6 +1,8 @@
-=begin comments
-Copyright © 2016 , UChicago Argonne, LLC
+=begin of comments
+Copyright © 201? , UChicago Argonne, LLC
 All Rights Reserved
+ [Software Name, Version 1.x??]
+[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -23,6 +25,7 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
+
 
 Modified Date and By:
 - August 2016 by Yuna Zhang
@@ -71,7 +74,7 @@ end
 
 # parse commandline inputs from the user
 options = {:osmName=> nil, :epwName=>nil}
-parser = OptionParser.new do |opts|
+parser = OptionParser.new do|opts|
   opts.banner = "Usage: PreRuns_Calibration.rb [options]"
 
   opts.on('--osmName osmName', 'osmName') do |osmName|
@@ -81,12 +84,12 @@ parser = OptionParser.new do |opts|
   opts.on('--epwName epwName', 'epwName') do |epwName|
     options[:epwName] = epwName
   end
-
+  
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
+  opts.on('-o', '--outfile outFile','Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
     options[:outFile] = outFile
-  end
-
+  end  
+  
   options[:priorsFile]="priors.csv"
   opts.on('--priors priorsFile', 'CSV File with prior uncertainty distribution info (default=priors.csv)') do |priorsFile|
     options[:priorsFile] = priorsFile
@@ -96,27 +99,27 @@ parser = OptionParser.new do |opts|
   opts.on('--utilityData utilityData', 'CSV File with utility data (default=utilitydata.csv)') do |utilityData|
     options[:utilityData] = utilityData
   end
-
+  
   options[:numLHS]=100
   opts.on('--numLHS numLHS', 'Number of LHS points (default = 100)') do |numLHS|
     options[:numLHS] = numLHS
   end
-
+  
   options[:randseed] = 0
-  opts.on('--seed seednum', 'Integer random number seed, 0 = no seed, default = 0') do |seednum|
+  opts.on('--seed seednum','Integer random number seed, 0 = no seed, default = 0') do |seednum|
     options[:randseed] = seednum
   end
-
+  
   options[:noCleanup] = false
-  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files') do
-    options[:noCleanup] = true
+  opts.on('-n','--noCleanup','Do not clean up intermediate files') do 
+	options[:noCleanup] = true
   end
-
+  
   options[:verbose] = false
-  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
-    options[:verbose] = true
+  opts.on('-v','--verbose','Run in verbose mode with more output info printed') do 
+	options[:verbose] = true
   end
-
+  
   opts.on('-h', '--help', 'Displays Help') do
     puts opts
     exit
@@ -127,29 +130,32 @@ parser.parse!
 
 # if the user didn't give the --osmName option, parse the rest of the input arguments for a *.osm
 if options[:osmName] == nil
-  if ARGV.grep(/.osm/).any?
-    temp=ARGV.grep /.osm/
-    osm_name=temp[0]
-  else
-    puts "An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line"
-    abort
-  end
-else # otherwise the --osmName option was used
-  osm_name = options[:osmName]
+	if ARGV.grep(/.osm/).any?
+		temp=ARGV.grep /.osm/
+		osm_name=temp[0]
+	else
+		puts "An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line"
+		abort
+	end
+else  # otherwise the --osmName option was used
+	osm_name = options[:osmName]
 end
 
 # if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
 if options[:epwName] == nil
-  if ARGV.grep(/.epw/).any?
-    temp=ARGV.grep /.epw/
-    epw_name=temp[0]
-  else
-    puts "An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line"
-    abort
-  end
-else # otherwise the --epwName option was used
-  epw_name = options[:epwName]
+	if ARGV.grep(/.epw/).any?
+		temp=ARGV.grep /.epw/
+		epw_name=temp[0]
+	else
+		puts "An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line"
+		abort
+	end
+else  # otherwise the --epwName option was used
+	epw_name = options[:epwName]
 end
+
+# strip the .osm from the OSM name to get the building name
+building_name = osm_name[0..-5]
 
 outfile_name = options[:outFile]
 priors_name = options[:priorsFile]
@@ -177,16 +183,16 @@ end
 if File.exist?("#{outfile_path}")
   puts "Using Output Settings = #{outfile_path}" if verbose
   workbook = RubyXL::Parser.parse("#{outfile_path}")
-  meters_table = Array.new
+    meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
-    meters_table_row = []
-    row.cells.each { |cell|
-      meters_table_row.push(cell.value)
-    }
-    meters_table.push(meters_table_row)
-  }
-
+   meters_table_row = []
+   row.cells.each { |cell|     
+   meters_table_row.push(cell.value)
+   }
+    meters_table.push(meters_table_row)	
+   }
+  
 else
   puts "#{outfile_path}was NOT found!"
   abort
@@ -216,7 +222,7 @@ preruns_path = "#{path}/PreRuns_Output"
 
 lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, preruns_path, verbose, randseed)
 
-samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv",headers:true)
 parameter_names = []
 parameter_types = []
 
@@ -230,32 +236,30 @@ uncertainty_parameters = UncertainParameters.new
 priors_table = "#{path}/#{priors_name}"
 
 for k in 2..samples[0].length-1
-  parameter_value = []
-  samples.each do |sample|
-    parameter_value << sample[k].to_f
-  end
-  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-  # add reporting meters
-  for meter_index in 1..(meters_table.length-1)
-    meter = OpenStudio::Model::Meter.new(model)
-    meter.setName("#{meters_table[meter_index][0]}")
-    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
-  end
-  variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
-  variable.setReportingFrequency("Monthly")
-  variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
-  variable.setReportingFrequency("Monthly")
+    parameter_value = []
+    samples.each {|sample| parameter_value << sample[k].to_f}
+    uncertainty_parameters.apply(model,parameter_types,parameter_names,parameter_value)
+    # add reporting meters
+    for meter_index in 1..(meters_table.length-1)
+        meter = OpenStudio::Model::Meter.new(model)
+        meter.setName("#{meters_table[meter_index][0]}")
+        meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+    end
+    variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
+    variable.setReportingFrequency("Monthly")
+    variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
+    variable.setReportingFrequency("Monthly")
 
-  # meters saved to sql file
-  model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
-
-  # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
-  # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
-
-
-  puts "Sample#{k-1} is saved to the folder of Models" if verbose
+    # meters saved to sql file
+    model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm",true)
+ 
+ # new edit start from here Yuna add for thermostat algorithm
+ out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
+ model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
+ uncertainty_parameters.thermostat_adjust(model,priors_table,out_file_path_name_thermostat,model_output_path,parameter_types,parameter_value)
+  
+ 
+    puts "Sample#{k-1} is saved to the folder of Models" if verbose
 end
 
 runner = RunOSM.new()

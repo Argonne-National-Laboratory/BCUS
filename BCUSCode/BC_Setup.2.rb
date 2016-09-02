@@ -1,4 +1,4 @@
-=begin comments
+=begin of comments
 Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
 OPEN SOURCE LICENSE
@@ -24,6 +24,7 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
+
 Modified Date and By:
 - August 2016 by Yuna Zhang
 - Created on February 15 2015 by Yuming Sun from Argonne National Laboratory
@@ -43,7 +44,6 @@ This is the main code used for setting up files for running Bayesian calibration
 # Main code used for setting up files for running Bayesian calibration
 #
 
-
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'LHS_Gen'
@@ -56,100 +56,104 @@ require 'fileutils'
 require 'csv'
 require 'rubyXL'
 
+
 def writeToFile(results, filename, verbose = false)
-    File.open(filename, "w+") do |f|
-        for resultsRow in results
-            for r in resultsRow
-                f.write(r)
-                f.write("\t")
-            end
-            f.write("\n")
-        end
-    end
-    puts "Run results have been written to #{filename}" if verbose
+	File.open(filename, "w+") do |f|
+		for resultsRow in results
+			for r in resultsRow
+				f.write(r)
+				f.write("\t")
+			end
+      f.write("\n")
+		end
+  end
+	puts "Run results have been written to #{filename}" if verbose
 end
 
 # parse commandline inputs from the user
 options = {:osmName=> nil, :epwName=>nil}
-parser = OptionParser.new do |opts|
-  opts.banner = "Usage: PreRuns_Calibration.rb [options]"
+parser = OptionParser.new do|opts|
+	opts.banner = "Usage: PreRuns_Calibration.rb [options]"
 
-  opts.on('--osmName osmName', 'osmName') do |osmName|
-    options[:osmName] = osmName
-  end
+	opts.on('--osmName osmName', 'osmName') do |osmName|
+		options[:osmName] = osmName
+	end
 
-  opts.on('--epwName epwName', 'epwName') do |epwName|
-    options[:epwName] = epwName
-  end
+	opts.on('--epwName epwName', 'epwName') do |epwName|
+		options[:epwName] = epwName
+	end
+  
+	options[:outFile] = 'Simulation_Output_Settings.xlsx'
+	opts.on('-o', '--outfile outFile','Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
+		options[:outFile] = outFile
+	end  
+  
+	options[:priorsFile] = 'priors.csv'
+	opts.on('--priors priorsFile', 'CSV File with prior uncertainty distribution info (default=priors.csv)') do |priorsFile|
+		options[:priorsFile] = priorsFile
+	end
 
-  options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
-    options[:outFile] = outFile
-  end
-
-  options[:priorsFile]="priors.csv"
-  opts.on('--priors priorsFile', 'CSV File with prior uncertainty distribution info (default=priors.csv)') do |priorsFile|
-    options[:priorsFile] = priorsFile
-  end
-
-  options[:utilityData]="utilitydata.csv"
-  opts.on('--utilityData utilityData', 'CSV File with utility data (default=utilitydata.csv)') do |utilityData|
-    options[:utilityData] = utilityData
-  end
-
-  options[:numLHS]=100
-  opts.on('--numLHS numLHS', 'Number of LHS points (default = 100)') do |numLHS|
-    options[:numLHS] = numLHS
-  end
-
-  options[:randseed] = 0
-  opts.on('--seed seednum', 'Integer random number seed, 0 = no seed, default = 0') do |seednum|
-    options[:randseed] = seednum
-  end
-
-  options[:noCleanup] = false
-  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files') do
-    options[:noCleanup] = true
-  end
-
-  options[:verbose] = false
-  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
-    options[:verbose] = true
-  end
-
-  opts.on('-h', '--help', 'Displays Help') do
-    puts opts
-    exit
-  end
+	options[:utilityData] = 'utilitydata.csv'
+	opts.on('--utilityData utilityData', 'CSV File with utility data (default=utilitydata.csv)') do |utilityData|
+		options[:utilityData] = utilityData
+	end
+  
+	options[:numLHS] = 100
+	opts.on('--numLHS numLHS', 'Number of LHS points (default = 100)') do |numLHS|
+		options[:numLHS] = numLHS
+	end
+  
+	options[:randseed] = 0
+	opts.on('--seed seednum','Integer random number seed, 0 = no seed, default = 0') do |seednum|
+		options[:randseed] = seednum
+	end
+  
+	options[:noCleanup] = false
+	opts.on('-n','--noCleanup','Do not clean up intermediate files') do 
+		options[:noCleanup] = true
+	end
+  
+	options[:verbose] = false
+	opts.on('-v','--verbose','Run in verbose mode with more output info printed') do 
+		options[:verbose] = true
+	end
+  
+	opts.on('-h', '--help', 'Displays Help') do
+		puts opts
+		exit
+	end
 end
 
 parser.parse!
 
 # if the user didn't give the --osmName option, parse the rest of the input arguments for a *.osm
 if options[:osmName] == nil
-  if ARGV.grep(/.osm/).any?
-    temp=ARGV.grep /.osm/
-    osm_name=temp[0]
-  else
-    puts "An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line"
-    abort
-  end
-else # otherwise the --osmName option was used
-  osm_name = options[:osmName]
+	if ARGV.grep(/.osm/).any?
+		temp=ARGV.grep /.osm/
+		osm_name=temp[0]
+	else
+		puts "An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line"
+		abort
+	end
+else  # otherwise the --osmName option was used
+	osm_name = options[:osmName]
 end
 
 # if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
 if options[:epwName] == nil
-  if ARGV.grep(/.epw/).any?
-    temp=ARGV.grep /.epw/
-    epw_name=temp[0]
-  else
-    puts "An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line"
-    abort
-  end
-else # otherwise the --epwName option was used
-  epw_name = options[:epwName]
+	if ARGV.grep(/.epw/).any?
+		temp=ARGV.grep /.epw/
+		epw_name=temp[0]
+	else
+		puts "An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line"
+		abort
+	end
+else  # otherwise the --epwName option was used
+	epw_name = options[:epwName]
 end
+
+# strip the .osm from the OSM name to get the building name
+building_name = osm_name[0..-5]
 
 outfile_name = options[:outFile]
 priors_name = options[:priorsFile]
@@ -170,32 +174,31 @@ outfile_path = File.absolute_path(outfile_name)
 building_name=File.basename(osm_name,".osm")
 
 if not Dir.exist?("#{path}/PreRuns_Output")
-  Dir.mkdir "#{path}/PreRuns_Output"
+	Dir.mkdir "#{path}/PreRuns_Output"
 end
 
 
 if File.exist?("#{outfile_path}")
-  puts "Using Output Settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{outfile_path}")
-  meters_table = Array.new
-  meters_table_row = Array.new
-  workbook['Meters'].each { |row|
-    meters_table_row = []
-    row.cells.each { |cell|
-      meters_table_row.push(cell.value)
-    }
-    meters_table.push(meters_table_row)
-  }
-
+	puts "Using Output Settings = #{outfile_path}" if verbose
+	workbook = RubyXL::Parser.parse("#{outfile_path}")
+    meters_table = Array.new
+	meters_table_row = Array.new
+	workbook['Meters'].each { |row|
+		meters_table_row = []
+		row.cells.each { |cell|     
+			meters_table_row.push(cell.value)
+		}
+		meters_table.push(meters_table_row)	
+	}
 else
-  puts "#{outfile_path}was NOT found!"
-  abort
+	puts "#{outfile_path}was NOT found!"
+	abort
 end
 
 # check if .osm model exists and if so, load it
 if File.exist?("#{osm_path}")
-  model = OpenStudio::Model::Model::load(osm_path).get
-  puts "Using OSM file #{osm_path}" if verbose
+	model = OpenStudio::Model::Model::load(osm_path).get
+	puts "Using OSM file #{osm_path}" if verbose
 else
   puts "OpenStudio file #{osm_path} not found!"
   abort
@@ -216,7 +219,7 @@ preruns_path = "#{path}/PreRuns_Output"
 
 lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, preruns_path, verbose, randseed)
 
-samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv",headers:true)
 parameter_names = []
 parameter_types = []
 
@@ -230,31 +233,28 @@ uncertainty_parameters = UncertainParameters.new
 priors_table = "#{path}/#{priors_name}"
 
 for k in 2..samples[0].length-1
-  parameter_value = []
-  samples.each do |sample|
-    parameter_value << sample[k].to_f
-  end
-  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+	parameter_value = []
+  samples.each {|sample| parameter_value << sample[k].to_f}
+  uncertainty_parameters.apply(model,parameter_types,parameter_names,parameter_value)
   # add reporting meters
-  for meter_index in 1..(meters_table.length-1)
-    meter = OpenStudio::Model::Meter.new(model)
+	for meter_index in 1..(meters_table.length-1)
+		meter = OpenStudio::Model::Meter.new(model)
     meter.setName("#{meters_table[meter_index][0]}")
     meter.setReportingFrequency("#{meters_table[meter_index][1]}")
-  end
+	end
   variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
   variable.setReportingFrequency("Monthly")
   variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
   variable.setReportingFrequency("Monthly")
 
   # meters saved to sql file
-  model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
-
-  # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
-  # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
-
-
+  model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm",true)
+ 
+	# new edit start from here Yuna add for thermostat algorithm
+	out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
+	model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
+	uncertainty_parameters.thermostat_adjust(model,priors_table,out_file_path_name_thermostat,model_output_path,parameter_types,parameter_value)
+  
   puts "Sample#{k-1} is saved to the folder of Models" if verbose
 end
 
@@ -271,33 +271,33 @@ OutPut.Read(num_of_runs,project_path,'PreRuns')
 
 # clean up the temp files if skip cleanup not set
 if !skip_cleanup
-    File.delete("#{path}/PreRuns_Output/Random_LHS_Samples.csv") if File.exists?("#{path}/PreRuns_Output/Random_LHS_Samples.csv")
-    FileUtils.remove_dir("#{path}/PreRuns_Models") if Dir.exists?("#{path}/PreRuns_Models")
+  File.delete("#{path}/PreRuns_Output/Random_LHS_Samples.csv") if File.exists?("#{path}/PreRuns_Output/Random_LHS_Samples.csv")
+  FileUtils.remove_dir("#{path}/PreRuns_Models") if Dir.exists?("#{path}/PreRuns_Models")
 end
 ## Prepare calibration input files
 # # y_sim, Monthly Drybuld, Monthly Solar Horizontal, Calibration parameter samples...
 
 y_sim = []
 if File.exists?("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv")
-    y_elec_table = CSV.read("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv",headers:false)
-    y_elec_table.delete_at(0)
-    y_elec_table.each do |run|
-        run.each do |data|
-            y_sim << data.to_f
-        end
-    end
+	y_elec_table = CSV.read("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv",headers:false)
+	y_elec_table.delete_at(0)
+	y_elec_table.each do |run|
+		run.each do |data|
+			y_sim << data.to_f
+		end
+	end
 end
 
 if File.exists?("#{path}/PreRuns_Output/Meter_Gas_Facility.csv")
-    y_gas_table = CSV.read("#{path}/PreRuns_Output/Meter_Gas_Facility.csv",headers:false)
-    y_gas_table.delete_at(0)
-    row = 0
-    y_gas_table.each do |run|
-        run.each do |data|
-            y_sim[row] = [y_sim[row],data.to_f]
-            row += 1
-        end
+  y_gas_table = CSV.read("#{path}/PreRuns_Output/Meter_Gas_Facility.csv",headers:false)
+  y_gas_table.delete_at(0)
+  row = 0
+  y_gas_table.each do |run|
+		run.each do |data|
+			y_sim[row] = [y_sim[row],data.to_f]
+			row += 1
     end
+  end
 end
 
 weather_table = CSV.read("#{path}/PreRuns_Output/Monthly_Weather.csv",headers:false)
@@ -314,14 +314,14 @@ cal_parameter_samples_table.delete_at(0)
 
 cal_parameter_samples = []
 cal_parameter_samples_table.each do |run|
-    for rep in 1..12 # Monthly
-        cal_parameter_samples << run
-    end
+	for rep in 1..12 # Monthly
+		cal_parameter_samples << run
+  end
 end
 
 cal_data_com = []
 y_sim.each_with_index do |y,index|
-    cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
+  cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
 end
 
 writeToFile(cal_data_com,"#{path}/PreRuns_Output/cal_sim_runs.txt", verbose)
@@ -340,7 +340,7 @@ puts "#{y_meter.length} months of data read from #{utility_file}" if verbose
 # generate the cal_data_field as a table with columns of y_meter, monthly drybulb, monthly solar horizontal
 cal_data_field = []
 y_meter.each_with_index do |y,index|
-    cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
+	cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
 end
 
 puts "cal_data_field length = #{cal_data_field.length}" if verbose

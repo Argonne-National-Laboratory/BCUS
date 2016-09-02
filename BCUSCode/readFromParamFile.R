@@ -1,7 +1,5 @@
-#                    Copyright © 201? , UChicago Argonne, LLC
+#                    Copyright © 2016 , UChicago Argonne, LLC
 #                              All Rights Reserved
-#                          [Software Name, Version 1.x??]
-#                   [Optional:  Authors name and organization}
 #                               OPEN SOURCE LICENSE
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -118,8 +116,8 @@ readFromParamFile <- function(filename){
 
     name <- paste(paramType, objectInModel, sep = ":")
     theta_info[[i]]$name <- name
-    
-    theta_info[[i]]$prior <- list()    
+
+    theta_info[[i]]$prior <- list()
     if (distributionName == "Triangle Absolute"){
       theta_info[[i]]$prior$type <- "triangular"
       theta_info[[i]]$prior$min <- min
@@ -180,7 +178,7 @@ readFromParamFile <- function(filename){
       z99 = 2.33
       theta_info[[i]]$max <- exp(theta_info[[i]]$prior$mu + z99 * theta_info[[i]]$prior$sig)
     }
-    
+
   }
   return (theta_info)
 }

@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -32,10 +30,8 @@ Modified Date and By:
 - Updated on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
 - Created on Feb 27 2015 by Yuming Sun and Matt Riddle from Argonne National Laboratory
 
-
 1. Introduction
-This is the main code used for generated random variables
-
+This is the main code used for generating random variables using LHS
 
 =end
 
@@ -169,4 +165,4 @@ EOF
     end
   end
  
-  end
+end

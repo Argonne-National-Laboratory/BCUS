@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,10 +24,8 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
-
 Modified Date and By:
 - Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
-
 
 1. Introduction
 This is the script to install R packages required by BCUS. Using this should ensure that rinruby can find the packages because they are installed by it 

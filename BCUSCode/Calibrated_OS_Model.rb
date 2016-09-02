@@ -1,8 +1,6 @@
-=begin of comments
-Copyright © 201? , UChicago Argonne, LLC
+=begin comments
+Copyright © 2016 , UChicago Argonne, LLC
 All Rights Reserved
- [Software Name, Version 1.x??]
-[Optional:  Authors name and organization}
 OPEN SOURCE LICENSE
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -25,7 +23,6 @@ THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ***************************************************************************************************
-
 
 Modified Date and By:
 - August 2016 by Yuna Zhang
@@ -80,28 +77,24 @@ class Calibrated_OSM
       posterior_average[index] = average(posterior[header])
     end
 
-# puts posterior_average
     model = OpenStudio::Model::Model::load(osm_model_file).get
     parameters = CSV.read(prior_file, headers: true)
     parameter_names = parameters['Object in the model']
     parameter_types = parameters['Parameter Type']
 
-# puts parameter_names,parameter_types
-
     uncertainty_parameters = UncertainParameters.new
     parameter_value = posterior_average
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
     workbook = RubyXL::Parser.parse(meter_set_file)
-	meters_table = Array.new
-  meters_table_row = Array.new
-  workbook['Meters'].each { |row|
-   meters_table_row = []
-   row.cells.each { |cell|     
-   meters_table_row.push(cell.value)
-   }
-    meters_table.push(meters_table_row)	
-   }
-  
+    meters_table = Array.new
+    meters_table_row = Array.new
+    workbook['Meters'].each { |row|
+      meters_table_row = []
+      row.cells.each { |cell|
+        meters_table_row.push(cell.value)
+      }
+      meters_table.push(meters_table_row)
+    }
 
     (1..(meters_table.length-1)).each { |meter_index|
       meter = OpenStudio::Model::Meter.new(model)
@@ -117,16 +110,11 @@ class Calibrated_OSM
     model.save(calibrated_model_file, true)
 
     runner = RunOSM.new()
-    runner.run_osm(run_manager_folder,
-                   weather_file,
-                   "#{run_manager_folder}/Simulations",
-                   1)
+    runner.run_osm(run_manager_folder, weather_file, "#{run_manager_folder}/Simulations", 1)
 
-# Read Simulation Results
+    # Read Simulation Results
     sql_file_path = "#{run_manager_folder}/Simulations/#{calibrated_model_name}/ModelToIdf/EnergyPlus-0/eplusout.sql"
     output_folder = run_manager_folder
     OutPut.Read(sql_file_path, meter_set_file, output_folder)
-
   end
-
 end
