@@ -1,0 +1,33 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+
+# BCUS Output Folders
+**/PreRuns_Simulations/
+**/PreRuns_Output/
+**/SA_Output/
+**/SA_Simulations/
+**/UA_output/
+**/UA_Simulations/
+**/Calibrated_Model/
+**/Calibration_Output/
+
+# BCUS Output Files
+**/cal_sim_runs.txt
+**/cal_utility_data.txt
+
+# Backup files from MS software (word, ppt, excel)
+**/~*
+
+# rubymine project files
+**/.idea/
+
+# Doxygen output folder
+[Dd]oc/
+
+# Mac temporary files
+.DS_Store
+
