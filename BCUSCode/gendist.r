@@ -46,7 +46,6 @@
 # 2. Call structure
 # Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 
-
 #===============================================================%
 #     author: Matt Riddle										%
 #     date: Feb 27, 2015										%
@@ -79,6 +78,7 @@
 # COMMENTS: Generally assume alpha = 2
 #===============================================================%
 
+
 gendist <- function (x, inds)
 {
   dist = list ();
@@ -89,3 +89,4 @@ gendist <- function (x, inds)
  
   return (dist);
 }
+
