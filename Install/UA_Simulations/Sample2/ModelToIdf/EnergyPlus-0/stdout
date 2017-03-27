@@ -1,0 +1,6 @@
+EnergyPlus Starting
+EnergyPlus, Version 8.6.0-198c6a3cff, YMD=2017.03.26 23:13
+Processing Data Dictionary
+Processing Input File
+**FATAL:Program Terminates: The ExpandObjects program has not been run or is not in your EnergyPlus.exe folder.
+EnergyPlus Run Time=00hr 00min  0.55sec

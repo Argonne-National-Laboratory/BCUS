@@ -1,0 +1,24 @@
+Program Version,EnergyPlus, Version 8.6.0-198c6a3cff, YMD=2017.03.26 23:23,IDD_Version 8.6.0
+   ************* Beginning Zone Sizing Calculations
+   ** Warning ** ProcessScheduleInput: ScheduleTypeLimits="CONTROLMODE", Unit Type="CONTROLMODE" is invalid.
+   ** Warning ** ProcessScheduleInput: ScheduleTypeLimits="LINEARPOWERDENSITY", Unit Type="LINEARPOWERDENSITY" is invalid.
+   ** Warning ** ProcessScheduleInput: ScheduleTypeLimits="VOLUMETRICFLOWRATE", Unit Type="VOLUMETRICFLOWRATE" is invalid.
+   ** Warning ** ProcessScheduleInput: Schedule:Constant="ALWAYS OFF DISCRETE", Blank Schedule Type Limits Name input -- will not be validated.
+   ** Warning ** ProcessScheduleInput: Schedule:Constant="ALWAYS ON CONTINUOUS", Blank Schedule Type Limits Name input -- will not be validated.
+   ************* Beginning Plant Sizing Calculations
+   ************* Testing Individual Branch Integrity
+   ************* All Branches passed integrity testing
+   ************* Testing Individual Supply Air Path Integrity
+   ************* All Supply Air Paths passed integrity testing
+   ************* Testing Individual Return Air Path Integrity
+   ************* All Return Air Paths passed integrity testing
+   ************* No node connection errors were found.
+   ************* Beginning Simulation
+   ************* Simulation Error Summary *************
+   ************* There are 17 unused schedules in input.
+   ************* There are 17 unused week schedules in input.
+   ************* There are 57 unused day schedules in input.
+   ************* Use Output:Diagnostics,DisplayUnusedSchedules; to see them.
+   ************* EnergyPlus Warmup Error Summary. During Warmup: 0 Warning; 0 Severe Errors.
+   ************* EnergyPlus Sizing Error Summary. During Sizing: 5 Warning; 0 Severe Errors.
+   ************* EnergyPlus Completed Successfully-- 5 Warning; 0 Severe Errors; Elapsed Time=00hr 00min 11.83sec

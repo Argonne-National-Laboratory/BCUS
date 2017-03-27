@@ -1,0 +1,20 @@
+Parameter Type,Object in the model,Parameter Base Value,Distribution,Mean or Mode,Std Dev,Min,Max
+Conductivity,1IN Stucco,0.691799999999999,Normal Relative,1,0.05,0,NA
+Conductivity,Cellular Polyurethane or Polyisocyanurate - Unfaced - 2 in.,0.0245,Normal Relative,1,0.05,0,NA
+Conductivity,8IN Concrete HW,1.72959999999999,Normal Relative,1,0.05,0,NA
+Conductivity,Wood-Framed - 4 in. Studs - 16 in. OC - R-11 Cavity Insulation,0.0603343758197198,Normal Relative,1,0.05,0,NA
+Conductivity,1/2IN Gypsum,0.16,Normal Relative,1,0.05,0,NA
+Conductivity,MAT-CC05 4 HW CONCRETE,1.311,Normal Relative,1,0.05,0,NA
+Conductivity,Roof Membrane,0.16,Normal Relative,1,0.05,0,NA
+Conductivity,Roof Insulation 12 in,0.049,Normal Relative,1,0.05,0,NA
+Conductivity,Metal Decking,45.006,Normal Relative,1,0.05,0,NA
+Specific Heat,1IN Stucco,836.999999999999,Normal Relative,1,0.125,0,NA
+Specific Heat,Cellular Polyurethane or Polyisocyanurate - Unfaced - 2 in.,1590.0,Normal Relative,1,0.125,0,NA
+Specific Heat,8IN Concrete HW,836.999999999999,Normal Relative,1,0.125,0,NA
+Specific Heat,Wood-Framed - 4 in. Studs - 16 in. OC - R-11 Cavity Insulation,1556.29337142857,Normal Relative,1,0.125,0,NA
+Specific Heat,1/2IN Gypsum,830.000000000001,Normal Relative,1,0.125,0,NA
+Specific Heat,MAT-CC05 4 HW CONCRETE,836.800000000001,Normal Relative,1,0.125,0,NA
+Specific Heat,Roof Membrane,1460.0,Normal Relative,1,0.125,0,NA
+Specific Heat,Roof Insulation 12 in,836.800000000001,Normal Relative,1,0.125,0,NA
+Specific Heat,Metal Decking,418.4,Normal Relative,1,0.125,0,NA
+Lights_WattsPerSpaceFloorArea,189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8,9.68751937503875,Normal Relative,1,0.5,0,50

@@ -1,0 +1,10 @@
+Parameter Type,Object in the model,Parameter Base Value,Distribution,Mean or Mode,Std Dev,Min,Max
+Density,Floor Insulation,265.0,Normal Relative,1,0.01,0,NA
+Density,MAT-CC05 8 HW CONCRETE,2240.0,Normal Relative,1,0.01,0,NA
+Density,4IN CONCRETE HW,2240.0,Normal Relative,1,0.01,0,NA
+Density,1/2IN Gypsum,784.9,Normal Relative,1,0.01,0,NA
+Density,Wood Siding,544.62,Normal Relative,1,0.01,0,NA
+Density,Wood Frame Wall Insulation,265.0,Normal Relative,1,0.01,0,NA
+Density,Roof Membrane,1121.29,Normal Relative,1,0.01,0,NA
+Density,IEAD Roof Insulation,265.0,Normal Relative,1,0.01,0,NA
+Density,Metal Decking,7680.0,Normal Relative,1,0.01,0,NA
