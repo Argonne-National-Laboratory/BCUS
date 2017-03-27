@@ -1620,7 +1620,7 @@ OS:Lights:Definition,
 OS:Lights,
   {bc4b699d-1994-4ab9-8cf8-596fb5a9786d}, !- Handle
   189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8 Lights, !- Name
-  {178b7807-f7c0-4022-8f6b-47411e4bd72f}, !- Lights Definition Name
+  {10f7caa3-7f25-42ee-8c80-2017abd9f50e}, !- Lights Definition Name
   {21bc2939-d312-40b9-aee4-ec72afc9d1ab}; !- Space or SpaceType Name
 
 OS:DesignSpecification:OutdoorAir,
@@ -1674,7 +1674,7 @@ OS:ElectricEquipment:Definition,
 OS:ElectricEquipment,
   {1e15f037-0268-427f-913c-4cc593898ba2}, !- Handle
   189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8 Electric Equipment, !- Name
-  {e4b7bce2-70b6-495e-95eb-b42b745841a9}, !- Electric Equipment Definition Name
+  {d31ecdeb-fd24-4442-94ef-af4f5a86e38b}, !- Electric Equipment Definition Name
   {21bc2939-d312-40b9-aee4-ec72afc9d1ab}; !- Space or SpaceType Name
 
 OS:ThermostatSetpoint:DualSetpoint,
@@ -3624,4 +3624,44 @@ OS:ScheduleTypeLimits,
   ,                                       !- Upper Limit Value
   Continuous,                             !- Numeric Type
   VolumetricFlowRate;                     !- Unit Type
+
+OS:Lights:Definition,
+  {10f7caa3-7f25-42ee-8c80-2017abd9f50e}, !- Handle
+  Lights Definition 1,                    !- Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Lighting Level {W}
+  0,                                      !- Watts per Space Floor Area {W/m2}
+  ;                                       !- Watts per Person {W/person}
+
+OS:ElectricEquipment:Definition,
+  {d31ecdeb-fd24-4442-94ef-af4f5a86e38b}, !- Handle
+  Electric Equipment Definition 1,        !- Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Design Level {W}
+  10.5928770390818,                       !- Watts per Space Floor Area {W/m2}
+  ;                                       !- Watts per Person {W/person}
+
+OS:Output:Meter,
+  {943cee31-ae38-4050-b9bd-ecd23c5c82d8}, !- Handle
+  Electricity:Facility,                   !- Name
+  Monthly;                                !- Reporting Frequency
+
+OS:Output:Meter,
+  {771dff63-29d2-4574-bec4-db9d763bc185}, !- Handle
+  Gas:Facility,                           !- Name
+  Monthly;                                !- Reporting Frequency
+
+OS:Output:Variable,
+  {b24bcb74-1b65-4442-b557-59992b44492f}, !- Handle
+  Output Variable 1,                      !- Name
+  ,                                       !- Key Value
+  Site Outdoor Air Drybulb Temperature,   !- Variable Name
+  Monthly;                                !- Reporting Frequency
+
+OS:Output:Variable,
+  {cf701514-a2dc-4c84-842d-e1ad7b24e5eb}, !- Handle
+  Output Variable 2,                      !- Name
+  ,                                       !- Key Value
+  Site Ground Reflected Solar Radiation Rate per Area, !- Variable Name
+  Monthly;                                !- Reporting Frequency
 

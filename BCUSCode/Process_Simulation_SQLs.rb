@@ -39,10 +39,24 @@ require 'csv'
 
 module OutPut
 
-  def OutPut.Read(num_of_runs, project_path, out_prefix, verbose=false)
+  def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile_path, verbose=false)
+	
+	debug = true
+	
+	if debug
+		puts
+		puts "number_of_runs = #{num_of_runs}"
+		puts "project_path = #{project_path}"
+		puts "out_prefix = #{out_prefix}"
+		puts "settingsfile_path = #{settingsfile_path}"
+		#puts "outfile_name = #{outfile_name}"
+		puts
+	end
 
 # Find the path of sql
-    workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
+    #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
+    workbook = RubyXL::Parser.parse(settingsfile_path)		
+
     #output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
 
     output_table = Array.new
@@ -300,7 +314,8 @@ module OutPut
       puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
     end
 
-    workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
+    #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
+		workbook = RubyXL::Parser.parse(settingsfile_path)	
     # meters_table = workbook['Meters'].extract_data  outdated by June 28th
     meters_table = Array.new
     meters_table_row = Array.new

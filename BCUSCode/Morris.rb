@@ -64,9 +64,59 @@ class Morris
   # Morris.compute_sensitivities(methd(:myfun), 2, 10, [0,0], [1,1])
   # => [1.0, 10.0]
   #
+  
+	# Generate random numbers using the CDF inverse method
+	def cdf_inverse(random_num, prob_distribution)
+		puts "evaluating samples-<qnorm(#{random_num},#{prob_distribution[2]},#{prob_distribution[3]}))"
+    R.assign('q', random_num)
+    case prob_distribution[1]
+      when /Normal Absolute/
+        R.assign('mean', prob_distribution[2])
+        R.assign('std', prob_distribution[3])
+        R.eval 'samples<- qnorm(q,mean,std)'
 
-  def design_matrix(file_path, file_name, morris_R, morris_levels, randseed=0)
-    puts "Randseed = #{randseed}" if randseed !=0
+      when /Normal Relative/
+        R.assign('mean', prob_distribution[2]*prob_distribution[0])
+        R.assign('std', prob_distribution[3]*prob_distribution[0])
+        R.eval 'samples<- qnorm(q,mean,std)'
+
+      when /Uniform Absolute/
+        R.assign('min', prob_distribution[4])
+        R.assign('max', prob_distribution[5])
+        R.eval 'samples<- qunif(q,min,max)'
+
+      when /Uniform Relative/
+        R.assign('min', prob_distribution[4]*prob_distribution[0])
+        R.assign('max', prob_distribution[5]*prob_distribution[0])
+        R.eval 'samples<- qunif(q,min,max)'
+
+      when /Triangle Absolute/
+        R.assign('min', prob_distribution[4])
+        R.assign('max', prob_distribution[5])
+        R.assign('mode', prob_distribution[2])
+        R.eval 'library("triangle")'
+        R.eval 'samples<- qtriangle(q,min,max,mode)'
+
+      when /Triangle Relative/
+        R.assign('min', prob_distribution[4]*prob_distribution[0])
+        R.assign('max', prob_distribution[5]*prob_distribution[0])
+        R.assign('mode', prob_distribution[2]*prob_distribution[0])
+        R.eval 'library("triangle")'
+        R.eval 'samples<- qtriangle(q,min,max,mode)'
+
+      when /LogNormal Absolute/
+        R.assign('log_mean', prob_distribution[2])
+        R.assign('log_std', prob_distribution[3])
+        R.eval 'samples<- qlognorm(q,log_mean,log_std)'
+
+      else
+        R.samples = []
+    end
+    return R.samples
+  end
+
+  def design_matrix(file_path, file_name, morris_R, morris_levels, randseed=0, verbose = false)
+    puts "Randseed = #{randseed}" if verbose
     table = CSV.read("#{file_name}")
     n_parameters = table.count-1 # the first row is the header
     R.assign('randseed', randseed) # set the random seed.
@@ -116,54 +166,7 @@ EOF
     end
   end
 
-  def cdf_inverse(random_num, prob_distribution)
-    R.assign('q', random_num)
-    case prob_distribution[1]
-      when /Normal Absolute/
-        R.assign('mean', prob_distribution[2])
-        R.assign('std', prob_distribution[3])
-        R.eval 'samples<- qnorm(q,mean,std)'
-
-      when /Normal Relative/
-        R.assign('mean', prob_distribution[2]*prob_distribution[0])
-        R.assign('std', prob_distribution[3]*prob_distribution[0])
-        R.eval 'samples<- qnorm(q,mean,std)'
-
-      when /Uniform Absolute/
-        R.assign('min', prob_distribution[4])
-        R.assign('max', prob_distribution[5])
-        R.eval 'samples<- qunif(q,min,max)'
-
-      when /Uniform Relative/
-        R.assign('min', prob_distribution[4]*prob_distribution[0])
-        R.assign('max', prob_distribution[5]*prob_distribution[0])
-        R.eval 'samples<- qunif(q,min,max)'
-
-      when /Triangle Absolute/
-        R.assign('min', prob_distribution[4])
-        R.assign('max', prob_distribution[5])
-        R.assign('mode', prob_distribution[2])
-        R.eval 'library("triangle")'
-        R.eval 'samples<- qtriangle(q,min,max,mode)'
-
-      when /Triangle Relative/
-        R.assign('min', prob_distribution[4]*prob_distribution[0])
-        R.assign('max', prob_distribution[5]*prob_distribution[0])
-        R.assign('mode', prob_distribution[2]*prob_distribution[0])
-        R.eval 'library("triangle")'
-        R.eval 'samples<- qtriangle(q,min,max,mode)'
-
-      when /LogNormal Absolute/
-        R.assign('log_mean', prob_distribution[2])
-        R.assign('log_std', prob_distribution[3])
-        R.eval 'samples<- qlognorm(q,log_mean,log_std)'
-
-      else
-        R.samples = []
-    end
-    return R.samples
-  end
-
+ 
   def compute_sensitivities(model_response_file, file_path, file_name)
     R.assign('y_file', model_response_file)
     R.assign('file_path', file_path)

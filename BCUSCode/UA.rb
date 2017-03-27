@@ -43,7 +43,7 @@ Refer to 'Function Call Structure_UA.pptx'
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'LHS_Gen'
-require_relative 'Read_Simulation_Results_SQL'
+require_relative 'Process_Simulation_SQLs'
 
 # use require to include functions from Ruby Library
 require 'openstudio'
@@ -97,9 +97,9 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uqRepo
   end
 
-  options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |outFile|
-    options[:outFile] = outFile
+  options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
+    options[:settingsFile] = settingsFile
   end
 
   # numLHS: the number of sample points of Monte Carlo simulation with Latin Hypercube Design
@@ -153,7 +153,8 @@ end
 
 verbose = options[:verbose]
 uqrepo_name = options[:uqRepo]
-outfile_name = options[:outFile]
+outfile_name = options[:settingsFile]
+settingsfile_name = options[:settingsFile]
 run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
 num_LHS_runs = Integer(options[:numLHS])
@@ -174,6 +175,7 @@ osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
 outfile_path = File.absolute_path(outfile_name)
+settingsfile_path = File.absolute_path(settingsfile_name)
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name, '.osm')
@@ -215,9 +217,9 @@ else
   abort
 end
 
-if File.exist?("#{outfile_path}")
-  puts "Using Output Settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{outfile_path}")
+if File.exist?("#{settingsfile_path}")
+  puts "Using Output Settings = #{settingsfile_path}" if verbose
+  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -230,7 +232,7 @@ if File.exist?("#{outfile_path}")
 
 
 else
-  puts "#{outfile_path}was NOT found!"
+  puts "#{settingsfile_path} was NOT found!"
   abort
 end
 
@@ -313,7 +315,7 @@ runner.run_osm("#{path}/UA_Models",
 
 # Read Simulation Results
 project_path = "#{path}"
-OutPut.Read(num_LHS_runs, project_path, 'UA', verbose)
+OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)
 
 #delete intermediate files
 if !skip_cleanup

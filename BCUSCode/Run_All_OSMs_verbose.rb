@@ -80,7 +80,9 @@ class RunOSM
 			runManager.enqueue(job, true)  # queue up a job and process even if its out of date
 			n = n + 1
 		}
-
+		
+		
+		runManager.showStatusDialog if verbose
 		runManager.waitForFinished() 
 
 		runManager.getJobs.each { |job|
