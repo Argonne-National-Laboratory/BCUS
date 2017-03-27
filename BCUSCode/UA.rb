@@ -25,6 +25,7 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 ***************************************************************************************************
 
 Modified Date and By:
+- Updates 27-mar-2017 by RTM to pass verbose to Uncertain_Parameters call
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
 
@@ -246,7 +247,7 @@ end
 # Define the output path of building specific uncertainty table
 out_file_path_name = "#{path}/UA_Output/UQ_#{building_name}.csv"
 uncertainty_parameters = UncertainParameters.new
-uncertainty_parameters.find(model, uq_table, out_file_path_name)
+uncertainty_parameters.find(model, uq_table, out_file_path_name, verbose)
 
 if run_interactive
   puts "Check the #{path}/UA_Output/UQ_#{building_name}.csv"
