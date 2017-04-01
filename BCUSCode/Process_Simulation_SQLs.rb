@@ -41,26 +41,15 @@ module OutPut
 
   def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile_path, verbose=false)
 	
-	debug = true
-	
-	if debug
-		puts
-		puts "number_of_runs = #{num_of_runs}"
-		puts "project_path = #{project_path}"
-		puts "out_prefix = #{out_prefix}"
-		puts "settingsfile_path = #{settingsfile_path}"
-		#puts "outfile_name = #{outfile_name}"
-		puts
-	end
 
 # Find the path of sql
     #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
     workbook = RubyXL::Parser.parse(settingsfile_path)		
 
-    #output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
-
     output_table = Array.new
-    output_table_row = Array.new
+    #output_table_row = Array.new
+
+	# find all the total energy tables requested in the simulation output settings file
     workbook['TotalEnergy'].each { |row|
       output_table_row = []
       row.cells.each { |cell|
@@ -68,257 +57,88 @@ module OutPut
       }
       output_table.push(output_table_row)
     }
-
-
-    total_site_energy = []
-    total_source_energy = []
-    electricity_total_end_uses = []
-    electricity_heating =[]
-    electricity_cooling =[]
-    electricity_water_systems = []
-    electricity_interior_lighting = []
-    electricity_exterior_lighting = []
-    electricity_interior_equipment = []
-    electricity_exterior_equipment = []
-    electricity_fans = []
-    electricity_pumps = []
-    electricity_heat_rejection = []
-    natural_gas_total_end_uses = []
-    natural_gas_heating = []
-    natural_gas_cooling = []
-    natural_gas_water_systems = []
-    district_cooling = []
-    district_heating = []
-    district_cooling_total_end_uses = []
-    district_heating_total_end_uses = []
-
-
+    
+    # get the header string from output_table and remove the leading "[" and trailing "]"
+    header = Array.new(output_table.length-1)
+    (1..(output_table.length-1)).each { |output_num|
+      header[output_num-1] = output_table[output_num].to_s[2..-3]
+    }
+    
+    # get the data from the SQL file
+    data_table = Array.new(num_of_runs){Array.new(output_table.length-1)}
     (1..num_of_runs).each { |sample_num|
       sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
       sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
       (1..(output_table.length-1)).each { |output_num|
         case output_table[output_num].to_s
           when /Total Site Energy/
-            if not sqlFile.totalSiteEnergy.empty?
-              total_site_energy << sqlFile.totalSiteEnergy.get
-            else
-              total_site_energy << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.totalSiteEnergy.get unless sqlFile.totalSiteEnergy.empty?
           when /Total Source Energy/
-            if not sqlFile.totalSourceEnergy.empty?
-              total_source_energy << sqlFile.totalSourceEnergy.get
-            else
-              total_source_energy << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.totalSourceEnergy.get unless sqlFile.totalSourceEnergy.empty?
           when /Electricity Total End Uses/
-            if not sqlFile.electricityTotalEndUses.empty?
-              electricity_total_end_uses << sqlFile.electricityTotalEndUses.get
-            else
-              electricity_total_end_uses << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityTotalEndUses.get unless sqlFile.electricityTotalEndUses.empty?
           when /Electricity Heating/
-            if sqlFile.electricityHeating.empty?
-              electricity_heating << sqlFile.electricityHeating.get
-            else
-              electricity_heating << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityHeating.get unless sqlFile.electricityHeating.empty?
           when /Electricity Cooling/
-            if not sqlFile.electricityCooling.empty?
-              electricity_cooling << sqlFile.electricityCooling.get
-            else
-              electricity_cooling << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityCooling.get unless sqlFile.electricityCooling.empty?
           when /Electricity Water Systems/
-            if not sqlFile.electricityWaterSystems.empty?
-              electricity_water_systems << sqlFile.electricityWaterSystems.get
-            else
-              electricity_water_systems << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityWaterSystems.get unless sqlFile.electricityWaterSystems.empty?
           when /Electricity Interior Lighting/
-            if not sqlFile.electricityInteriorLighting.empty?
-              electricity_interior_lighting << sqlFile.electricityInteriorLighting.get
-            else
-              electricity_interior_lighting << ''
-            end
-
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityInteriorLighting.get unless sqlFile.electricityInteriorLighting.empty?
           when /Electricity Exterior Lighting/
-            if not sqlFile.electricityExteriorLighting.empty?
-              electricity_exterior_lighting << sqlFile.electricityExteriorLighting.get
-            else
-              electricity_exterior_lighting << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityExteriorLighting.get unless sqlFile.electricityExteriorLighting.empty?
           when /Electricity Interior Equipment/
-            if not sqlFile.electricityInteriorEquipment.empty?
-              electricity_interior_equipment << sqlFile.electricityInteriorEquipment.get
-            else
-              electricity_interior_equipment << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityInteriorEquipment.get unless sqlFile.electricityInteriorEquipment.empty?
           when /Electricity Exterior Equipment/
-            if not sqlFile.electricityExteriorEquipment.empty?
-              electricity_exterior_equipment << sqlFile.electricityExteriorEquipment.get
-            else
-              electricity_exterior_equipment << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityExteriorEquipment.get unless sqlFile.electricityExteriorEquipment.empty?
           when /Electricity Fans/
-            if not sqlFile.electricityFans.empty?
-              electricity_fans << sqlFile.electricityFans.get
-            else
-              electricity_fans << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityFans.get unless sqlFile.electricityFans.empty?
           when /Electricity Pumps/
-            if not sqlFile.electricityPumps.empty?
-              electricity_pumps << sqlFile.electricityPumps.get
-            else
-              electricity_pumps << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityPumps.get unless sqlFile.electricityPumps.empty?
           when /Electricity Heat Rejection/
-            if not sqlFile.electricityHeatRejection.empty?
-              electricity_heat_rejection << sqlFile.electricityHeatRejection.get
-            else
-              electricity_heat_rejection << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.electricityHeatRejection.get unless sqlFile.electricityHeatRejection.empty?
           when /Natural Gas Total End Uses/
-            if not sqlFile.naturalGasTotalEndUses.empty?
-              natural_gas_total_end_uses << sqlFile.naturalGasTotalEndUses.get
-            else
-              natural_gas_total_end_uses << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.naturalGasTotalEndUses.get unless sqlFile.naturalGasTotalEndUses.empty?
           when /Natural Gas Heating/
-            if not sqlFile.naturalGasHeating.empty?
-              natural_gas_heating << sqlFile.naturalGasHeating.get
-            else
-              natural_gas_heating << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.naturalGasHeating.get unless sqlFile.naturalGasHeating.empty?
           when /Natural Gas Cooling/
-            if not sqlFile.naturalGasCooling.empty?
-              natural_gas_cooling << sqlFile.naturalGasCooling.get
-            else
-              natural_gas_cooling << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.naturalGasCooling.get unless sqlFile.naturalGasCooling.empty?
           when /Natural Gas Water Systems/
-            if not sqlFile.naturalGasWaterSystems.empty?
-              natural_gas_water_systems << sqlFile.naturalGasWaterSystems.get
-            else
-              natural_gas_water_systems << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.naturalGasWaterSystems.get unless sqlFile.naturalGasWaterSystems.empty?
           when /District Cooling/
-            if not sqlFile.districtCoolingCooling.empty?
-              district_cooling << sqlFile.districtCoolingCooling.get
-            else
-              district_cooling << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.districtCoolingCooling.get unless sqlFile.districtCoolingCooling.empty?
           when /District Heating/
-            if not sqlFile.districtHeatingHeating.empty?
-              district_heating << sqlFile.districtHeatingHeating.get
-            else
-              district_heating << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.districtHeatingHeating.get unless sqlFile.districtHeatingHeating.empty?
           when /District Cooling Total End Uses/
-            if not sqlFile.districtCoolingTotalEndUses.empty?
-              district_cooling_total_end_uses << sqlFile.districtCoolingTotalEndUses.get
-            else
-              district_cooling_total_end_uses << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.districtCoolingTotalEndUses.get unless sqlFile.districtCoolingTotalEndUses.empty?
           when /District Heating Total End Uses/
-            if not sqlFile.districtHeatingTotalEndUses.empty?
-              district_heating_total_end_uses << sqlFile.districtHeatingTotalEndUses.get
-            else
-              district_heating_total_end_uses << ''
-            end
+            data_table[sample_num-1][output_num-1] = sqlFile.districtHeatingTotalEndUses.get unless sqlFile.districtHeatingTotalEndUses.empty?
+          else
+            abort('Invalid selection of Annual outputs - terminating script')
         end
       }
     }
 
-    # put all output array to final_output
-
-    final_output = []
-    header = []
-    (1..(output_table.length-1)).each { |output_num|
-      case output_table[output_num].to_s
-        when /Total Site Energy/
-          final_output << total_site_energy
-          header << 'Total Site Energy [GJ]'
-        when /Total Source Energy/
-          final_output << total_source_energy
-          header << 'Total Source Energy [GJ]'
-        when /Electricity Total End Uses/
-          final_output << electricity_total_end_uses
-          header << 'Electricity Total End Uses [GJ]'
-        when /Electricity Heating/
-          final_output << electricity_heating
-          header << 'Electricity Heating [GJ]'
-        when /Electricity Cooling/
-          final_output << electricity_cooling
-          header << 'Electricity Cooling [GJ]'
-        when /Electricity Water Systems/
-          final_output << electricity_water_systems
-          header << 'Electricity Water Systems [GJ]'
-        when /Electricity Interior Lighting/
-          final_output << electricity_interior_lighting
-          header << 'Electricity Interior Lighting [GJ]'
-        when /Electricity Exterior Lighting/
-          final_output << electricity_exterior_lighting
-          header << 'Electricity Exterior Lighting [GJ]'
-        when /Electricity Interior Equipment/
-          final_output << electricity_interior_equipment
-          header << 'Electricity Interior Equipment [GJ]'
-        when /Electricity Exterior Equipment/
-          final_output << electricity_exterior_equipment
-          header << 'Electricity Exterior Equipment [GJ]'
-        when /Electricity Fans/
-          final_output << electricity_fans
-          header << 'Electricity Fans [GJ]'
-        when /Electricity Pumps/
-          final_output << electricity_pumps
-          header << 'Electricity Pumps [GJ]'
-        when /Electricity Heat Rejection/
-          final_output << electricity_heat_rejection
-          header << 'Electricity Heat Rejection [GJ]'
-        when /Natural Gas Total End Uses/
-          final_output << natural_gas_total_end_uses
-          header << 'Natural Gas Total End Uses [GJ]'
-        when /Natural Gas Heating/
-          final_output << natural_gas_heating
-          header << 'Natural Gas Heating [GJ]'
-        when /Natural Gas Cooling/
-          final_output << natural_gas_cooling
-          header << 'Natural Gas Cooling [GJ]'
-        when /Natural Gas Water Systems/
-          final_output << natural_gas_water_systems
-          header << 'Natural Gas Water Systems [GJ]'
-        when /District Cooling/
-          final_output << district_cooling
-          header << 'District Cooling [GJ]'
-        when /District Heating/
-          final_output << district_heating
-          header << 'District Heating [GJ]'
-        when /District Cooling Total End Uses/
-          final_output << district_cooling_total_end_uses
-          header << 'District Cooling Total End Uses [GJ]'
-        when /District Heating Total End Uses/
-          final_output << district_heating_total_end_uses
-          header << 'District Heating Total End Uses [GJ]'
-      end
-    }
-
-    # Save to final_output to csv files
-    table = final_output.transpose
+    #table = data_table
     CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
       csv << header
     end
 
     CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'a+') do |csv|
-      table.each do |row|
+      data_table.each do |row|
         csv << row
       end
-      puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
     end
 
+    puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
+
+	# look for all the requested meters
+
     #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
-		workbook = RubyXL::Parser.parse(settingsfile_path)	
+    workbook = RubyXL::Parser.parse(settingsfile_path)	
     # meters_table = workbook['Meters'].extract_data  outdated by June 28th
     meters_table = Array.new
-    meters_table_row = Array.new
+    #meters_table_row = Array.new
     workbook['Meters'].each { |row|
       meters_table_row = []
       row.cells.each { |cell|
@@ -326,49 +146,57 @@ module OutPut
       }
       meters_table.push(meters_table_row)
     }
-
-
+    
     (1..(meters_table.length-1)).each { |meter_index|
       var_value = []
+	  
       (1..num_of_runs).each { |sample_num|
+      
         sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
         sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
-        query_var_index = "SELECT ReportMeterDataDictionaryIndex FROM ReportMeterDataDictionary
-           WHERE VariableName = '#{meters_table[meter_index][0]}' AND
-           ReportingFrequency = '#{meters_table[meter_index][1]}'"
-        if not sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+        
+        # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
+        # we need this to make sure we only select data for actual weather period run and not the sizing runs
+        query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods 
+                            WHERE EnvironmentName = 'RUN PERIOD 1'"
+        if sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+          var_value << []
+        else
           var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
 
-          query_var_value = "SELECT VariableValue FROM ReportMeterData
-           WHERE ReportMeterDataDictionaryIndex = #{var_index}"
+          # generate the query for the data from ReportVariableWithTime that has matching
+          # meter table name, reporting frequency, and is Run Period 1
+          query_var_value = "SELECT Value FROM ReportVariableWithTime
+           WHERE Name = '#{meters_table[meter_index][0]}' AND
+           ReportingFrequency = '#{meters_table[meter_index][1]}' AND
+           EnvironmentPeriodIndex = #{var_index}"
           var_value << sqlFile.execAndReturnVectorOfDouble(query_var_value).get
-        else
-          var_value << []
         end
       }
 
-      case meters_table[meter_index][1]
-        when /Monthly/
-          header = ['Jan', 'Feb', 'Mar', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
-        when /Daily/
-          header = ['Day 1', 'Day 2', 'Day 3', '...']
-        when /Hourly/
-          header = ['Hour 1', 'Hour 2', 'Hour 3', '...']
-        else
-          header = ['TimeStep 1', 'TimeStep 2', 'TimeStep 3', '...']
-      end
+      #header = [meters_table[meter_index][1].to_s]
+      header = [meters_table[meter_index][1].to_s]
+      (1..num_of_runs).each { |sample_num|
+      
+        header << "Sim #{sample_num}"
+      }
 
-      CSV.open("#{project_path}/#{out_prefix}_Output/Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}.csv", 'wb') do |csv|
+      csv_metername= "Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}"
+      csv_filename = "#{project_path}/#{out_prefix}_Output/" + csv_metername + '.csv'
+
+      CSV.open(csv_filename, 'wb') do |csv|
         csv << header
       end
 
-      CSV.open("#{project_path}/#{out_prefix}_Output/Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}.csv", 'a+') do |csv|
-        var_value.each do |row|
+      time =1
+      CSV.open(csv_filename, 'a+') do |csv|
+        var_value.transpose.each do |row|
+          row.insert(0,time)
           csv << row
+          time += 1
         end
-        puts "Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}.csv is saved to the Output folder" if verbose
+        puts "#{csv_metername} is saved to the Output folder" if verbose
       end
-
     }
 
     weather_var = []
@@ -380,7 +208,7 @@ module OutPut
            WHERE VariableName = 'Site Outdoor Air Drybulb Temperature' AND
            ReportingFrequency = 'Monthly'"
 
-    if not sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+    unless sqlFile.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
       query_var_value = "SELECT VariableValue FROM ReportVariableData
            WHERE ReportVariableDataDictionaryIndex = #{var_index}"
@@ -394,7 +222,9 @@ module OutPut
            WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area' AND
            ReportingFrequency = 'Monthly'"
 
-    if not sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+    if sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+      weather_var << []
+    else
       var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
 
       query_var_value = "SELECT VariableValue FROM ReportVariableData
@@ -402,8 +232,6 @@ module OutPut
       ground_reflec_solar = sqlFile.execAndReturnVectorOfDouble(query_var_value).get
       horizontal_total_solar = ground_reflec_solar.collect { |n| n * 5 }
       weather_var << horizontal_total_solar
-    else
-      weather_var << []
     end
 
     weather_out = (weather_var.transpose)*num_of_runs

@@ -1,0 +1,94 @@
+{
+    "Loop Delimiter": {
+        "output": {
+            "result": "Fail"
+        },
+        "args_hash": {
+            "loop": "------ airLoopHVACs -------"
+        }
+    },
+    "IncludeDemandNodes": {
+        "output": {
+            "result": "Success",
+            "num_var_created": 69.0
+        },
+        "args_hash": {
+            "reporting_frequency": "Hourly",
+            "include_demand_nodes": true,
+            "loop": "{5760002d-000c-4c45-a56c-b1310381c62c}"
+        }
+    },
+    "RandomNumberOfVariables": {
+        "output": {
+            "result": "Success",
+            "num_var_created": 81.0
+        },
+        "args_hash": {
+            "System Node Setpoint Humidity Ratio": true,
+            "System Node Setpoint High Temperature": true,
+            "System Node Setpoint Low Temperature": true,
+            "System Node Mass Flow Rate": true,
+            "System Node Wetbulb Temperature": false,
+            "System Node Height": true,
+            "include_demand_nodes": false,
+            "System Node Enthalpy": false,
+            "System Node Temperature": false,
+            "reporting_frequency": "Timestep",
+            "System Node Current Density Volume Flow Rate": true,
+            "System Node Setpoint Minimum Humidity Ratio": true,
+            "System Node Humidity Ratio": true,
+            "System Node Setpoint Temperature": false,
+            "System Node Current Density": false,
+            "System Node Quality": false,
+            "loop": "{5760002d-000c-4c45-a56c-b1310381c62c}",
+            "System Node Dewpoint Temperature": true
+        }
+    },
+    "No output": {
+        "output": {
+            "result": "Fail"
+        },
+        "args_hash": {
+            "System Node Setpoint Humidity Ratio": false,
+            "System Node Relative Humidity": false,
+            "System Node Setpoint Maximum Humidity Ratio": false,
+            "System Node Current Density": false,
+            "System Node Pressure": false,
+            "System Node Current Density Volume Flow Rate": false,
+            "System Node Standard Density Volume Flow Rate": false,
+            "System Node Setpoint Minimum Humidity Ratio": false,
+            "System Node Quality": false,
+            "loop": "{5760002d-000c-4c45-a56c-b1310381c62c}",
+            "System Node Dewpoint Temperature": false,
+            "System Node Setpoint High Temperature": false,
+            "System Node Setpoint Low Temperature": false,
+            "System Node Mass Flow Rate": false,
+            "System Node Wetbulb Temperature": false,
+            "System Node Height": false,
+            "include_demand_nodes": false,
+            "System Node Enthalpy": false,
+            "System Node Temperature": false,
+            "reporting_frequency": "Daily",
+            "System Node Humidity Ratio": false,
+            "System Node Setpoint Temperature": false
+        }
+    },
+    "AirLoopHVAC": {
+        "output": {
+            "result": "Success"
+        },
+        "args_hash": {
+            "reporting_frequency": "Detailed",
+            "include_demand_nodes": false,
+            "loop": "{5760002d-000c-4c45-a56c-b1310381c62c}"
+        }
+    },
+    "Loop Blank": {
+        "output": {
+            "result": "Fail"
+        },
+        "args_hash": {
+            "loop": ""
+        }
+    }
+}

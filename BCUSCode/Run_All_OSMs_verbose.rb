@@ -41,7 +41,7 @@ class RunOSM
 
 		OpenStudio::create_directory(outputDir)
 		runManagerDBPath = outputDir / OpenStudio::Path.new("RunManager.db")
-		puts "Creating RunManager database at " + runManagerDBPath.to_s + "." if verbose
+		puts "Creating RunManager database at " + runManagerDBPath.to_s if verbose
 		OpenStudio::remove(runManagerDBPath) if (OpenStudio::exists(runManagerDBPath))
 		
 		# create a run manager instance and set new database = true to overwrite any existing, false to start in paused mode, 
@@ -60,11 +60,11 @@ class RunOSM
 
 			# copy osm file
 			relativeFilePath = OpenStudio::relativePath(OpenStudio::Path.new(filename),osmDir)
-			puts "Queuing simulation job for " + relativeFilePath.to_s + "." if verbose
+			puts "Queuing simulation job for " + relativeFilePath.to_s  if verbose
 			
 			originalOsmPath = osmDir / relativeFilePath
 			outputOsmPath = outputDir / relativeFilePath 
-			puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s + "'." if verbose
+			puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s if verbose
 			OpenStudio::makeParentFolder(outputOsmPath,OpenStudio::Path.new,true)
 			OpenStudio::copy_file(originalOsmPath,outputOsmPath)
 
@@ -75,7 +75,7 @@ class RunOSM
 			
 			# create and queue job
 			jobDirectory = outputOsmPath.parent_path() / OpenStudio::Path.new(outputOsmPath.stem()) / OpenStudio::Path.new("/")
-			puts "Job directory will be '" + jobDirectory.to_s + "'." if verbose
+			puts "Job directory will be '" + jobDirectory.to_s  if verbose
 			job = workflow.create(jobDirectory)
 			runManager.enqueue(job, true)  # queue up a job and process even if its out of date
 			n = n + 1

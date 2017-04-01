@@ -1,0 +1,238 @@
+
+ Meters for 8,THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:Building [J]
+  OnMeter=Electricity:Zone:THERMAL ZONE 1 [J]
+  OnMeter=InteriorLights:Electricity [J]
+  OnMeter=InteriorLights:Electricity:Zone:THERMAL ZONE 1 [J]
+  OnMeter=General:InteriorLights:Electricity [J]
+
+ Meters for 69,THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:Building [J]
+  OnMeter=Electricity:Zone:THERMAL ZONE 1 [J]
+  OnMeter=InteriorEquipment:Electricity [J]
+  OnMeter=InteriorEquipment:Electricity:Zone:THERMAL ZONE 1 [J]
+  OnMeter=General:InteriorEquipment:Electricity [J]
+
+ Meters for 100,THERMAL ZONE 1:Zone Air System Sensible Heating Energy [J]
+  OnMeter=EnergyTransfer:Facility [J]
+  OnMeter=EnergyTransfer:Building [J]
+  OnMeter=EnergyTransfer:Zone:THERMAL ZONE 1 [J]
+  OnMeter=Heating:EnergyTransfer [J]
+  OnMeter=Heating:EnergyTransfer:Zone:THERMAL ZONE 1 [J]
+
+ Meters for 151,THERMAL ZONE 1:Zone Air System Sensible Cooling Energy [J]
+  OnMeter=EnergyTransfer:Facility [J]
+  OnMeter=EnergyTransfer:Building [J]
+  OnMeter=EnergyTransfer:Zone:THERMAL ZONE 1 [J]
+  OnMeter=Cooling:EnergyTransfer [J]
+  OnMeter=Cooling:EnergyTransfer:Zone:THERMAL ZONE 1 [J]
+
+ Meters for 174,Whole Building:Facility Total Purchased Electric Energy [J]
+  OnMeter=ElectricityPurchased:Facility [J]
+  OnMeter=ElectricityPurchased:Plant [J]
+  OnMeter=Cogeneration:ElectricityPurchased [J]
+
+ Meters for 205,Whole Building:Facility Total Surplus Electric Energy [J]
+  OnMeter=ElectricitySurplusSold:Facility [J]
+  OnMeter=ElectricitySurplusSold:Plant [J]
+  OnMeter=Cogeneration:ElectricitySurplusSold [J]
+
+ Meters for 236,Whole Building:Facility Net Purchased Electric Energy [J]
+  OnMeter=ElectricityNet:Facility [J]
+  OnMeter=ElectricityNet:Plant [J]
+  OnMeter=Cogeneration:ElectricityNet [J]
+
+ Meters for 267,FAN CONSTANT VOLUME 1:Fan Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:HVAC [J]
+  OnMeter=Fans:Electricity [J]
+  OnMeter=General:Fans:Electricity [J]
+
+ Meters for 298,COIL COOLING DX SINGLE SPEED 1:Cooling Coil Total Cooling Energy [J]
+  OnMeter=EnergyTransfer:Facility [J]
+  OnMeter=EnergyTransfer:HVAC [J]
+  OnMeter=CoolingCoils:EnergyTransfer [J]
+
+ Meters for 319,COIL COOLING DX SINGLE SPEED 1:Cooling Coil Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:HVAC [J]
+  OnMeter=Cooling:Electricity [J]
+
+ Meters for 330,COIL HEATING GAS 1:Heating Coil Air Heating Energy [J]
+  OnMeter=EnergyTransfer:Facility [J]
+  OnMeter=EnergyTransfer:HVAC [J]
+  OnMeter=HeatingCoils:EnergyTransfer [J]
+
+ Meters for 341,COIL HEATING GAS 1:Heating Coil Gas Energy [J]
+  OnMeter=Gas:Facility [J]
+  OnMeter=Gas:HVAC [J]
+  OnMeter=Heating:Gas [J]
+
+ Meters for 372,COIL HEATING GAS 1:Heating Coil Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:HVAC [J]
+  OnMeter=Heating:Electricity [J]
+
+ Meters for 383,COIL HEATING GAS 1:Heating Coil Ancillary Gas Energy [J]
+  OnMeter=Gas:Facility [J]
+  OnMeter=Gas:HVAC [J]
+  OnMeter=Heating:Gas [J]
+
+ Meters for 384,COIL COOLING DX SINGLE SPEED 1:Cooling Coil Crankcase Heater Electric Energy [J]
+  OnMeter=Electricity:Facility [J]
+  OnMeter=Electricity:Plant [J]
+  OnMeter=Cooling:Electricity [J]
+
+ Meters for 395,Site:Environmental Impact Total N2O Emissions Carbon Equivalent Mass [kg]
+  OnMeter=Carbon Equivalent:Facility [kg]
+  OnMeter=CarbonEquivalentEmissions:Carbon Equivalent [kg]
+
+ Meters for 416,Site:Environmental Impact Total CH4 Emissions Carbon Equivalent Mass [kg]
+  OnMeter=Carbon Equivalent:Facility [kg]
+  OnMeter=CarbonEquivalentEmissions:Carbon Equivalent [kg]
+
+ Meters for 417,Site:Environmental Impact Total CO2 Emissions Carbon Equivalent Mass [kg]
+  OnMeter=Carbon Equivalent:Facility [kg]
+  OnMeter=CarbonEquivalentEmissions:Carbon Equivalent [kg]
+
+ For Meter=Electricity:Facility [J], ResourceType=Electricity, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+  FAN CONSTANT VOLUME 1:Fan Electric Energy
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Electric Energy
+  COIL HEATING GAS 1:Heating Coil Electric Energy
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Crankcase Heater Electric Energy
+
+ For Meter=Electricity:Building [J], ResourceType=Electricity, Group=Building, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+
+ For Meter=Electricity:Zone:THERMAL ZONE 1 [J], ResourceType=Electricity, Group=Zone, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+
+ For Meter=InteriorLights:Electricity [J], ResourceType=Electricity, EndUse=InteriorLights, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+
+ For Meter=InteriorLights:Electricity:Zone:THERMAL ZONE 1 [J], ResourceType=Electricity, EndUse=InteriorLights, Group=Zone, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+
+ For Meter=General:InteriorLights:Electricity [J], ResourceType=Electricity, EndUse=InteriorLights, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 LIGHTS:Lights Electric Energy
+
+ For Meter=InteriorEquipment:Electricity [J], ResourceType=Electricity, EndUse=InteriorEquipment, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+
+ For Meter=InteriorEquipment:Electricity:Zone:THERMAL ZONE 1 [J], ResourceType=Electricity, EndUse=InteriorEquipment, Group=Zone, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+
+ For Meter=General:InteriorEquipment:Electricity [J], ResourceType=Electricity, EndUse=InteriorEquipment, contents are:
+  THERMAL ZONE 1 189.1-2009 - OFFICE - WHOLEBUILDING - SM OFFICE - CZ4-8 ELECTRIC EQUIPMENT:Electric Equipment Electric Energy
+
+ For Meter=EnergyTransfer:Facility [J], ResourceType=EnergyTransfer, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Heating Energy
+  THERMAL ZONE 1:Zone Air System Sensible Cooling Energy
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Total Cooling Energy
+  COIL HEATING GAS 1:Heating Coil Air Heating Energy
+
+ For Meter=EnergyTransfer:Building [J], ResourceType=EnergyTransfer, Group=Building, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Heating Energy
+  THERMAL ZONE 1:Zone Air System Sensible Cooling Energy
+
+ For Meter=EnergyTransfer:Zone:THERMAL ZONE 1 [J], ResourceType=EnergyTransfer, Group=Zone, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Heating Energy
+  THERMAL ZONE 1:Zone Air System Sensible Cooling Energy
+
+ For Meter=Heating:EnergyTransfer [J], ResourceType=EnergyTransfer, EndUse=Heating, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Heating Energy
+
+ For Meter=Heating:EnergyTransfer:Zone:THERMAL ZONE 1 [J], ResourceType=EnergyTransfer, EndUse=Heating, Group=Zone, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Heating Energy
+
+ For Meter=Cooling:EnergyTransfer [J], ResourceType=EnergyTransfer, EndUse=Cooling, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Cooling Energy
+
+ For Meter=Cooling:EnergyTransfer:Zone:THERMAL ZONE 1 [J], ResourceType=EnergyTransfer, EndUse=Cooling, Group=Zone, contents are:
+  THERMAL ZONE 1:Zone Air System Sensible Cooling Energy
+
+ For Meter=ElectricityPurchased:Facility [J], ResourceType=ElectricityPurchased, contents are:
+  Whole Building:Facility Total Purchased Electric Energy
+
+ For Meter=ElectricityPurchased:Plant [J], ResourceType=ElectricityPurchased, Group=Plant, contents are:
+  Whole Building:Facility Total Purchased Electric Energy
+
+ For Meter=Cogeneration:ElectricityPurchased [J], ResourceType=ElectricityPurchased, EndUse=Cogeneration, contents are:
+  Whole Building:Facility Total Purchased Electric Energy
+
+ For Meter=ElectricitySurplusSold:Facility [J], ResourceType=ElectricitySurplusSold, contents are:
+  Whole Building:Facility Total Surplus Electric Energy
+
+ For Meter=ElectricitySurplusSold:Plant [J], ResourceType=ElectricitySurplusSold, Group=Plant, contents are:
+  Whole Building:Facility Total Surplus Electric Energy
+
+ For Meter=Cogeneration:ElectricitySurplusSold [J], ResourceType=ElectricitySurplusSold, EndUse=Cogeneration, contents are:
+  Whole Building:Facility Total Surplus Electric Energy
+
+ For Meter=ElectricityNet:Facility [J], ResourceType=ElectricityNet, contents are:
+  Whole Building:Facility Net Purchased Electric Energy
+
+ For Meter=ElectricityNet:Plant [J], ResourceType=ElectricityNet, Group=Plant, contents are:
+  Whole Building:Facility Net Purchased Electric Energy
+
+ For Meter=Cogeneration:ElectricityNet [J], ResourceType=ElectricityNet, EndUse=Cogeneration, contents are:
+  Whole Building:Facility Net Purchased Electric Energy
+
+ For Meter=Electricity:HVAC [J], ResourceType=Electricity, Group=HVAC, contents are:
+  FAN CONSTANT VOLUME 1:Fan Electric Energy
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Electric Energy
+  COIL HEATING GAS 1:Heating Coil Electric Energy
+
+ For Meter=Fans:Electricity [J], ResourceType=Electricity, EndUse=Fans, contents are:
+  FAN CONSTANT VOLUME 1:Fan Electric Energy
+
+ For Meter=General:Fans:Electricity [J], ResourceType=Electricity, EndUse=Fans, contents are:
+  FAN CONSTANT VOLUME 1:Fan Electric Energy
+
+ For Meter=EnergyTransfer:HVAC [J], ResourceType=EnergyTransfer, Group=HVAC, contents are:
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Total Cooling Energy
+  COIL HEATING GAS 1:Heating Coil Air Heating Energy
+
+ For Meter=CoolingCoils:EnergyTransfer [J], ResourceType=EnergyTransfer, EndUse=CoolingCoils, contents are:
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Total Cooling Energy
+
+ For Meter=Cooling:Electricity [J], ResourceType=Electricity, EndUse=Cooling, contents are:
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Electric Energy
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Crankcase Heater Electric Energy
+
+ For Meter=HeatingCoils:EnergyTransfer [J], ResourceType=EnergyTransfer, EndUse=HeatingCoils, contents are:
+  COIL HEATING GAS 1:Heating Coil Air Heating Energy
+
+ For Meter=Gas:Facility [J], ResourceType=Gas, contents are:
+  COIL HEATING GAS 1:Heating Coil Gas Energy
+  COIL HEATING GAS 1:Heating Coil Ancillary Gas Energy
+
+ For Meter=Gas:HVAC [J], ResourceType=Gas, Group=HVAC, contents are:
+  COIL HEATING GAS 1:Heating Coil Gas Energy
+  COIL HEATING GAS 1:Heating Coil Ancillary Gas Energy
+
+ For Meter=Heating:Gas [J], ResourceType=Gas, EndUse=Heating, contents are:
+  COIL HEATING GAS 1:Heating Coil Gas Energy
+  COIL HEATING GAS 1:Heating Coil Ancillary Gas Energy
+
+ For Meter=Heating:Electricity [J], ResourceType=Electricity, EndUse=Heating, contents are:
+  COIL HEATING GAS 1:Heating Coil Electric Energy
+
+ For Meter=Electricity:Plant [J], ResourceType=Electricity, Group=Plant, contents are:
+  COIL COOLING DX SINGLE SPEED 1:Cooling Coil Crankcase Heater Electric Energy
+
+ For Meter=Carbon Equivalent:Facility [kg], ResourceType=Carbon Equivalent, contents are:
+  Site:Environmental Impact Total N2O Emissions Carbon Equivalent Mass
+  Site:Environmental Impact Total CH4 Emissions Carbon Equivalent Mass
+  Site:Environmental Impact Total CO2 Emissions Carbon Equivalent Mass
+
+ For Meter=CarbonEquivalentEmissions:Carbon Equivalent [kg], ResourceType=Carbon Equivalent, EndUse=CarbonEquivalentEmissions, contents are:
+  Site:Environmental Impact Total N2O Emissions Carbon Equivalent Mass
+  Site:Environmental Impact Total CH4 Emissions Carbon Equivalent Mass
+  Site:Environmental Impact Total CO2 Emissions Carbon Equivalent Mass
