@@ -26,7 +26,7 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 Modified Date and By:
 - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-
+01-apr-2017: refactored code using ruby coding standards RTM
 
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to generate boilder efficiency uncertainty distribution.
@@ -46,11 +46,10 @@ class BoilerUncertainty < OpenStudio::Model::Model
   def boiler_find(model)
     #loop through to find water boiler
     model.getBoilerHotWaters.each do |boiler_water|
-      if not boiler_water.to_BoilerHotWater.empty?
+      unless boiler_water.to_BoilerHotWater.empty?
         water_unit = boiler_water.to_BoilerHotWater.get
         @boiler_name << water_unit.name.to_s
         @boiler_thermal_efficiency << water_unit.nominalThermalEfficiency.to_f
-        ## add else nil
       end
     end
 

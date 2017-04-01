@@ -29,6 +29,7 @@ Modified Date and By:
 - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
 
 
+
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to set uncertainty for operational parameters
 
@@ -152,5 +153,4 @@ class OperationUncertainty < OpenStudio::Model::Model
       end
     end
   end
-
 end

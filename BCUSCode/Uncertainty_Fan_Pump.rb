@@ -26,6 +26,7 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 Modified Date and By:
 - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
+- 01-apr-2017: Refactored to better match ruby coding standards by RTM
 
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to generate fan and pump uncertainty distribution.

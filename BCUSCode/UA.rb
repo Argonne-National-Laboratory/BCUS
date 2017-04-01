@@ -306,7 +306,7 @@ end
 }
 
 # run all the OSM simulation files 
-runner = RunOSM.new()
+runner = RunOSM.new
 runner.run_osm("#{path}/UA_Models",
                epw_path,
                "#{path}/UA_Simulations",
@@ -318,7 +318,7 @@ project_path = "#{path}"
 OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)
 
 #delete intermediate files
-if !skip_cleanup
+unless skip_cleanup
   File.delete("#{path}/UA_Output/Monthly_Weather.csv") if File.exists?("#{path}/UA_Output/Monthly_Weather.csv")
   FileUtils.remove_dir("#{path}/UA_Models") if Dir.exists?("#{path}/UA_Models")
 end

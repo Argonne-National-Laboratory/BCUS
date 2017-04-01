@@ -27,7 +27,7 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 Modified Date and By:
 - Created on July 2016 by Yuna Zhang from Argonne National Laboratory
-
+- 01-apr-2017: Refactored to better match ruby coding standards by RTM
 
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to set uncertainty for thermostat
@@ -61,7 +61,7 @@ class ThermostatUncertainty < OpenStudio::Model::Model
     thermostats.each do |thermostat|
       #setup new cooling setpoint schedule
       clg_set_sch = thermostat.coolingSetpointTemperatureSchedule
-      if not clg_set_sch.empty?
+      unless clg_set_sch.empty?
         # clone of not alredy in hash
         if clg_set_schs.has_key?(clg_set_sch.get.name.to_s)
           new_clg_set_sch = clg_set_schs[clg_set_sch.get.name.to_s]
@@ -74,13 +74,13 @@ class ThermostatUncertainty < OpenStudio::Model::Model
         end
         #hook up clone to thermostat
         thermostat.setCoolingSetpointTemperatureSchedule(new_clg_set_sch)
-      end #end if not clg_set_sch.empty?
+      end #end unless clg_set_sch.empty?
     end
     clg_set_schs.each do |k, v| #old name and new object for schedule
 
       clg_set_schedules_name = v.name.to_s
 
-      if not v.to_ScheduleRuleset.empty?
+      unless v.to_ScheduleRuleset.empty?
         #array to store profiles inules.each do |rule|
         profiles = []
         schedule = v.to_ScheduleRuleset.get
@@ -108,7 +108,7 @@ class ThermostatUncertainty < OpenStudio::Model::Model
         end #end of profiles.each do
 
 
-      end # end of if not
+      end # end of unless
     end #end clg_set_schs.each do
     model.save("#{model_output_path}", true)
   end
@@ -119,7 +119,7 @@ class ThermostatUncertainty < OpenStudio::Model::Model
     thermostats.each do |thermostat|
       #setup new heating setpoint schedule
       htg_set_sch = thermostat.heatingSetpointTemperatureSchedule
-      if not htg_set_sch.empty?
+      unless htg_set_sch.empty?
         # clone of not alredy in hash
         if htg_set_schs.has_key?(htg_set_sch.get.name.to_s)
           new_htg_set_sch = htg_set_schs[htg_set_sch.get.name.to_s]
@@ -138,7 +138,7 @@ class ThermostatUncertainty < OpenStudio::Model::Model
 
     htg_set_schs.each do |k, v| #old name and new object for schedule
       htg_set_schedules_name = v.name.to_s
-      if not v.to_ScheduleRuleset.empty?
+      unless v.to_ScheduleRuleset.empty?
         profiles_1 = []
         schedule = v.to_ScheduleRuleset.get
         #push default profiles to array
@@ -160,8 +160,8 @@ class ThermostatUncertainty < OpenStudio::Model::Model
             target_value = day_value_vector[i] + adjust_value_heating
             sch_day.addValue(day_time_vector[i], target_value)
           end
-        end #end of profiles.each do
-      end # end of if not
+        end
+      end # end of unless v.to_ScheduleRuleset.empty?
     end #end htg_set_schs.each do
     model.save("#{model_output_path}", true)
 

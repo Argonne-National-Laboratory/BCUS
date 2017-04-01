@@ -25,9 +25,10 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 ***************************************************************************************************
 
 Modified Date and By:
-- Updated on Junly 2016 by Yuna Zhang from Argonne National Laboratory
-- Updated on June 2015 by Yuna Zhang from Argonne National Laboratory
 - Created on March 2015 by Yuming Sun from Argonne National Laboratory
+- Updated on June 2015 by Yuna Zhang from Argonne National Laboratory
+- Updated on Junly 2016 by Yuna Zhang from Argonne National Laboratory
+- 01-apr-2017: Refactored to better match ruby coding standards by RTM
 
 1. Introduction
 This is the subfunction called by Uncertain_Parameters to generate envelop uncertainty distribution.

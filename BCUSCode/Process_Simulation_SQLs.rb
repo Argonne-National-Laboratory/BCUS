@@ -43,11 +43,10 @@ module OutPut
 	
 
 # Find the path of sql
-    #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
+
     workbook = RubyXL::Parser.parse(settingsfile_path)		
 
     output_table = Array.new
-    #output_table_row = Array.new
 
 	# find all the total energy tables requested in the simulation output settings file
     workbook['TotalEnergy'].each { |row|
@@ -60,7 +59,7 @@ module OutPut
     
     # get the header string from output_table and remove the leading "[" and trailing "]"
     header = Array.new(output_table.length-1)
-    (1..(output_table.length-1)).each { |output_num|
+    (1..(output_table.length-1)).each { |output_num|    
       header[output_num-1] = output_table[output_num].to_s[2..-3]
     }
     
@@ -155,6 +154,12 @@ module OutPut
         sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
         sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
         
+        meter_name = meters_table[meter_index][0]
+        meter_frequency = meters_table[meter_index][1]
+        # rename Timestep to Zone Timestep for SQL lookup
+        meter_frequency = 'Zone Timestep' if meter_frequency = 'Timestep'
+        
+        
         # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
         # we need this to make sure we only select data for actual weather period run and not the sizing runs
         query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods 
@@ -165,19 +170,29 @@ module OutPut
           var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
 
           # generate the query for the data from ReportVariableWithTime that has matching
-          # meter table name, reporting frequency, and is Run Period 1
+          # meter table name, reporting frequency, and is in Run Period 1
           query_var_value = "SELECT Value FROM ReportVariableWithTime
-           WHERE Name = '#{meters_table[meter_index][0]}' AND
-           ReportingFrequency = '#{meters_table[meter_index][1]}' AND
+           WHERE Name = '#{meter_name}' AND
+           ReportingFrequency = '#{meter_frequency}' AND
            EnvironmentPeriodIndex = #{var_index}"
           var_value << sqlFile.execAndReturnVectorOfDouble(query_var_value).get
         end
       }
 
-      #header = [meters_table[meter_index][1].to_s]
-      header = [meters_table[meter_index][1].to_s]
-      (1..num_of_runs).each { |sample_num|
       
+      # create the first column of header from the meter time step info
+      case meters_frequency
+        when /Monthly/
+          header = ['Month']
+        when /Daily/
+          header = ['Day']
+        when /Hourly/
+          header = ['Hour']
+        else
+          header = ['TimeStep']
+      end
+      # create the rest of the columns from the simulation number
+      (1..num_of_runs).each { |sample_num| 
         header << "Sim #{sample_num}"
       }
 
