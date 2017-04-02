@@ -29,6 +29,7 @@ Modified Date and By:
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Sep 2015 Cleaned up and new parsing added by Ralph Muehleisen from Argonne National Laboratory
 - Created on Feb27 2015 by Yuming Sun from Argonne National Laboratory
+- 02-Apr-2017: RTM: Added noEP option
 
 
 1. Introduction
@@ -55,6 +56,9 @@ require 'csv'
 require 'rubyXL'
 require 'optparse'
 require 'fileutils'
+
+
+debugs = true
 
 # define prompt to wait for user to enter y or Y to continue for interactive 
 def wait_for_y
@@ -123,6 +127,11 @@ parser = OptionParser.new do |opts|
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
   end
+  
+  options[:noep] = false
+  opts.on('--noEP', 'Do not run EnergyPlus') do
+    options[:noEP] = true
+  end
 
   opts.on('-h', '--help', 'Displays Help') do
     puts opts
@@ -165,6 +174,7 @@ skip_cleanup = options[:noCleanup]
 morris_R = Integer(options[:morrisR])
 morris_levels = Integer(options[:morrisL])
 randseed = Integer(options[:randseed])
+noEP = options[:noEP]
 
 if run_interactive
   puts 'Running Interactively'
@@ -205,7 +215,6 @@ end
 if File.exist?("#{uqrepo_path}")
   puts "Using UQ repository = #{uqrepo_path}" if verbose
   workbook = RubyXL::Parser.parse("#{uqrepo_path}")
-  # uq_table = workbook['UQ'].extract_data  outdated by June 28th
   uq_table = Array.new
   uq_table_row = Array.new
   workbook['UQ'].each { |row|
@@ -234,7 +243,7 @@ if File.exist?("#{settingsfile_path}")
   }
 
 else
-  puts "#{outfile_path}was NOT found!"
+  puts "#{settingsfile_path} was NOT found!"
   abort
 end
 
@@ -243,7 +252,6 @@ if verbose
   puts "Using morris levels = #{morris_levels}"
   puts "Random Number Seed = #{randseed}" if randseed != 0
 end
-
 
 # remove the first two rows of headers
 (1..2).each { |i|
@@ -283,42 +291,50 @@ if run_interactive
   puts "Step 3: Run #{num_of_runs} OSM Simulation may take a long time."
   wait_for_y if run_interactive
 end
-
-for k in 2..samples[0].length-1
-  model = OpenStudio::Model::Model::load(osm_path).get
-  parameter_value = []
-  samples.each { |sample| parameter_value << sample[k].to_f }
-  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-  # add reporting meters
-  for meter_index in 1..(meters_table.length-1)
-    meter = OpenStudio::Model::Meter.new(model)
-    meter.setName("#{meters_table[meter_index][0]}")
-    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+if noEP
+  if verbose
+    puts
+    puts '--noEP option selected, skipping running of EnergyPlus'
+    puts
   end
-  variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-  variable.setReportingFrequency('Monthly')
-  variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-  variable.setReportingFrequency('Monthly')
+else
+  for k in 2..samples[0].length-1
+    model = OpenStudio::Model::Model::load(osm_path).get
+    parameter_value = []
+    samples.each { |sample| parameter_value << sample[k].to_f }
+    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+    # add reporting meters
+    for meter_index in 1..(meters_table.length-1)
+      meter = OpenStudio::Model::Meter.new(model)
+      meter.setName("#{meters_table[meter_index][0]}")
+      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+    end
+    variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
+    variable.setReportingFrequency('Monthly')
+    variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
+    variable.setReportingFrequency('Monthly')
 
-  # meters saved to sql file
-  model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
+    # meters saved to sql file
+    model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
 
-  # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
-  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+    # new edit start from here Yuna add for thermostat algorithm
+    out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
+    model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
+    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
-  puts "Sample#{k-1} is saved to the folder of Models" if verbose
+    puts "Sample#{k-1} is saved to the folder of Models" if verbose
+  end
+
+  # use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
+  runner = RunOSM.new()
+  runner.run_osm("#{path}/SA_Models",
+                 epw_path,
+                 "#{path}/SA_Simulations",
+                 num_of_runs,
+                 verbose)
 end
-
-# use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
-runner = RunOSM.new()
-runner.run_osm("#{path}/SA_Models",
-               epw_path,
-               "#{path}/SA_Simulations",
-               num_of_runs,
-               verbose)
-
+               
+         
 
 puts "Step 4: Read simulation results, run Morris method analysis and plot sensitivity results" if verbose
 project_path = "#{path}"

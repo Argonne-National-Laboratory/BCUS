@@ -28,6 +28,7 @@ Modified Date and By:
 - Updates 27-mar-2017 by RTM to pass verbose to Uncertain_Parameters call
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
+- 02-Apr-2017: RTM: Added noEP option
 
 
 1. Introduction
@@ -115,8 +116,13 @@ parser = OptionParser.new do |opts|
   end
 
   options[:verbose] = false
-  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
+  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do 
     options[:verbose] = true
+  end
+  
+  options[:noep] = false
+  opts.on('--noEP', 'Do not run EnergyPlus') do
+    options[:noEP] = true
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -159,13 +165,14 @@ run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
 num_LHS_runs = Integer(options[:numLHS])
 randseed = Integer(options[:randseed])
+noEP = options[:noEP]
 
 if run_interactive
   puts 'Running Interactively'
   wait_for_y
 end
 
-puts 'Not Cleaning Up Interim Files' if skip_cleanup
+puts 'Not Cleaning Up Interim Files' if (skip_cleanup && verbose)
 
 # Acquire the path of the working directory that is the user's project folder.
 path = Dir.pwd
@@ -230,7 +237,6 @@ if File.exist?("#{settingsfile_path}")
     meters_table.push(meters_table_row)
   }
 
-
 else
   puts "#{settingsfile_path} was NOT found!"
   abort
@@ -279,40 +285,49 @@ if run_interactive
   wait_for_y
 end
 
-(2..samples[0].length-1).each { |k|
-  model = OpenStudio::Model::Model::load(osm_path).get
-  parameter_value = []
-  samples.each { |sample| parameter_value << sample[k].to_f }
-  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-  # add reporting meters
-  (1..(meters_table.length-1)).each { |meter_index|
-    meter = OpenStudio::Model::Meter.new(model)
-    meter.setName("#{meters_table[meter_index][0]}")
-    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+
+if noEP
+  if verbose
+    puts
+    puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
+    puts
+  end
+else
+  (2..samples[0].length-1).each { |k|
+    model = OpenStudio::Model::Model::load(osm_path).get
+    parameter_value = []
+    samples.each { |sample| parameter_value << sample[k].to_f }
+    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+    # add reporting meters
+    (1..(meters_table.length-1)).each { |meter_index|
+      meter = OpenStudio::Model::Meter.new(model)
+      meter.setName("#{meters_table[meter_index][0]}")
+      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+    }
+    variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
+    variable.setReportingFrequency('Monthly')
+    variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
+    variable.setReportingFrequency('Monthly')
+    # meters saved to sql file
+    model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
+
+    # new edit start from here Yuna add for thermostat algorithm
+    out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
+    model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
+    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+
+    puts "Sample#{k-1} is saved to the folder of Models" if verbose
   }
-  variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-  variable.setReportingFrequency('Monthly')
-  variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-  variable.setReportingFrequency('Monthly')
-  # meters saved to sql file
-  model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
 
-  # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
-  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
-
-  puts "Sample#{k-1} is saved to the folder of Models" if verbose
-}
-
-# run all the OSM simulation files 
-runner = RunOSM.new
-runner.run_osm("#{path}/UA_Models",
-               epw_path,
-               "#{path}/UA_Simulations",
-               num_LHS_runs,
-               verbose)
-
+  # run all the OSM simulation files 
+  runner = RunOSM.new
+  runner.run_osm("#{path}/UA_Models",
+                 epw_path,
+                 "#{path}/UA_Simulations",
+                 num_LHS_runs,
+                 verbose)
+end
+               
 # Read Simulation Results
 project_path = "#{path}"
 OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)

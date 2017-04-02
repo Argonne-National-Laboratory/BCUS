@@ -41,14 +41,12 @@ module OutPut
 
   def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile_path, verbose=false)
 	
-
-# Find the path of sql
-
+    # create a workbook to read in the simulation output settings file
     workbook = RubyXL::Parser.parse(settingsfile_path)		
 
     output_table = Array.new
-
-	# find all the total energy tables requested in the simulation output settings file
+    # find all the total energy tables requested in the simulation output settings file
+ 
     workbook['TotalEnergy'].each { |row|
       output_table_row = []
       row.cells.each { |cell|
@@ -131,13 +129,8 @@ module OutPut
 
     puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
 
-	# look for all the requested meters
-
-    #workbook = RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
-    workbook = RubyXL::Parser.parse(settingsfile_path)	
-    # meters_table = workbook['Meters'].extract_data  outdated by June 28th
+    # look for all the requested meters using the same workbook as above
     meters_table = Array.new
-    #meters_table_row = Array.new
     workbook['Meters'].each { |row|
       meters_table_row = []
       row.cells.each { |cell|
@@ -146,19 +139,19 @@ module OutPut
       meters_table.push(meters_table_row)
     }
     
+    # loop through all the found meters and extract their data from the SQL file
     (1..(meters_table.length-1)).each { |meter_index|
       var_value = []
-	  
+      
+      # find meters that selected timestep and replace 'Timestep' with 'Zone Timestep' for lookup in SQL
+      if meters_table[meter_index][1] == 'Timestep'
+        meters_table[meter_index][1] = 'Zone Timestep'
+      end
+      
       (1..num_of_runs).each { |sample_num|
       
         sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
         sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
-        
-        meter_name = meters_table[meter_index][0]
-        meter_frequency = meters_table[meter_index][1]
-        # rename Timestep to Zone Timestep for SQL lookup
-        meter_frequency = 'Zone Timestep' if meter_frequency = 'Timestep'
-        
         
         # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
         # we need this to make sure we only select data for actual weather period run and not the sizing runs
@@ -170,18 +163,18 @@ module OutPut
           var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
 
           # generate the query for the data from ReportVariableWithTime that has matching
-          # meter table name, reporting frequency, and is in Run Period 1
+          # meter table name, reporting frequency, and is Run Period 1
           query_var_value = "SELECT Value FROM ReportVariableWithTime
-           WHERE Name = '#{meter_name}' AND
-           ReportingFrequency = '#{meter_frequency}' AND
+           WHERE Name = '#{meters_table[meter_index][0]}' AND
+           ReportingFrequency = '#{meters_table[meter_index][1]}' AND
            EnvironmentPeriodIndex = #{var_index}"
+           
           var_value << sqlFile.execAndReturnVectorOfDouble(query_var_value).get
         end
       }
 
-      
       # create the first column of header from the meter time step info
-      case meters_frequency
+      case meters_table[meter_index][1]
         when /Monthly/
           header = ['Month']
         when /Daily/

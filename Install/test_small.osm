@@ -2243,9 +2243,9 @@ OS:Surface,
   {455c1955-4796-4f7f-919b-84d7ee43fa91}, !- Handle
   Surface 1,                              !- Name
   Floor,                                  !- Surface Type
-  ,                                       !- Construction Name
+  {ca0b8402-a973-458c-a138-eacbdf3dea5d}, !- Construction Name
   {402fd6aa-1669-4de8-82df-5403b2804b10}, !- Space Name
-  Ground,                                 !- Outside Boundary Condition
+  Adiabatic,                              !- Outside Boundary Condition
   ,                                       !- Outside Boundary Condition Object
   NoSun,                                  !- Sun Exposure
   NoWind,                                 !- Wind Exposure
@@ -2467,10 +2467,10 @@ OS:ThermostatSetpoint:DualSetpoint,
 
 OS:SimulationControl,
   {30009d89-2f98-42d3-8a10-70558a412235}, !- Handle
-  Yes,                                    !- Do Zone Sizing Calculation
+  No,                                     !- Do Zone Sizing Calculation
   Yes,                                    !- Do System Sizing Calculation
   No,                                     !- Do Plant Sizing Calculation
-  Yes,                                    !- Run Simulation for Sizing Periods
+  No,                                     !- Run Simulation for Sizing Periods
   ,                                       !- Run Simulation for Weather File Run Periods
   ,                                       !- Loads Convergence Tolerance Value
   ,                                       !- Temperature Convergence Tolerance Value {deltaC}
@@ -2483,7 +2483,7 @@ OS:Sizing:Parameters,
 
 OS:Timestep,
   {ee88f81c-6b89-4807-bd6f-a4377fd43020}, !- Handle
-  4;                                      !- Number of Timesteps per Hour
+  6;                                      !- Number of Timesteps per Hour
 
 OS:ShadowCalculation,
   {27c4437a-d3e9-497e-a893-93220e034347}, !- Handle
@@ -3052,80 +3052,6 @@ OS:Connection,
   3;                                      !- Inlet Port
 
 OS:SizingPeriod:DesignDay,
-  {b969b9f4-4208-46c5-850d-411c595b818d}, !- Handle
-  Chicago Ohare Intl Ap Ann Clg .4% Condns WB=>MDB, !- Name
-  31.2,                                   !- Maximum Dry-Bulb Temperature {C}
-  10.5,                                   !- Daily Dry-Bulb Temperature Range {deltaC}
-  25.5,                                   !- Humidity Indicating Conditions at Maximum Dry-Bulb
-  98934,                                  !- Barometric Pressure {Pa}
-  5.2,                                    !- Wind Speed {m/s}
-  230,                                    !- Wind Direction {deg}
-  0,                                      !- Sky Clearness
-  0,                                      !- Rain Indicator
-  0,                                      !- Snow Indicator
-  21,                                     !- Day of Month
-  7,                                      !- Month
-  SummerDesignDay,                        !- Day Type
-  0,                                      !- Daylight Saving Time Indicator
-  Wetbulb,                                !- Humidity Indicating Type
-  ,                                       !- Humidity Indicating Day Schedule Name
-  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
-  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
-  ASHRAETau,                              !- Solar Model Indicator
-  ,                                       !- Beam Solar Day Schedule Name
-  ,                                       !- Diffuse Solar Day Schedule Name
-  0.455,                                  !- ASHRAE Taub {dimensionless}
-  2.05;                                   !- ASHRAE Taud {dimensionless}
-
-OS:SizingPeriod:DesignDay,
-  {d3a7c782-3859-4f53-8fa6-cfa532219cf0}, !- Handle
-  Chicago Ohare Intl Ap Ann Clg .4% Condns DP=>MDB, !- Name
-  28.9,                                   !- Maximum Dry-Bulb Temperature {C}
-  10.5,                                   !- Daily Dry-Bulb Temperature Range {deltaC}
-  23.8,                                   !- Humidity Indicating Conditions at Maximum Dry-Bulb
-  98934,                                  !- Barometric Pressure {Pa}
-  5.2,                                    !- Wind Speed {m/s}
-  230,                                    !- Wind Direction {deg}
-  0,                                      !- Sky Clearness
-  0,                                      !- Rain Indicator
-  0,                                      !- Snow Indicator
-  21,                                     !- Day of Month
-  7,                                      !- Month
-  SummerDesignDay,                        !- Day Type
-  0,                                      !- Daylight Saving Time Indicator
-  Dewpoint,                               !- Humidity Indicating Type
-  ,                                       !- Humidity Indicating Day Schedule Name
-  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
-  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
-  ASHRAETau,                              !- Solar Model Indicator
-  ,                                       !- Beam Solar Day Schedule Name
-  ,                                       !- Diffuse Solar Day Schedule Name
-  0.455,                                  !- ASHRAE Taub {dimensionless}
-  2.05;                                   !- ASHRAE Taud {dimensionless}
-
-OS:SizingPeriod:DesignDay,
-  {7110fc57-31d9-4546-8d5b-fbd5f3ad2de0}, !- Handle
-  Chicago Ohare Intl Ap Ann Hum_n 99.6% Condns DP=>MCDB, !- Name
-  -19.2,                                  !- Maximum Dry-Bulb Temperature {C}
-  0,                                      !- Daily Dry-Bulb Temperature Range {deltaC}
-  -25.7,                                  !- Humidity Indicating Conditions at Maximum Dry-Bulb
-  98934,                                  !- Barometric Pressure {Pa}
-  4.9,                                    !- Wind Speed {m/s}
-  270,                                    !- Wind Direction {deg}
-  0,                                      !- Sky Clearness
-  0,                                      !- Rain Indicator
-  0,                                      !- Snow Indicator
-  21,                                     !- Day of Month
-  1,                                      !- Month
-  WinterDesignDay,                        !- Day Type
-  0,                                      !- Daylight Saving Time Indicator
-  Dewpoint,                               !- Humidity Indicating Type
-  ,                                       !- Humidity Indicating Day Schedule Name
-  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
-  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
-  ASHRAEClearSky;                         !- Solar Model Indicator
-
-OS:SizingPeriod:DesignDay,
   {4a14722d-8ac4-4f32-a32c-ab295b8e5f3d}, !- Handle
   Chicago Ohare Intl Ap Ann Htg 99.6% Condns DB, !- Name
   -20,                                    !- Maximum Dry-Bulb Temperature {C}
@@ -3164,54 +3090,6 @@ OS:SizingPeriod:DesignDay,
   SummerDesignDay,                        !- Day Type
   0,                                      !- Daylight Saving Time Indicator
   Wetbulb,                                !- Humidity Indicating Type
-  ,                                       !- Humidity Indicating Day Schedule Name
-  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
-  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
-  ASHRAETau,                              !- Solar Model Indicator
-  ,                                       !- Beam Solar Day Schedule Name
-  ,                                       !- Diffuse Solar Day Schedule Name
-  0.455,                                  !- ASHRAE Taub {dimensionless}
-  2.05;                                   !- ASHRAE Taud {dimensionless}
-
-OS:SizingPeriod:DesignDay,
-  {d0845e38-078c-4681-a417-1c2c2e79f9e1}, !- Handle
-  Chicago Ohare Intl Ap Ann Htg Wind 99.6% Condns WS=>MCDB, !- Name
-  -3.5,                                   !- Maximum Dry-Bulb Temperature {C}
-  0,                                      !- Daily Dry-Bulb Temperature Range {deltaC}
-  -3.5,                                   !- Humidity Indicating Conditions at Maximum Dry-Bulb
-  98934,                                  !- Barometric Pressure {Pa}
-  12.4,                                   !- Wind Speed {m/s}
-  270,                                    !- Wind Direction {deg}
-  0,                                      !- Sky Clearness
-  0,                                      !- Rain Indicator
-  0,                                      !- Snow Indicator
-  21,                                     !- Day of Month
-  1,                                      !- Month
-  WinterDesignDay,                        !- Day Type
-  0,                                      !- Daylight Saving Time Indicator
-  Wetbulb,                                !- Humidity Indicating Type
-  ,                                       !- Humidity Indicating Day Schedule Name
-  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
-  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
-  ASHRAEClearSky;                         !- Solar Model Indicator
-
-OS:SizingPeriod:DesignDay,
-  {a94f3e9f-4b7a-4ccf-8fa7-7cbb9643c010}, !- Handle
-  Chicago Ohare Intl Ap Ann Clg .4% Condns Enth=>MDB, !- Name
-  31.4,                                   !- Maximum Dry-Bulb Temperature {C}
-  10.5,                                   !- Daily Dry-Bulb Temperature Range {deltaC}
-  79200,                                  !- Humidity Indicating Conditions at Maximum Dry-Bulb
-  98934,                                  !- Barometric Pressure {Pa}
-  5.2,                                    !- Wind Speed {m/s}
-  230,                                    !- Wind Direction {deg}
-  0,                                      !- Sky Clearness
-  0,                                      !- Rain Indicator
-  0,                                      !- Snow Indicator
-  21,                                     !- Day of Month
-  7,                                      !- Month
-  SummerDesignDay,                        !- Day Type
-  0,                                      !- Daylight Saving Time Indicator
-  Enthalpy,                               !- Humidity Indicating Type
   ,                                       !- Humidity Indicating Day Schedule Name
   DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
   ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
@@ -3624,4 +3502,74 @@ OS:ScheduleTypeLimits,
   ,                                       !- Upper Limit Value
   Continuous,                             !- Numeric Type
   VolumetricFlowRate;                     !- Unit Type
+
+OS:SizingPeriod:DesignDay,
+  {55cd8292-fc05-4d5b-aa16-3768e5473a84}, !- Handle
+  Chicago Ohare Intl Ap Ann Htg Wind 99.6% Condns WS=>MCDB, !- Name
+  -3.5,                                   !- Maximum Dry-Bulb Temperature {C}
+  0,                                      !- Daily Dry-Bulb Temperature Range {deltaC}
+  -3.5,                                   !- Humidity Indicating Conditions at Maximum Dry-Bulb
+  98934,                                  !- Barometric Pressure {Pa}
+  12.4,                                   !- Wind Speed {m/s}
+  270,                                    !- Wind Direction {deg}
+  0,                                      !- Sky Clearness
+  0,                                      !- Rain Indicator
+  0,                                      !- Snow Indicator
+  21,                                     !- Day of Month
+  1,                                      !- Month
+  WinterDesignDay,                        !- Day Type
+  0,                                      !- Daylight Saving Time Indicator
+  Wetbulb,                                !- Humidity Indicating Type
+  ,                                       !- Humidity Indicating Day Schedule Name
+  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
+  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
+  ASHRAEClearSky;                         !- Solar Model Indicator
+
+OS:SizingPeriod:DesignDay,
+  {220ceadf-6619-4ade-990a-68d13cf0ceaa}, !- Handle
+  Chicago Ohare Intl Ap Ann Hum_n 99.6% Condns DP=>MCDB, !- Name
+  -19.2,                                  !- Maximum Dry-Bulb Temperature {C}
+  0,                                      !- Daily Dry-Bulb Temperature Range {deltaC}
+  -25.7,                                  !- Humidity Indicating Conditions at Maximum Dry-Bulb
+  98934,                                  !- Barometric Pressure {Pa}
+  4.9,                                    !- Wind Speed {m/s}
+  270,                                    !- Wind Direction {deg}
+  0,                                      !- Sky Clearness
+  0,                                      !- Rain Indicator
+  0,                                      !- Snow Indicator
+  21,                                     !- Day of Month
+  1,                                      !- Month
+  WinterDesignDay,                        !- Day Type
+  0,                                      !- Daylight Saving Time Indicator
+  Dewpoint,                               !- Humidity Indicating Type
+  ,                                       !- Humidity Indicating Day Schedule Name
+  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
+  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
+  ASHRAEClearSky;                         !- Solar Model Indicator
+
+OS:SizingPeriod:DesignDay,
+  {f050f84b-a055-4489-8d6c-1410eeb0b815}, !- Handle
+  Chicago Ohare Intl Ap Ann Clg .4% Condns DP=>MDB, !- Name
+  28.9,                                   !- Maximum Dry-Bulb Temperature {C}
+  10.5,                                   !- Daily Dry-Bulb Temperature Range {deltaC}
+  23.8,                                   !- Humidity Indicating Conditions at Maximum Dry-Bulb
+  98934,                                  !- Barometric Pressure {Pa}
+  5.2,                                    !- Wind Speed {m/s}
+  230,                                    !- Wind Direction {deg}
+  0,                                      !- Sky Clearness
+  0,                                      !- Rain Indicator
+  0,                                      !- Snow Indicator
+  21,                                     !- Day of Month
+  7,                                      !- Month
+  SummerDesignDay,                        !- Day Type
+  0,                                      !- Daylight Saving Time Indicator
+  Dewpoint,                               !- Humidity Indicating Type
+  ,                                       !- Humidity Indicating Day Schedule Name
+  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
+  ,                                       !- Dry-Bulb Temperature Range Modifier Schedule Name
+  ASHRAETau,                              !- Solar Model Indicator
+  ,                                       !- Beam Solar Day Schedule Name
+  ,                                       !- Diffuse Solar Day Schedule Name
+  0.455,                                  !- ASHRAE Taub {dimensionless}
+  2.05;                                   !- ASHRAE Taud {dimensionless}
 
