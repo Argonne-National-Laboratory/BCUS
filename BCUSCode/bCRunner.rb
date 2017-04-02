@@ -76,6 +76,7 @@ require_relative 'rinruby'
 module BCRunner
   def BCRunner.runBC(code_path, params_filename, com_filename, field_filename, numOutputVars, numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose = false, randseed = 0)
 
+    R.eval("source('runmcmc.R')")
 
     R.assign('randseed', randseed)
     # R in ruby doesn't allow one to assign boolean values, so we need to kludge the passing
@@ -86,7 +87,7 @@ module BCRunner
     end
     R.assign('work_dir', code_path)
     R.eval('setwd(work_dir)')
-    R.eval("source('runmcmc.R')")
+
     R.assign('params_filename', params_filename)
     R.assign('com_filename', com_filename)
     R.assign('field_filename', field_filename)
