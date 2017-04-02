@@ -167,6 +167,11 @@ num_LHS_runs = Integer(options[:numLHS])
 randseed = Integer(options[:randseed])
 noEP = options[:noEP]
 
+# if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
+if noEP
+  skip_cleanup = true
+end
+
 if run_interactive
   puts 'Running Interactively'
   wait_for_y
