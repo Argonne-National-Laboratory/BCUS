@@ -277,6 +277,7 @@ uncertainty_parameters.find(model, uq_table, file_name, verbose)
 puts 'Step2: Generate Morris Design Matrix' if verbose
 morris = Morris.new
 file_path = "#{path}/SA_Output"
+#morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
 morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
 
 

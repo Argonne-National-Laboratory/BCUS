@@ -111,8 +111,8 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 	pvals = tail(pvals, nrow(pvals[1])-burnin); # significant difference when showing burnin-data
 
 	#------------------------
-	library (ggplot2);
-	library (triangle);
+	library(ggplot2);
+	library(triangle);
 	library(gridExtra); # http://www.r-bloggers.com/extra-extra-get-your-gridextra/
 	library(car);
 	#------------------------
