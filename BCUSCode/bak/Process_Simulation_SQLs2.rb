@@ -267,6 +267,140 @@ module OutPut
     
   end #  OutPut.Read
   
+  
+   
+  def Output.ReadOne(sqlFilePath, meter_set_file, output_folder, verbose = false)
+  
+    workbook = RubyXL::Parser.parse(meter_set_file)
+    # output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
+
+    output_table = Array.new
+    output_table_row = Array.new
+    workbook['TotalEnergy'].each { |row|
+      output_table_row = []
+      row.cells.each { |cell|
+        output_table_row.push(cell.value)
+      }
+      output_table.push(output_table_row)
+    }
+
+    
+    # get the header string from output_table and remove the leading "[" and trailing "]"
+    header = Array.new(output_table.length - 1)
+    (1..(output_table.length - 1)).each { |output_num|    
+      header[output_num - 1] = output_table[output_num].to_s[2..-3]
+    }
+    
+    # get the data from the SQL file
+    data_table = Array.new(num_of_runs){Array.new(output_table.length-1)}
+    sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
+
+    (1..(output_table.length-1)).each { |output_num|
+      data_table[sample_num - 1][output_num - 1] = sql_table_lookup(output_table[output_num].to_s, sqlFile)
+    }
+
+
+    #table = data_table
+    CSV.open("#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
+      csv << header
+    end
+
+    CSV.open("#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'a+') do |csv|
+      data_table.each do |row|
+        csv << row
+      end
+    end
+
+    puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
+
+    # look for all the requested meters using the same workbook as above
+    workbook = RubyXL::Parser.parse(meter_set_file)
+
+    meters_table = Array.new
+    meters_table_row = Array.new
+    workbook['Meters'].each { |row|
+      meters_table_row = []
+      row.cells.each { |cell|
+        meters_table_row.push(cell.value)
+      }
+      meters_table.push(meters_table_row)
+    }
+    
+    
+    
+    
+    
+    # loop through all the found meters and extract their data from the SQL file
+    (1..(meters_table.length-1)).each { |meter_index|
+      var_value = []
+      
+      # find meters that selected timestep and replace 'Timestep' with 'Zone Timestep' for lookup in SQL
+      if meters_table[meter_index][1] == 'Timestep'
+        meters_table[meter_index][1] = 'Zone Timestep'
+      end
+      
+      (1..num_of_runs).each { |sample_num|
+      
+        sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
+        sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
+        
+        # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
+        # we need this to make sure we only select data for actual weather period run and not the sizing runs
+        query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods 
+                            WHERE EnvironmentName = 'RUN PERIOD 1'"
+        if sqlFile.execAndReturnFirstDouble(query_var_index).empty?
+          var_value << []
+        else
+          var_index = sqlFile.execAndReturnFirstDouble(query_var_index).get
+
+          # generate the query for the data from ReportVariableWithTime that has matching
+          # meter table name, reporting frequency, and is Run Period 1
+          query_var_value = "SELECT Value FROM ReportVariableWithTime
+           WHERE Name = '#{meters_table[meter_index][0]}' AND
+           ReportingFrequency = '#{meters_table[meter_index][1]}' AND
+           EnvironmentPeriodIndex = #{var_index}"
+           
+          var_value << sqlFile.execAndReturnVectorOfDouble(query_var_value).get
+        end
+      }
+
+      # create the first column of header from the meter time step info
+      case meters_table[meter_index][1]
+        when /Monthly/
+          header = ['Month']
+        when /Daily/
+          header = ['Day']
+        when /Hourly/
+          header = ['Hour']
+        else
+          header = ['TimeStep']
+      end
+      # create the rest of the columns from the simulation number
+      (1..num_of_runs).each { |sample_num| 
+        header << "Sim #{sample_num}"
+      }
+
+           
+      csv_filename = "#{output_folder}/Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}.csv"
+
+      CSV.open(csv_filename, 'wb') do |csv|
+        csv << header
+      end
+
+      time =1
+      CSV.open(csv_filename, 'a+') do |csv|
+        var_value.transpose.each do |row|
+          row.insert(0,time)
+          csv << row
+          time += 1
+        end
+        puts "#{csv_filename} is saved to the Output folder" if verbose
+      end
+    }
+
+  end # Output.ReadOne
+  
+  
 end # Module Output
 
 

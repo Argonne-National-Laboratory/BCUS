@@ -300,7 +300,7 @@ if noEP
   end
 else
   (2..samples[0].length-1).each { |k|
-    #model = OpenStudio::Model::Model::load(osm_path).get
+    model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
     parameter_value = []
     samples.each { |sample| parameter_value << sample[k].to_f }
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
@@ -327,13 +327,9 @@ else
 
   # run all the OSM simulation files 
   runner = RunOSM.new
-  runner.run_osm("#{path}/UA_Models",
-                 epw_path,
-                 "#{path}/UA_Simulations",
-                 num_LHS_runs,
-                 verbose)
+  runner.run_osm("#{path}/UA_Models", epw_path, "#{path}/UA_Simulations", num_LHS_runs, verbose)
 end
-               
+
 # Read Simulation Results
 project_path = "#{path}"
 OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)
