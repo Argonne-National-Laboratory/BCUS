@@ -34,7 +34,7 @@ class Morris
 		R.assign('n', n_parameters)
     R.assign('mR', morris_R)
 
-		R.eval <<-RUBYCODE
+		R.eval <<-RCODE
       library("sensitivity")
       if (randseed!=0){
         set.seed(randseed)
@@ -45,7 +45,7 @@ class Morris
         scale=FALSE, design = list(type = "oat", levels = #{morris_levels}, grid.jump = #{(morris_levels/2+0.5).to_i}))
       X <- design$X
       save (design, file="#{file_path}/Morris_design")
-    RUBYCODE
+    RCODE
   
 		design_matrix = R.X
     
@@ -68,19 +68,21 @@ class Morris
 			end
 			csv << header
 
-		CSV.foreach("#{file_name}",headers:true, converters: :numeric) do |parameter|
-			prob_distribution = [parameter["Parameter Base Value"],
-								 parameter["Distribution"],
-								 parameter["Mean or Mode"],
-								 parameter["Std Dev"],
-								 parameter["Min"],
-								 parameter["Max"]]
-			q = design_matrix.transpose.row(row_index).to_a
-			csv << table[row_index+1].to_a[0,2] + cdf_inverse(q,prob_distribution)
-			row_index +=1
+      CSV.foreach("#{file_name}",headers:true, converters: :numeric) do |parameter|
+        prob_distribution = [
+          parameter["Parameter Base Value"],
+          parameter["Distribution"],
+          parameter["Mean or Mode"],
+          parameter["Std Dev"],
+          parameter["Min"],
+          parameter["Max"]
+        ]
+        q = design_matrix.transpose.row(row_index).to_a
+        csv << table[row_index+1].to_a[0,2] + cdf_inverse(q,prob_distribution)
+        row_index +=1
+      end
 		end
-		end
-	end
+	end # design matrix
 
 	def cdf_inverse(random_num,prob_distribution)
 		R.assign("q",random_num)
@@ -103,7 +105,7 @@ class Morris
 			when /Uniform Relative/
 				R.assign("min",prob_distribution[4]*prob_distribution[0])
 				R.assign("max",prob_distribution[5]*prob_distribution[0])
-                R.eval "samples<- qunif(q,min,max)"
+        R.eval "samples<- qunif(q,min,max)"
 
 			when /Triangle Absolute/
 				R.assign("min",prob_distribution[4])
@@ -125,7 +127,7 @@ class Morris
         R.eval "samples<- qlognorm(q,log_mean,log_std)"
 
 			else
-				R.samples = []
+			R.samples = []
 		end
 		return R.samples
 	end # def cdf_inverse
@@ -135,8 +137,8 @@ class Morris
 		R.assign("file_path",file_path)
 		R.assign("file_name",file_name)
    
-		R.eval <<-RUBYCODE
-      table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE,stringsAsFactors=TRUE)
+		R.eval <<-RCODE
+      table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
       a=table_name[1]
       b=t(a)
       library("sensitivity")
@@ -150,7 +152,7 @@ class Morris
         plot(design, main = names(Table)[i])
       }
       dev.off()
-    RUBYCODE
+    RCODE
     
 	end # def compute_sensitivities
 end # Class Morris
