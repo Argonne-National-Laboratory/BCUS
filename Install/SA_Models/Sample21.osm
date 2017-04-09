@@ -1620,7 +1620,7 @@ OS:Lights:Definition,
 OS:Lights,
   {bc4b699d-1994-4ab9-8cf8-596fb5a9786d}, !- Handle
   189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8 Lights, !- Name
-  {508b7fa8-e860-412c-b7ed-b0749d408561}, !- Lights Definition Name
+  {98ecb1ce-c2ab-4233-9723-31ad8a8c2568}, !- Lights Definition Name
   {21bc2939-d312-40b9-aee4-ec72afc9d1ab}; !- Space or SpaceType Name
 
 OS:DesignSpecification:OutdoorAir,
@@ -1705,7 +1705,7 @@ OS:Material,
   MAT-CC05 4 HW CONCRETE,                 !- Name
   Rough,                                  !- Roughness
   0.1016,                                 !- Thickness {m}
-  1.41882015524667,                       !- Conductivity {W/m-K}
+  1.311,                                  !- Conductivity {W/m-K}
   2240,                                   !- Density {kg/m3}
   836.800000000001,                       !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -1734,7 +1734,7 @@ OS:Material,
   1IN Stucco,                             !- Name
   Smooth,                                 !- Roughness
   0.0253,                                 !- Thickness {m}
-  0.634904513043748,                      !- Conductivity {W/m-K}
+  0.67112347724019,                       !- Conductivity {W/m-K}
   1858,                                   !- Density {kg/m3}
   836.999999999999,                       !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -1782,7 +1782,7 @@ OS:Material,
   Roof Membrane,                          !- Name
   VeryRough,                              !- Roughness
   0.0095,                                 !- Thickness {m}
-  0.173158829015612,                      !- Conductivity {W/m-K}
+  0.16,                                   !- Conductivity {W/m-K}
   1121.29,                                !- Density {kg/m3}
   1460,                                   !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -1798,7 +1798,7 @@ OS:Material,
   Metal Decking,                          !- Name
   MediumSmooth,                           !- Roughness
   0.0015,                                 !- Thickness {m}
-  48.7074141167289,                       !- Conductivity {W/m-K}
+  46.3511396116334,                       !- Conductivity {W/m-K}
   7680,                                   !- Density {kg/m3}
   418.4,                                  !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -1904,7 +1904,7 @@ OS:Material,
   Roof Insulation [26],                   !- Name
   MediumRough,                            !- Roughness
   0.2941,                                 !- Thickness {m}
-  0.0449701086139689,                     !- Conductivity {W/m-K}
+  0.0475354876911959,                     !- Conductivity {W/m-K}
   265,                                    !- Density {kg/m3}
   836.800000000001,                       !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -3177,9 +3177,9 @@ OS:ComponentData,
   {cd63d895-a588-4fc5-a9d6-24c78f2dd72b}, !- Handle
   OS:ComponentData 2,                     !- Name
   {19ad440d-b53c-446c-9bf7-13dcfb781a36}, !- UUID
-  {f9e8dff2-120a-4878-8a92-fa57f266fd3d}, !- Version UUID
+  {4c2f00fa-8d48-44a2-be71-a1f253a4b54e}, !- Version UUID
   ,                                       !- Creation Timestamp
-  1491178910,                             !- Version Timestamp
+  1491706676,                             !- Version Timestamp
   {f8a0ab55-1c45-4e68-bc6f-2f172ce667a5}; !- Name of Object 1
 
 OS:Material,
@@ -3299,9 +3299,9 @@ OS:ComponentData,
   {65b0033c-86c7-4fbc-9470-0b55abb8e1c4}, !- Handle
   OS:ComponentData 3,                     !- Name
   {aaed0484-1dd5-46cb-b4f9-d6ccd81b2f09}, !- UUID
-  {fe3f7d27-fdc7-492b-b3a8-2891a228f211}, !- Version UUID
+  {3ae13778-34a7-45a1-9cd3-b8c66ace221d}, !- Version UUID
   ,                                       !- Creation Timestamp
-  1491178910,                             !- Version Timestamp
+  1491706676,                             !- Version Timestamp
   {7d72534f-86e7-4369-832e-76cc62c5db27}; !- Name of Object 1
 
 OS:Material,
@@ -3318,7 +3318,7 @@ OS:Material,
   8IN Concrete HW 1,                      !- Name
   MediumRough,                            !- Roughness
   0.2033,                                 !- Thickness {m}
-  1.58735305834123,                       !- Conductivity {W/m-K}
+  1.67790570429984,                       !- Conductivity {W/m-K}
   2242.99999999999,                       !- Density {kg/m3}
   836.999999999999,                       !- Specific Heat {J/kg-K}
   0.9,                                    !- Thermal Absorptance
@@ -3574,42 +3574,42 @@ OS:SizingPeriod:DesignDay,
   2.05;                                   !- ASHRAE Taud {dimensionless}
 
 OS:Lights:Definition,
-  {508b7fa8-e860-412c-b7ed-b0749d408561}, !- Handle
+  {98ecb1ce-c2ab-4233-9723-31ad8a8c2568}, !- Handle
   Lights Definition 1,                    !- Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
-  1.72024368494117,                       !- Watts per Space Floor Area {W/m2}
+  6.79211297370769,                       !- Watts per Space Floor Area {W/m2}
   ;                                       !- Watts per Person {W/person}
 
 OS:Output:Meter,
-  {c244c1f1-8995-4906-9d91-82b3c0b5c406}, !- Handle
+  {9c92a702-3fa4-4350-bb19-64ad2defab7c}, !- Handle
   Electricity:Facility,                   !- Name
   Timestep;                               !- Reporting Frequency
 
 OS:Output:Meter,
-  {06a37117-eaed-43d5-bb6f-04620f3e85df}, !- Handle
+  {d4be9f2f-6c89-460b-b9b5-77f6d31ffda5}, !- Handle
   Fans:Electricity,                       !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Meter,
-  {16855a17-6f1d-478a-a406-804cd9f9cc98}, !- Handle
+  {57f49a85-4479-4139-a4ca-f0595cb122e2}, !- Handle
   CarbonEquivalentEmissions:Carbon Equivalent, !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Meter,
-  {fc6257e8-d467-4870-a3ae-3ce16f6c1a8e}, !- Handle
+  {4864fec2-c436-45d9-b098-02d3ca481454}, !- Handle
   Carbon Equivalent:Facility,             !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {a83e7702-040f-4452-8f42-f25aa4253dae}, !- Handle
+  {df41b7de-7ab8-4e97-8098-af52cc979039}, !- Handle
   Output Variable 1,                      !- Name
   ,                                       !- Key Value
   Site Outdoor Air Drybulb Temperature,   !- Variable Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {99ccd38a-6aed-4589-b096-0aae544b634a}, !- Handle
+  {22553a86-7b8e-4428-a262-687106ef212c}, !- Handle
   Output Variable 2,                      !- Name
   ,                                       !- Key Value
   Site Ground Reflected Solar Radiation Rate per Area, !- Variable Name

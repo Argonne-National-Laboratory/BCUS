@@ -84,40 +84,12 @@ class Morris
 		end
 	end # design matrix
 
-	def compute_sensitivities(model_response_file,file_path,file_name)
-    R.assign("y_file", model_response_file)
-		R.assign("file_path",file_path)
-		R.assign("file_name",file_name)
-   
-		R.eval <<-RCODE
-      table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
-      a=table_name[1]
-      b=t(a)
-      library("sensitivity")
-      load("#{file_path}/Morris_design")
-      Table <- read.csv(y_file,header=TRUE)
-      Y <- data.matrix(Table)
-      pdf(sprintf("%s/Sensitivity_Plots.pdf",file_path))
-      for (i in 1:dim(Y)[2]){
-        tell(design,Y[, i])
-        write.csv(print(design), file = sprintf("%s/SA_wrt_%s.csv", file_path, names(Table)[i]),row.names = b)
-        plot(design, main = names(Table)[i])
-      }
-      dev.off()
-    RCODE
-    
-	end # def compute_sensitivities
-  
-  def cdf_inverse(random_num,prob_distribution)
+	def cdf_inverse(random_num,prob_distribution)
 		R.assign("q",random_num)
 		case prob_distribution[1]
 			when /Normal Absolute/
 				R.assign("mean",prob_distribution[2])
-				R.assign("std",prob_distribution[3])				R.assign("min",prob_distribution[4])
-				R.assign("max",prob_distribution[5])
-				R.assign("mode",prob_distribution[2])
-        R.eval 'library("triangle")'
-        R.eval "samples<- qtriangle(q,min,max,mode)"
+				R.assign("std",prob_distribution[3])
         R.eval "samples<- qnorm(q,mean,std)"
 
 			when /Normal Relative/
@@ -160,62 +132,29 @@ class Morris
 		return R.samples
 	end # def cdf_inverse
 
+	def compute_sensitivities(model_response_file,file_path,file_name)
+    R.assign("y_file", model_response_file)
+		R.assign("file_path",file_path)
+		R.assign("file_name",file_name)
+   
+		R.eval <<-RCODE
+      table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
+      a=table_name[1]
+      b=t(a)
+      library("sensitivity")
+      load("#{file_path}/Morris_design")
+      Table <- read.csv(y_file,header=TRUE)
+      Y <- data.matrix(Table)
+      pdf(sprintf("%s/Sensitivity_Plots.pdf",file_path))
+      for (i in 1:dim(Y)[2]){
+        tell(design,Y[, i])
+        write.csv(print(design), file = sprintf("%s/SA_wrt_%s.csv", file_path, names(Table)[i]),row.names = b)
+        plot(design, main = names(Table)[i])
+      }
+      dev.off()
+    RCODE
+    
+	end # def compute_sensitivities
 end # Class Morris
-
-Class CDF
-  def inverse(random_num,prob_distribution)
-		R.assign("q",random_num)
-		case prob_distribution[1]
-			when /Normal Absolute/
-				R.assign("mean",prob_distribution[2])
-				R.assign("std",prob_distribution[3])				R.assign("min",prob_distribution[4])
-				R.assign("max",prob_distribution[5])
-				R.assign("mode",prob_distribution[2])
-        R.eval 'library("triangle")'
-        R.eval "samples<- qtriangle(q,min,max,mode)"
-        R.eval "samples<- qnorm(q,mean,std)"
-
-			when /Normal Relative/
-				R.assign("mean",prob_distribution[2]*prob_distribution[0])
-				R.assign("std",prob_distribution[3]*prob_distribution[0])
-        R.eval "samples<- qnorm(q,mean,std)"
-
-			when /Uniform Absolute/
-				R.assign("min",prob_distribution[4])
-				R.assign("max",prob_distribution[5])
-        R.eval "samples<- qunif(q,min,max)"
-
-			when /Uniform Relative/
-				R.assign("min",prob_distribution[4]*prob_distribution[0])
-				R.assign("max",prob_distribution[5]*prob_distribution[0])
-        R.eval "samples<- qunif(q,min,max)"
-
-			when /Triangle Absolute/
-				R.assign("min",prob_distribution[4])
-				R.assign("max",prob_distribution[5])
-				R.assign("mode",prob_distribution[2])
-        R.eval 'library("triangle")'
-        R.eval "samples<- qtriangle(q,min,max,mode)"
-
-			when /Triangle Relative/
-				R.assign("min",prob_distribution[4]*prob_distribution[0])
-				R.assign("max",prob_distribution[5]*prob_distribution[0])
-				R.assign("mode",prob_distribution[2]*prob_distribution[0])
-        R.eval 'library("triangle")'
-        R.eval "samples<- qtriangle(q,min,max,mode)"
-
-			when /LogNormal Absolute/
-				R.assign("log_mean",prob_distribution[2])
-				R.assign("log_std",prob_distribution[3])
-        R.eval "samples<- qlognorm(q,log_mean,log_std)"
-
-			else
-			R.samples = []
-		end
-		return R.samples
-	end # def CDF.inverse
-
-
-end # Class CDF
 
 

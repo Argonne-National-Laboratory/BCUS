@@ -49,7 +49,9 @@ References:
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'Process_Simulation_SQLs'
-require_relative 'Morris'
+#require_relative 'Morris'
+require_relative 'LHS_Morris'
+
 # use require to include functions from Ruby Library
 require 'openstudio'
 require 'csv'
@@ -306,7 +308,7 @@ if noEP
   end
 else
   for k in 2..samples[0].length-1
-    model = OpenStudio::Model::Model::load(osm_path).get
+    model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
     parameter_value = []
     samples.each { |sample| parameter_value << sample[k].to_f }
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)

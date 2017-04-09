@@ -43,7 +43,8 @@ Refer to 'Function Call Structure_UA.pptx'
 
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-require_relative 'LHS_Gen'
+#require_relative 'LHS_Gen'
+require_relative 'LHS_Morris'
 require_relative 'Process_Simulation_SQLs'
 
 # use require to include functions from Ruby Library
@@ -299,7 +300,7 @@ if noEP
   end
 else
   (2..samples[0].length-1).each { |k|
-    model = OpenStudio::Model::Model::load(osm_path).get
+    #model = OpenStudio::Model::Model::load(osm_path).get
     parameter_value = []
     samples.each { |sample| parameter_value << sample[k].to_f }
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
