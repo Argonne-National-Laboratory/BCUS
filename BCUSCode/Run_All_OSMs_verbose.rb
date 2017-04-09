@@ -30,74 +30,73 @@ require 'openstudio/energyplus/find_energyplus'
 class RunOSM
   def run_osm(model_dir, weather_dir, output_dir, sim_num, verbose = false)
 
-osmDir = OpenStudio::Path.new(model_dir)
+		osmDir = OpenStudio::Path.new(model_dir)
 
-weatherFileDir = OpenStudio::system_complete(OpenStudio::Path.new(weather_dir))
+		weatherFileDir = OpenStudio::system_complete(OpenStudio::Path.new(weather_dir))
 
-outputDir = OpenStudio::Path.new(output_dir)
+		outputDir = OpenStudio::Path.new(output_dir)
 
-nSim = OpenStudio::OptionalInt.new
-nSim = OpenStudio::OptionalInt.new(sim_num.to_i)
+		#nSim = OpenStudio::OptionalInt.new
+		nSim = OpenStudio::OptionalInt.new(sim_num.to_i)
 
-OpenStudio::create_directory(outputDir)
-runManagerDBPath = outputDir / OpenStudio::Path.new("RunManager.db")
-puts "Creating RunManager database at " + runManagerDBPath.to_s + "." if verbose
-OpenStudio::remove(runManagerDBPath) if (OpenStudio::exists(runManagerDBPath))
-runManager = OpenStudio::Runmanager::RunManager.new(runManagerDBPath,true)
+		OpenStudio::create_directory(outputDir)
+		runManagerDBPath = outputDir / OpenStudio::Path.new('RunManager.db')
+		puts 'Creating RunManager database at ' + runManagerDBPath.to_s if verbose
+		OpenStudio::remove(runManagerDBPath) if (OpenStudio::exists(runManagerDBPath))
+		
+		# create a run manager instance and set new database = true to overwrite any existing, false to start in paused mode, 
+		# and ui initialize to same as verbose so it will only show up if verbose = true
+		runManager = OpenStudio::Runmanager::RunManager.new(runManagerDBPath,true, false, verbose)
+		
+		# find energyplus
+		co = OpenStudio::Runmanager::ConfigOptions.new
+		co.fastFindEnergyPlus
 
-# find energyplus
+		filenames = Dir.glob(osmDir.to_s + '/*.osm')
 
-co = OpenStudio::Runmanager::ConfigOptions.new
-co.fastFindEnergyPlus
+		n = 0
+		filenames.each { |filename|
+			break if (not nSim.empty?) && (nSim.get <= n)
 
-filenames = Dir.glob(osmDir.to_s + "/*.osm")
+			# copy osm file
+			relativeFilePath = OpenStudio::relativePath(OpenStudio::Path.new(filename),osmDir)
+			puts 'Queuing simulation job for ' + relativeFilePath.to_s  if verbose
+			
+			originalOsmPath = osmDir / relativeFilePath
+			outputOsmPath = outputDir / relativeFilePath 
+			puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s if verbose
+			OpenStudio::makeParentFolder(outputOsmPath,OpenStudio::Path.new,true)
+			OpenStudio::copy_file(originalOsmPath,outputOsmPath)
 
+			# create workflow
+			workflow = OpenStudio::Runmanager::Workflow.new('modeltoidf->energyplus->openstudiopostprocess')
+			workflow.setInputFiles(outputOsmPath,weatherFileDir)
+			workflow.add(co.getTools)
+			
+			# create and queue job
+			jobDirectory = outputOsmPath.parent_path / OpenStudio::Path.new(outputOsmPath.stem) / OpenStudio::Path.new('/')
+			puts "Job directory will be '" + jobDirectory.to_s  if verbose
+			job = workflow.create(jobDirectory)
+			runManager.enqueue(job, true)  # queue up a job and process even if its out of date
+			n = n + 1
+		}
+		
+		
+		runManager.showStatusDialog if verbose
+		runManager.waitForFinished
 
-n = 0
-filenames.each { |filename|
-  break if (not nSim.empty?) && (nSim.get <= n)
+		runManager.getJobs.each { |job|
 
-  # copy osm file
-  relativeFilePath = OpenStudio::relativePath(OpenStudio::Path.new(filename),osmDir)
-  puts "Queuing simulation job for " + relativeFilePath.to_s + "." if verbose
-  
-  originalOsmPath = osmDir / relativeFilePath
-  outputOsmPath = outputDir / relativeFilePath 
-  puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s + "'." if verbose
-  OpenStudio::makeParentFolder(outputOsmPath,OpenStudio::Path.new,true)
-  OpenStudio::copy_file(originalOsmPath,outputOsmPath)
+			if not job.errors.succeeded
+				puts "The job in '" + job.outdir.to_s + "' did not finish successfully." 
+			elsif not job.errors.warnings.empty?
+				puts "The job in '" + job.outdir.to_s + "' has warnings." 
+			end
 
-  # create workflow
-  workflow = OpenStudio::Runmanager::Workflow.new("modeltoidf->energyplus->openstudiopostprocess")
-  workflow.setInputFiles(outputOsmPath,weatherFileDir)
-  workflow.add(co.getTools)
-  
-  # create and queue job
-  jobDirectory = outputOsmPath.parent_path() / OpenStudio::Path.new(outputOsmPath.stem()) / OpenStudio::Path.new("/")
-  puts "Job directory will be '" + jobDirectory.to_s + "'." if verbose
-  job = workflow.create(jobDirectory)
-  runManager.enqueue(job, true)
-  n = n + 1
-}
-
-
-# wait for finished
-    runManager.showStatusDialog
-    runManager.waitForFinished
-
-
-runManager.getJobs.each { |job|
-
-  if not job.errors.succeeded
-    puts "The job in '" + job.outdir.to_s + "' did not finish successfully." 
-  elsif not job.errors.warnings.empty?
-    puts "The job in '" + job.outdir.to_s + "' has warnings." 
-  end
-
-  job.errors.errors.each { |err|
-    puts "ERROR: " + err
-  }
-}
-  end
+			job.errors.errors.each { |err|
+				puts 'ERROR: ' + err
+			}
+		}
+	end
 end
 

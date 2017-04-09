@@ -25,8 +25,10 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 ***************************************************************************************************
 
 Modified Date and By:
+- Updates 27-mar-2017 by RTM to pass verbose to Uncertain_Parameters call
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
+- 02-Apr-2017: RTM: Added noEP option
 
 
 1. Introduction
@@ -41,8 +43,9 @@ Refer to 'Function Call Structure_UA.pptx'
 
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-require_relative 'LHS_Gen'
-require_relative 'Read_Simulation_Results_SQL'
+#require_relative 'LHS_Gen'
+require_relative 'LHS_Morris'
+require_relative 'Process_Simulation_SQLs'
 
 # use require to include functions from Ruby Library
 require 'openstudio'
@@ -96,9 +99,9 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uqRepo
   end
 
-  options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |outFile|
-    options[:outFile] = outFile
+  options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
+    options[:settingsFile] = settingsFile
   end
 
   # numLHS: the number of sample points of Monte Carlo simulation with Latin Hypercube Design
@@ -114,8 +117,13 @@ parser = OptionParser.new do |opts|
   end
 
   options[:verbose] = false
-  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
+  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do 
     options[:verbose] = true
+  end
+  
+  options[:noep] = false
+  opts.on('--noEP', 'Do not run EnergyPlus') do
+    options[:noEP] = true
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -152,18 +160,25 @@ end
 
 verbose = options[:verbose]
 uqrepo_name = options[:uqRepo]
-outfile_name = options[:outFile]
+outfile_name = options[:settingsFile]
+settingsfile_name = options[:settingsFile]
 run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
 num_LHS_runs = Integer(options[:numLHS])
 randseed = Integer(options[:randseed])
+noEP = options[:noEP]
+
+# if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
+if noEP
+  skip_cleanup = true
+end
 
 if run_interactive
   puts 'Running Interactively'
   wait_for_y
 end
 
-puts 'Not Cleaning Up Interim Files' if skip_cleanup
+puts 'Not Cleaning Up Interim Files' if (skip_cleanup && verbose)
 
 # Acquire the path of the working directory that is the user's project folder.
 path = Dir.pwd
@@ -173,6 +188,7 @@ osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
 outfile_path = File.absolute_path(outfile_name)
+settingsfile_path = File.absolute_path(settingsfile_name)
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name, '.osm')
@@ -214,9 +230,9 @@ else
   abort
 end
 
-if File.exist?("#{outfile_path}")
-  puts "Using Output Settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{outfile_path}")
+if File.exist?("#{settingsfile_path}")
+  puts "Using Output Settings = #{settingsfile_path}" if verbose
+  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -227,9 +243,8 @@ if File.exist?("#{outfile_path}")
     meters_table.push(meters_table_row)
   }
 
-
 else
-  puts "#{outfile_path}was NOT found!"
+  puts "#{settingsfile_path} was NOT found!"
   abort
 end
 
@@ -246,7 +261,7 @@ end
 # Define the output path of building specific uncertainty table
 out_file_path_name = "#{path}/UA_Output/UQ_#{building_name}.csv"
 uncertainty_parameters = UncertainParameters.new
-uncertainty_parameters.find(model, uq_table, out_file_path_name)
+uncertainty_parameters.find(model, uq_table, out_file_path_name, verbose)
 
 if run_interactive
   puts "Check the #{path}/UA_Output/UQ_#{building_name}.csv"
@@ -276,46 +291,51 @@ if run_interactive
   wait_for_y
 end
 
-(2..samples[0].length-1).each { |k|
-  model = OpenStudio::Model::Model::load(osm_path).get
-  parameter_value = []
-  samples.each { |sample| parameter_value << sample[k].to_f }
-  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-  # add reporting meters
-  (1..(meters_table.length-1)).each { |meter_index|
-    meter = OpenStudio::Model::Meter.new(model)
-    meter.setName("#{meters_table[meter_index][0]}")
-    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+
+if noEP
+  if verbose
+    puts
+    puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
+    puts
+  end
+else
+  (2..samples[0].length-1).each { |k|
+    model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
+    parameter_value = []
+    samples.each { |sample| parameter_value << sample[k].to_f }
+    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+    # add reporting meters
+    (1..(meters_table.length-1)).each { |meter_index|
+      meter = OpenStudio::Model::Meter.new(model)
+      meter.setName("#{meters_table[meter_index][0]}")
+      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+    }
+    variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
+    variable.setReportingFrequency('Monthly')
+    variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
+    variable.setReportingFrequency('Monthly')
+    # meters saved to sql file
+    model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
+
+    # new edit start from here Yuna add for thermostat algorithm
+    out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
+    model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
+    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+
+    puts "Sample#{k-1} is saved to the folder of Models" if verbose
   }
-  variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-  variable.setReportingFrequency('Monthly')
-  variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-  variable.setReportingFrequency('Monthly')
-  # meters saved to sql file
-  model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
 
-  # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
-  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
-
-  puts "Sample#{k-1} is saved to the folder of Models" if verbose
-}
-
-# run all the OSM simulation files 
-runner = RunOSM.new()
-runner.run_osm("#{path}/UA_Models",
-               epw_path,
-               "#{path}/UA_Simulations",
-               num_LHS_runs,
-               verbose)
+  # run all the OSM simulation files 
+  runner = RunOSM.new
+  runner.run_osm("#{path}/UA_Models", epw_path, "#{path}/UA_Simulations", num_LHS_runs, verbose)
+end
 
 # Read Simulation Results
 project_path = "#{path}"
-OutPut.Read(num_LHS_runs, project_path, 'UA', verbose)
+OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)
 
 #delete intermediate files
-if !skip_cleanup
+unless skip_cleanup
   File.delete("#{path}/UA_Output/Monthly_Weather.csv") if File.exists?("#{path}/UA_Output/Monthly_Weather.csv")
   FileUtils.remove_dir("#{path}/UA_Models") if Dir.exists?("#{path}/UA_Models")
 end

@@ -56,15 +56,15 @@ class LHSGenerator
     R.assign('numParams', n_parameters)
     R.assign('randseed', randseed) # set the random seed.
 
-    R.eval <<EOF
-            library("lhs")
-            if (randseed!=0){
-                set.seed(randseed)
-            } else {
-                set.seed(NULL)
-            } 
-            lhs <- randomLHS (numRuns,numParams)
-EOF
+    R.eval <<-RCODE
+      library("lhs")
+      if (randseed!=0){
+          set.seed(randseed)
+      } else {
+          set.seed(NULL)
+      } 
+      lhs <- randomLHS (numRuns,numParams)
+    RCODE
     lhs_table = R.lhs.transpose
 
     CSV.open("#{outputfilePath}/Random_LHS_Samples.csv", 'wb')
@@ -77,7 +77,7 @@ EOF
     end
     return lhs_table
     puts "Random_LHS_Samples.csv with the size of #{row_index-1} rows and #{lhs_table.column_count} columns is generated" if verbose
-  end
+  end # random_num_generate
 
   def cdf_inverse(lhs_random_num, prob_distribution)
     R.assign('q', lhs_random_num)
@@ -85,55 +85,47 @@ EOF
       when /Normal Absolute/
         R.assign('mean', prob_distribution[2])
         R.assign('std', prob_distribution[3])
-        R.eval <<EOF
-                samples<- qnorm(q,mean,std)
-EOF
+        R.eval "samples<- qnorm(q,mean,std)"
+
       when /Normal Relative/
         R.assign('mean', prob_distribution[2]*prob_distribution[0])
         R.assign('std', prob_distribution[3]*prob_distribution[0])
-        R.eval <<EOF
-                samples<- qnorm(q,mean,std)
-EOF
+        R.eval "samples<- qnorm(q,mean,std)"
+
       when /Uniform Absolute/
         R.assign('min', prob_distribution[4])
         R.assign('max', prob_distribution[5])
-        R.eval <<EOF
-            samples<- qunif(q,min,max)
-EOF
+        R.eval "samples<- qnorm(q,mean,std)"
+
       when /Uniform Relative/
         R.assign('min', prob_distribution[4]*prob_distribution[0])
         R.assign('max', prob_distribution[5]*prob_distribution[0])
-        R.eval <<EOF
-            samples<- qunif(q,min,max)
-EOF
+        R.eval "samples<- qnorm(q,mean,std)"
+
       when /Triangle Absolute/
         R.assign('min', prob_distribution[4])
         R.assign('max', prob_distribution[5])
         R.assign('mode', prob_distribution[2])
-        R.eval <<EOF
-                library("triangle")
-                samples<- qtriangle(q,min,max,mode)
-EOF
+        R.eval 'library("triangle")'
+        R.eval "samples<- qtriangle(q,min,max,mode)"
+       
       when /Triangle Relative/
         R.assign('min', prob_distribution[4]*prob_distribution[0])
         R.assign('max', prob_distribution[5]*prob_distribution[0])
         R.assign('mode', prob_distribution[2]*prob_distribution[0])
-        R.eval <<EOF
-                library("triangle")
-                samples<- qtriangle(q,min,max,mode)
-EOF
+        R.eval 'library("triangle")'
+        R.eval "samples<- qtriangle(q,min,max,mode)"
+
       when /LogNormal Absolute/
         R.assign('log_mean', prob_distribution[2])
         R.assign('log_std', prob_distribution[3])
-        R.eval <<EOF
-                samples<- qlnorm(q,log_mean,log_std)
-EOF
+        R.eval "samples<- qtriangle(q,min,max,mode)"
       else
         R.samples = []
-
     end
     return R.samples
-  end
+  
+  end # cdf_inverse
 
   def lhs_samples_generator(uqtablefilePath, file_name, n_runs, outputfilePath, verbose=false, randseed=0)
     table = CSV.read("#{uqtablefilePath}/#{file_name}")
@@ -163,6 +155,59 @@ EOF
       puts 'LHS_Samples.csv is generated and saved to the folder!'
       puts "It includes #{n_runs} simulation runs"
     end
-  end
+  end # lhs_samples_generator
  
 end
+
+class RandCDF
+  def inverse(lhs_random_num, prob_distribution)
+    R.assign('q', lhs_random_num)
+    case prob_distribution[1]
+      when /Normal Absolute/
+        R.assign('mean', prob_distribution[2])
+        R.assign('std', prob_distribution[3])
+        R.eval "samples<- qnorm(q,mean,std)"
+
+      when /Normal Relative/
+        R.assign('mean', prob_distribution[2]*prob_distribution[0])
+        R.assign('std', prob_distribution[3]*prob_distribution[0])
+        R.eval "samples<- qnorm(q,mean,std)"
+
+      when /Uniform Absolute/
+        R.assign('min', prob_distribution[4])
+        R.assign('max', prob_distribution[5])
+        R.eval "samples<- qnorm(q,mean,std)"
+
+      when /Uniform Relative/
+        R.assign('min', prob_distribution[4]*prob_distribution[0])
+        R.assign('max', prob_distribution[5]*prob_distribution[0])
+        R.eval "samples<- qnorm(q,mean,std)"
+
+      when /Triangle Absolute/
+        R.assign('min', prob_distribution[4])
+        R.assign('max', prob_distribution[5])
+        R.assign('mode', prob_distribution[2])
+        R.eval 'library("triangle")'
+        R.eval "samples<- qtriangle(q,min,max,mode)"
+       
+      when /Triangle Relative/
+        R.assign('min', prob_distribution[4]*prob_distribution[0])
+        R.assign('max', prob_distribution[5]*prob_distribution[0])
+        R.assign('mode', prob_distribution[2]*prob_distribution[0])
+        R.eval 'library("triangle")'
+        R.eval "samples<- qtriangle(q,min,max,mode)"
+
+      when /LogNormal Absolute/
+        R.assign('log_mean', prob_distribution[2])
+        R.assign('log_std', prob_distribution[3])
+        R.eval "samples<- qtriangle(q,min,max,mode)"
+      else
+        R.samples = []
+    end
+    return R.samples
+  
+  end # RandCDF.inverse
+  
+end #Class RandCDF
+
+

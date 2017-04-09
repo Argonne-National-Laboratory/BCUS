@@ -38,11 +38,11 @@ This is the script to install R packages required by BCUS. Using this should ens
 # 10-Aug-2015 Ralph Muehleisen
 
 require_relative 'rinruby'
-R.eval <<EOF
-install.packages("sensitivity")
-install.packages("ggplot2")
-install.packages("triangle")
-install.packages("gridExtra")
-install.packages("lhs")
-install.packages("car")
-EOF
+R.eval <<-RCODE
+  install.packages("sensitivity")
+  install.packages("ggplot2")
+  install.packages("triangle")
+  install.packages("gridExtra")
+  install.packages("lhs")
+  install.packages("car")
+RCODE
