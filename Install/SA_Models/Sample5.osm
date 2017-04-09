@@ -1620,7 +1620,7 @@ OS:Lights:Definition,
 OS:Lights,
   {bc4b699d-1994-4ab9-8cf8-596fb5a9786d}, !- Handle
   189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8 Lights, !- Name
-  {feac046d-b981-4a7c-93b4-f4ae41a507dc}, !- Lights Definition Name
+  {a500d95c-926d-4128-90e6-d42595e4a4be}, !- Lights Definition Name
   {21bc2939-d312-40b9-aee4-ec72afc9d1ab}; !- Space or SpaceType Name
 
 OS:DesignSpecification:OutdoorAir,
@@ -3177,9 +3177,9 @@ OS:ComponentData,
   {cd63d895-a588-4fc5-a9d6-24c78f2dd72b}, !- Handle
   OS:ComponentData 2,                     !- Name
   {19ad440d-b53c-446c-9bf7-13dcfb781a36}, !- UUID
-  {fa15f23b-5fc9-4f16-9291-8e5daff8d357}, !- Version UUID
+  {3252aae3-6585-4ce4-8625-911c2fc55cfc}, !- Version UUID
   ,                                       !- Creation Timestamp
-  1491754247,                             !- Version Timestamp
+  1491770361,                             !- Version Timestamp
   {f8a0ab55-1c45-4e68-bc6f-2f172ce667a5}; !- Name of Object 1
 
 OS:Material,
@@ -3299,9 +3299,9 @@ OS:ComponentData,
   {65b0033c-86c7-4fbc-9470-0b55abb8e1c4}, !- Handle
   OS:ComponentData 3,                     !- Name
   {aaed0484-1dd5-46cb-b4f9-d6ccd81b2f09}, !- UUID
-  {542fe19e-a60c-4072-999e-fdda3548d9fa}, !- Version UUID
+  {4a5cea35-0aac-4323-876d-6e04876c698a}, !- Version UUID
   ,                                       !- Creation Timestamp
-  1491754247,                             !- Version Timestamp
+  1491770361,                             !- Version Timestamp
   {7d72534f-86e7-4369-832e-76cc62c5db27}; !- Name of Object 1
 
 OS:Material,
@@ -3574,7 +3574,7 @@ OS:SizingPeriod:DesignDay,
   2.05;                                   !- ASHRAE Taud {dimensionless}
 
 OS:Lights:Definition,
-  {feac046d-b981-4a7c-93b4-f4ae41a507dc}, !- Handle
+  {a500d95c-926d-4128-90e6-d42595e4a4be}, !- Handle
   Lights Definition 1,                    !- Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
@@ -3582,24 +3582,24 @@ OS:Lights:Definition,
   ;                                       !- Watts per Person {W/person}
 
 OS:Output:Meter,
-  {93a49e26-28cc-458c-b609-707b9638263e}, !- Handle
+  {61a648d5-c8f9-4284-b0d8-d438b3fb8006}, !- Handle
   Electricity:Facility,                   !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Meter,
-  {3c2605e7-efaa-43b6-aeba-d9f9797276a2}, !- Handle
+  {93e00928-f0c8-49dd-8ed0-7d9d002d258a}, !- Handle
   Gas:Facility,                           !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {fa53da83-9bd0-4585-9bae-d569aea974f8}, !- Handle
+  {0dc40337-f15c-44ae-a3a8-5045ac962bfd}, !- Handle
   Output Variable 1,                      !- Name
   ,                                       !- Key Value
   Site Outdoor Air Drybulb Temperature,   !- Variable Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {fd2db13d-211a-4362-832c-98e29d2268ce}, !- Handle
+  {85a1da79-f10b-4fb0-92b6-565819dcd95c}, !- Handle
   Output Variable 2,                      !- Name
   ,                                       !- Key Value
   Site Ground Reflected Solar Radiation Rate per Area, !- Variable Name

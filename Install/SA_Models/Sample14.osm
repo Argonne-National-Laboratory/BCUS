@@ -1620,7 +1620,7 @@ OS:Lights:Definition,
 OS:Lights,
   {bc4b699d-1994-4ab9-8cf8-596fb5a9786d}, !- Handle
   189.1-2009 - Office - WholeBuilding - Sm Office - CZ4-8 Lights, !- Name
-  {0b287a32-babc-4641-9a2b-e890bc41f63a}, !- Lights Definition Name
+  {bad49f97-2d72-4377-83ec-12d699c1cb47}, !- Lights Definition Name
   {21bc2939-d312-40b9-aee4-ec72afc9d1ab}; !- Space or SpaceType Name
 
 OS:DesignSpecification:OutdoorAir,
@@ -3574,7 +3574,7 @@ OS:SizingPeriod:DesignDay,
   2.05;                                   !- ASHRAE Taud {dimensionless}
 
 OS:Lights:Definition,
-  {0b287a32-babc-4641-9a2b-e890bc41f63a}, !- Handle
+  {bad49f97-2d72-4377-83ec-12d699c1cb47}, !- Handle
   Lights Definition 1,                    !- Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
@@ -3582,24 +3582,24 @@ OS:Lights:Definition,
   ;                                       !- Watts per Person {W/person}
 
 OS:Output:Meter,
-  {dd4eb652-cf46-4a00-b2db-b230db7d8bc7}, !- Handle
+  {46053607-078e-435e-b3df-49967eef39ac}, !- Handle
   Electricity:Facility,                   !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Meter,
-  {0ef4e075-fdb3-45d2-9b4c-efc6ef5b986a}, !- Handle
+  {2c960820-da73-486e-a963-09c6537c5cf3}, !- Handle
   Gas:Facility,                           !- Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {e859ba56-56c1-48c4-b4f3-2d32010d8fe5}, !- Handle
+  {88ae4d66-60f1-439c-a689-f4cef883ccfd}, !- Handle
   Output Variable 1,                      !- Name
   ,                                       !- Key Value
   Site Outdoor Air Drybulb Temperature,   !- Variable Name
   Monthly;                                !- Reporting Frequency
 
 OS:Output:Variable,
-  {48cdaeea-8218-486f-8efe-c78d428ee61e}, !- Handle
+  {b5e5148c-d92d-4d1f-b50e-f999d44f3fc7}, !- Handle
   Output Variable 2,                      !- Name
   ,                                       !- Key Value
   Site Ground Reflected Solar Radiation Rate per Area, !- Variable Name
