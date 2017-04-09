@@ -24,25 +24,53 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 ***************************************************************************************************
 
+
 Modified Date and By:
-- Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
+- Created on July 2015 by Yuna Zhang from Argonne National Laboratory
+
 
 1. Introduction
-This is the script to install R packages required by BCUS. Using this should ensure that rinruby can find the packages because they are installed by it 
-
+This is the subfunction called by Uncertain_Parameters to generate chiller efficiency uncertainty distribution.
 
 =end
 
-# script to install R packages required by BCUS
-# using this should ensure that rinruby can find the packages because they are installed by it
-# 10-Aug-2015 Ralph Muehleisen
+class ChillerUncertainty < OpenStudio::Model::Model
+  attr_reader :chiller_name
+  attr_reader :chiller_Reference_COP
 
-require_relative 'rinruby'
-R.eval <<EOF
-install.packages("sensitivity")
-install.packages("ggplot2")
-install.packages("triangle")
-install.packages("gridExtra")
-install.packages("lhs")
-install.packages("car")
-EOF
+  def initialize
+    @chiller_name = Array.new
+    @chiller_Reference_COP =Array.new
+  end
+
+  def chiller_find(model)
+    #loop through to find water boiler
+    model.getLoops.each do |loop|
+      loop.supplyComponents.each do |supply_component|
+        unless supply_component.to_ChillerElectricEIR.empty?
+          chiller = supply_component.to_ChillerElectricEIR.get
+          @chiller_name << chiller.name.to_s
+          @chiller_Reference_COP << chiller.referenceCOP.to_f
+        end
+      end
+    end
+  end
+
+  # find thermal efficiency for boiler
+  def chiller_method(model, parameter_types, parameter_names, parameter_value)
+    parameter_types.each_with_index do |type, index|
+      if type =~ /ChillerElectricEIRReferenceCOP/
+        model.getLoops.each do |loop|
+          loop.supplyComponents.each do |supply_component|
+            unless supply_component.to_ChillerElectricEIR.empty?
+              chiller = supply_component.to_ChillerElectricEIR.get
+              chiller.setReferenceCOP(parameter_value[index])
+
+            end
+          end
+        end
+      end
+    end
+  end
+
+end

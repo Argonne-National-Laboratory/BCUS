@@ -28,9 +28,6 @@ Modified Date and By:
 - August 2016 by Yuna Zhang
 - Created on February 15 2015 by Yuming Sun from Argonne National Laboratory
 
-08-Apr-2017 Ralph Muehleisen updated require_relative from LSH_Gen to LHS_Morris
-08-Apr-2017 Ralph Muehleisen add --noEP option to parser to avoid running EnergyPlus if the prerun files exist
-
 
 1. Introduction
 This is the main code used for setting up files for running Bayesian calibration.
@@ -49,9 +46,8 @@ This is the main code used for setting up files for running Bayesian calibration
 
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-#require_relative 'LHS_Gen'
-require_relative 'LHS_Morris'
-require_relative 'Process_Simulation_SQLs'
+require_relative 'LHS_Gen'
+require_relative 'Read_Simulation_Results_SQL'
 require_relative 'rinruby'
 
 require 'openstudio'
@@ -86,16 +82,11 @@ parser = OptionParser.new do |opts|
     options[:epwName] = epwName
   end
 
-  # options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  # opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
-    # options[:outFile] = outFile
-  # end
-  
-  options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
-    options[:settingsFile] = settingsFile
+  options[:outFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
+    options[:outFile] = outFile
   end
-  
+
   options[:priorsFile]="priors.csv"
   opts.on('--priors priorsFile', 'CSV File with prior uncertainty distribution info (default=priors.csv)') do |priorsFile|
     options[:priorsFile] = priorsFile
@@ -124,11 +115,6 @@ parser = OptionParser.new do |opts|
   options[:verbose] = false
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
-  end
-  
-  options[:noep] = false
-  opts.on('--noEP', 'Do not run EnergyPlus') do
-    options[:noEP] = true
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -166,14 +152,11 @@ else # otherwise the --epwName option was used
 end
 
 outfile_name = options[:outFile]
-outfile_name = options[:settingsFile]
-settingsfile_name = options[:settingsFile]
 priors_name = options[:priorsFile]
 num_of_runs = Integer(options[:numLHS])
 verbose = options[:verbose]
 skip_cleanup = options[:noCleanup]
 randseed = Integer(options[:randseed])
-noEP = options[:noEP]
 
 # get the current working directory as the path
 path = Dir.pwd
@@ -182,7 +165,6 @@ path = Dir.pwd
 osm_path = File.absolute_path(osm_name)     
 epw_path = File.absolute_path(epw_name)
 outfile_path = File.absolute_path(outfile_name)
-settingsfile_path = File.absolute_path(settingsfile_name)
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name,".osm")
@@ -192,9 +174,9 @@ if not Dir.exist?("#{path}/PreRuns_Output")
 end
 
 
-if File.exist?("#{settingsfile_path}")
-  puts "Using Output Settings = #{settingsfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
+if File.exist?("#{outfile_path}")
+  puts "Using Output Settings = #{outfile_path}" if verbose
+  workbook = RubyXL::Parser.parse("#{outfile_path}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -206,7 +188,7 @@ if File.exist?("#{settingsfile_path}")
   }
 
 else
-  puts "#{settingsfile_path}was NOT found!"
+  puts "#{outfile_path}was NOT found!"
   abort
 end
 
@@ -247,54 +229,45 @@ uncertainty_parameters = UncertainParameters.new
 
 priors_table = "#{path}/#{priors_name}"
 
-if noEP
-  if verbose
-    puts
-    puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
-    puts
+for k in 2..samples[0].length-1
+  parameter_value = []
+  samples.each do |sample|
+    parameter_value << sample[k].to_f
   end
-else
-  (2..samples[0].length-1).each { |k|
-  
-    model = OpenStudio::Model::Model::load(osm_path).get  # reload the model to get the same starting point each time
-    parameter_value = []
-    samples.each do |sample|
-      parameter_value << sample[k].to_f
-    end
-    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-    # add reporting meters
-    for meter_index in 1..(meters_table.length-1)
-      meter = OpenStudio::Model::Meter.new(model)
-      meter.setName("#{meters_table[meter_index][0]}")
-      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
-    end
-    variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
-    variable.setReportingFrequency("Monthly")
-    variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
-    variable.setReportingFrequency("Monthly")
+  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+  # add reporting meters
+  for meter_index in 1..(meters_table.length-1)
+    meter = OpenStudio::Model::Meter.new(model)
+    meter.setName("#{meters_table[meter_index][0]}")
+    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
+  end
+  variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
+  variable.setReportingFrequency("Monthly")
+  variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
+  variable.setReportingFrequency("Monthly")
 
-    # meters saved to sql file
-    model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
+  # meters saved to sql file
+  model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
 
-    # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
-    model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
-    # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+  # new edit start from here Yuna add for thermostat algorithm
+  out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
+  model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
+  # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
 
-    puts "Sample#{k-1} is saved to the folder of Models" if verbose
-  }
+  puts "Sample#{k-1} is saved to the folder of Models" if verbose
+end
 
-  runner = RunOSM.new()
-  
-  runner.run_osm("#{path}/PreRuns_Models", epw_path, "#{path}/PreRuns_Simulations", num_of_runs, verbose)
-  
-                 
-end # if noEP
+runner = RunOSM.new()
+runner.run_osm("#{path}/PreRuns_Models",
+               epw_path,
+               "#{path}/PreRuns_Simulations",
+               num_of_runs,
+               verbose)
+
 # Read Simulation Results
 project_path = "#{path}"
-OutPut.Read(num_of_runs,project_path,'PreRuns',settingsfile_path, verbose)
-
+OutPut.Read(num_of_runs,project_path,'PreRuns')
 
 # clean up the temp files if skip cleanup not set
 if !skip_cleanup

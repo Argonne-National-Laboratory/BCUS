@@ -25,24 +25,65 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 ***************************************************************************************************
 
 Modified Date and By:
-- Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
+- Created on July 2015 by Yuna Zhang from Argonne National Laboratory
+
 
 1. Introduction
-This is the script to install R packages required by BCUS. Using this should ensure that rinruby can find the packages because they are installed by it 
-
+This is the subfunction called by Uncertain_Parameters to generate boilder efficiency uncertainty distribution.
 
 =end
 
-# script to install R packages required by BCUS
-# using this should ensure that rinruby can find the packages because they are installed by it
-# 10-Aug-2015 Ralph Muehleisen
 
-require_relative 'rinruby'
-R.eval <<EOF
-install.packages("sensitivity")
-install.packages("ggplot2")
-install.packages("triangle")
-install.packages("gridExtra")
-install.packages("lhs")
-install.packages("car")
-EOF
+class BoilerUncertainty < OpenStudio::Model::Model
+  attr_reader :boiler_name
+  attr_reader :boiler_thermal_efficiency
+
+  def initialize
+    @boiler_name = Array.new
+    @boiler_thermal_efficiency =Array.new
+  end
+
+  def boiler_find(model)
+    #loop through to find water boiler
+    model.getBoilerHotWaters.each do |boiler_water|
+      if not boiler_water.to_BoilerHotWater.empty?
+        water_unit = boiler_water.to_BoilerHotWater.get
+        @boiler_name << water_unit.name.to_s
+        @boiler_thermal_efficiency << water_unit.nominalThermalEfficiency.to_f
+        ## add else nil
+      end
+    end
+
+    model.getBoilerSteams.each do |boiler_steam|
+      unless boiler_steam.to_BoilerSteam.empty?
+        steam_unit = boiler_steam.to_BoilerSteam.get
+        @boiler_name << steam_unit.name.to_s
+        @boiler_thermal_efficiency << water_unit.nominalThermalEfficiency.to_f
+      end
+    end
+  end
+
+
+  # find thermal efficiency for boiler
+  def boiler_efficiency_method(model, parameter_types, parameter_names, parameter_value)
+    parameter_types.each_with_index do |type, index|
+      if type =~ /HotWaterBoiler/
+        model.getBoilerHotWaters.each do |boiler_water|
+          unless boiler_water.to_BoilerHotWater.empty?
+            water_unit = boiler_water.to_BoilerHotWater.get
+            water_unit.setNominalThermalEfficiency(parameter_value[index])
+          end
+        end
+      end
+      if type =~ /SteamBoiler/
+        model.getBoilerSteams.each do |boiler_steam|
+          unless boiler_water.to_BoilerSteam.empty?
+            steam_unit = boiler_steam.to_BoilerSteam.get
+            steam_unit.setNominalThermalEfficiency(parameter_value[index])
+          end
+        end
+      end
+    end
+  end
+
+end

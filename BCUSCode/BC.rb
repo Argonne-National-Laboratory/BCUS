@@ -196,12 +196,7 @@ parser = OptionParser.new do |opts|
   opts.on('-n', '--noCleanup', 'Do not clean up intermediate files') do
     options[:noCleanup] = true
   end
-  
-  options[:noep] = false
-  opts.on('--noEP', 'Do not run EnergyPlus') do
-    options[:noEP] = true
-  end
-  
+
   options[:verbose] = false
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
@@ -285,7 +280,6 @@ numBurnin = Integer(options[:numBurnin])
 randseed = Integer(options[:randseed])
 verbose = options[:verbose]
 no_run_cal= options[:noRunCal]
-noEP = options[:noEP]
 
 skip_cleanup = options[:noCleanup]
 

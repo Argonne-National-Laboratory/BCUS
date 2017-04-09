@@ -26,9 +26,6 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 
 Modified Date and By:
-- Update 27-Mar-2017 to add verbose printouts and finished the error messages using abort() when UQ parameters are not found
-- Update 27-Mar-2017 renaming the uncertain parameter libraries so the first word is Uncertainty to help directory sorting
-
 - Updated on July 2016 by Yuna Zhang from Argonne National Laboratory
 - Created on Feb 27, 2015 by Yuming Sun and Matt Riddle from Argonne National Laboratory
 
@@ -49,14 +46,14 @@ Refer to 'Function Call Structure_UA.pptx'
 # Main code used for searching model for parameters to be perturbued for uncertainty and sensitivity analysis
 
 # Uncertain_Parameters
-require_relative 'Uncertainty_Boiler'
-require_relative 'Uncertainty_Chiller'
-require_relative 'Uncertainty_Design_Specific_Outdoor_Air'
-require_relative 'Uncertainty_DX_Coil'
-require_relative 'Uncertainty_Envelop'
-require_relative 'Uncertainty_Fan_Pump'
-require_relative 'Uncertainty_Operation'
-require_relative 'Uncertainty_Thermostat'
+require_relative 'Envelop_Uncertainty'
+require_relative 'Operation_Uncertainty'
+require_relative 'Boiler_Uncertainty'
+require_relative 'Fan_Pump_Uncertainty'
+require_relative 'Design_Specific_Outdoor_Air_Uncertainty'
+require_relative 'DX_Coil_Uncertainty'
+require_relative 'Chiller_Uncertainty'
+require_relative 'Thermostat_Uncertainty'
 require 'csv'
 require 'rubyXL'
 
@@ -73,16 +70,7 @@ class UncertainParameters
 		@thermostat_uncertainty = ThermostatUncertainty.new
 	end
 
-	
   def find(model, uq_table, out_file_path_name, verbose = false) #write into the uq cvs the uncertainty distribution information
-	
-		# if verbose
-			# uq_table.each do |uq_parameter|
-				# puts "Searching for #{uq_parameter[1]} #{uq_parameter[2]} in the model"
-			# end
-		# end
-	
-	
 		@envelop_uncertainty.material_find(model)
 		@operation_uncertainty.operation_parameters_find(model)
 		@boiler_uncertainty.boiler_find(model)
@@ -101,7 +89,6 @@ class UncertainParameters
 		CSV.open("#{out_file_path_name}", 'a+') do |csv|
 			uq_table.each do |uq_parameter|
         unless uq_parameter[3] =='Off'
-					puts "Searching for #{uq_parameter[1]} #{uq_parameter[2]} in the model" if verbose
           case uq_parameter[1]
             when /StandardOpaqueMaterial/
               case uq_parameter[2]
@@ -141,7 +128,8 @@ class UncertainParameters
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
                 else
-									abort("\n!!!ABORTING!!! StandardOpaqueMaterial #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter StandardOpaqueMaterial #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter StandardOpaqueMaterial #{uq_parameter[2]} was not found")
               end
             when /StandardGlazing/
               case uq_parameter[2]
@@ -206,7 +194,8 @@ class UncertainParameters
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
                 else
-									abort("\n!!!ABORTING!!! StandardGlazing #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter StandardGlazing #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter StandardGlazing #{uq_parameter[2]} was not found")
               end
             when /Infiltration/
               case uq_parameter[2]
@@ -214,7 +203,8 @@ class UncertainParameters
                   csv << ['Infiltration', 'FlowPerExteriorArea', '',
                           uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                 else
-									abort("\n!!!ABORTING!!! Infiltration #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter Infiltration #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter Infiltration #{uq_parameter[2]} was not found")
               end
 
             when /Lights/
@@ -225,7 +215,8 @@ class UncertainParameters
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
                 else
-									abort("\n!!!ABORTING!!! Lights #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter Lights #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter Lights #{uq_parameter[2]} was not found")
               end
             when /PlugLoad/
               case uq_parameter[2]
@@ -235,7 +226,8 @@ class UncertainParameters
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
                 else
-									abort("\n!!!ABORTING!!! PlugLoad #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter PlugLoad #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter PlugLoad #{uq_parameter[2]} was not found")
               end
             when /People/
               case uq_parameter[2]
@@ -244,8 +236,6 @@ class UncertainParameters
                     csv << ['People_SpaceFloorAreaPerPerson', spacetype, @operation_uncertainty.people_floor_area_per_person[index],
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! People #{uq_parameter[2]} not found\n\n")
               end
             when /HotWaterBoiler/
               case uq_parameter[2]
@@ -254,8 +244,6 @@ class UncertainParameters
                     csv << ['HotWaterBoilerEfficiency', @boiler_uncertainty.boiler_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! HotWaterBoiler #{uq_parameter[2]} not found\n\n")
               end
             when /SteamBoiler/
               case uq_parameter[2]
@@ -264,8 +252,6 @@ class UncertainParameters
                     csv << ['SteamBoilerEfficiency', @boiler_uncertainty.boiler_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! SteamBoiler #{uq_parameter[2]} not found\n\n")
               end
             when /FanConstantVolume/
               case uq_parameter[2]
@@ -279,8 +265,6 @@ class UncertainParameters
                     csv << ['FanConstantVolumeMotorEfficiency', @fan_pump_uncertaintainty.fan_ConstantVolume_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! FanConstantVolume #{uq_parameter[2]} not found\n\n")
               end
             when /FanVariableVolume/
               case uq_parameter[2]
@@ -294,8 +278,6 @@ class UncertainParameters
                     csv << ['FanVariableVolumeMotorEfficiency', @fan_pump_uncertaintainty.fan_VariableVolume_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! FanVariableVolume #{uq_parameter[2]} not found\n\n")
               end
             when /PumpConstantSpeed/
               case uq_parameter[2]
@@ -304,8 +286,6 @@ class UncertainParameters
                     csv << ['PumpConstantSpeedMotorEfficiency', @fan_pump_uncertaintainty.pump_ConstantSpeed_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! PumpConstantSpeed #{uq_parameter[2]} not found\n\n")
               end
             when /PumpVariableSpeed/
               case uq_parameter[2]
@@ -314,8 +294,6 @@ class UncertainParameters
                     csv << ['PumpVariableSpeedMotorEfficiency', @fan_pump_uncertaintainty.pump_VariableSpeed_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! PumpVariablespeed #{uq_parameter[2]} not found\n\n")
               end
             when /DesignSpecificationOutdoorAir/
               case uq_parameter[2]
@@ -334,8 +312,6 @@ class UncertainParameters
                     csv << ['DesignSpecificOutdoorAirFlowRate', @design_spec_OA_uncertainty.design_spec_outdoor_air_name[index], airflow,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! DesignSpecificationOutdoorAir #{uq_parameter[2]} not found\n\n")
               end
             when /SingleSpeedDXCoolingUnits/
               case uq_parameter[2]
@@ -359,8 +335,6 @@ class UncertainParameters
                     csv << ['DXCoolingCoilSingleSpeedRatedAirFlowRate', @dx_Cooling_Coil_uncertainty.dx_Coil_SingleSpeed_name[index], airflow,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! SingleSpeedDXCoolingUnits #{uq_parameter[2]} not found\n\n")
               end
             when /TwoSpeedDXCoolingUnits/
               case uq_parameter[2]
@@ -374,8 +348,6 @@ class UncertainParameters
                     csv << ['DXCoolingCoilTwoSpeedRatedLowSpeedCOP', @dx_Cooling_Coil_uncertainty.dx_Coil_TwoSpeed_name[index], cop,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! TwoSpeedDXCoolingUnits #{uq_parameter[2]} not found\n\n")
               end
             when /ChillerElectricEIR/
               case uq_parameter[2]
@@ -384,8 +356,6 @@ class UncertainParameters
                     csv << ['ChillerElectricEIRReferenceCOP', @chillerEIR_uncertainty.chiller_name[index], cop,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-								else
-									abort("\n!!!ABORTING!!! ChillerElectricEIR #{uq_parameter[2]} not found\n\n")
               end
             when /ThermostatSettings/
               case uq_parameter[2]
@@ -396,10 +366,12 @@ class UncertainParameters
                   csv << ['HeatingSetpoint', 'DualSetpoint:HeatingSetpoint', 'HeatingSetpointTemperature',
                           uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                 else
-                	abort("\n!!!ABORTING!!!  #{uq_parameter[2]} not found\n\n")
+                  puts "UQ parameter ThermostatSettings #{uq_parameter[2]}  was not found"
+                  abort("UQ parameter ThermostatSettings #{uq_parameter[2]} was not found")
               end
             else
-								abort("\n!!!ABORTING!!! UQ Class #{uq_parameter[1]} not found\n\n")
+              puts "UQ parameter  #{uq_parameter[1]}  was not found"
+              abort("UQ parameter #{uq_parameter[1]} was not found")
           end
         end
 			end

@@ -45,11 +45,9 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 # Main code used for setting up files for running Bayesian calibration
 
 require 'openstudio'
-#require_relative 'Run_All_OSMs'
-require_relative 'Run_All_OSMs_verbose'
+require_relative 'Run_All_OSMs'
 require_relative 'Uncertain_Parameters'
-#require_relative 'Read_Calibrated_Sim_SQL'
-require_relative 'Process_Simulation_SQLs'
+require_relative 'Read_Calibrated_Sim_SQL'
 
 class Calibrated_OSM
   def gen_and_sim(osm_model_file, weather_file, prior_file, posterior_file,
@@ -117,10 +115,6 @@ class Calibrated_OSM
     # Read Simulation Results
     sql_file_path = "#{run_manager_folder}/Simulations/#{calibrated_model_name}/ModelToIdf/EnergyPlus-0/eplusout.sql"
     output_folder = run_manager_folder
-   #OutPut.Read(sql_file_path, meter_set_file, output_folder)
-    OutPut.Read(1, project_path, 'UA',  settingsfile_path, verbose)
-    
-    ### fixing the OutPut.Read
-
+    OutPut.Read(sql_file_path, meter_set_file, output_folder)
   end
 end

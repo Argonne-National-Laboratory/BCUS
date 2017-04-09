@@ -29,7 +29,6 @@ Modified Date and By:
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Sep 2015 Cleaned up and new parsing added by Ralph Muehleisen from Argonne National Laboratory
 - Created on Feb27 2015 by Yuming Sun from Argonne National Laboratory
-- 02-Apr-2017: RTM: Added noEP option
 
 
 1. Introduction
@@ -48,19 +47,14 @@ References:
 # Run_All_OSMs.rb is developed by OpenStudio team at NREL
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-require_relative 'Process_Simulation_SQLs'
-#require_relative 'Morris'
-require_relative 'LHS_Morris'
-
+require_relative 'Read_Simulation_Results_SQL'
+require_relative 'Morris'
 # use require to include functions from Ruby Library
 require 'openstudio'
 require 'csv'
 require 'rubyXL'
 require 'optparse'
 require 'fileutils'
-
-
-debugs = true
 
 # define prompt to wait for user to enter y or Y to continue for interactive 
 def wait_for_y
@@ -105,9 +99,9 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uqRepo
   end
 
-  options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-s', '--settingsFile settingsFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
-    options[:settingsFile] = settingsFile
+  options[:outFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |outFile|
+    options[:outFile] = outFile
   end
 
   options[:morrisR] = 5
@@ -121,18 +115,13 @@ parser = OptionParser.new do |opts|
   end
 
   options[:randseed] = 0
-  opts.on('--seed randseed', 'Integer random number seed, 0 = no seed, default = 0') do |randseed|
-    options[:randseed] = randseed
+  opts.on('--seed seednum', 'Integer random number seed, 0 = no seed, default = 0') do |seednum|
+    options[:randseed] = seednum
   end
 
   options[:verbose] = false
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
-  end
-  
-  options[:noep] = false
-  opts.on('--noEP', 'Do not run EnergyPlus') do
-    options[:noEP] = true
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -170,19 +159,12 @@ end
 
 verbose = options[:verbose]
 uqrepo_name = options[:uqRepo]
-settingsfile_name = options[:settingsFile]
+outfile_name = options[:outFile]
 run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
 morris_R = Integer(options[:morrisR])
 morris_levels = Integer(options[:morrisL])
 randseed = Integer(options[:randseed])
-noEP = options[:noEP]
-
-
-# if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
-if noEP
-  skip_cleanup = true
-end
 
 if run_interactive
   puts 'Running Interactively'
@@ -198,7 +180,7 @@ path = Dir.pwd
 osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
-settingsfile_path = File.absolute_path(settingsfile_name)
+outfile_path = File.absolute_path(outfile_name)
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name, '.osm')
@@ -223,6 +205,7 @@ end
 if File.exist?("#{uqrepo_path}")
   puts "Using UQ repository = #{uqrepo_path}" if verbose
   workbook = RubyXL::Parser.parse("#{uqrepo_path}")
+  # uq_table = workbook['UQ'].extract_data  outdated by June 28th
   uq_table = Array.new
   uq_table_row = Array.new
   workbook['UQ'].each { |row|
@@ -237,9 +220,9 @@ else
   abort
 end
 
-if File.exist?("#{settingsfile_path}")
-  puts "Using Output Settings = #{settingsfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
+if File.exist?("#{outfile_path}")
+  puts "Using Output Settings = #{outfile_path}" if verbose
+  workbook = RubyXL::Parser.parse("#{outfile_path}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -251,7 +234,7 @@ if File.exist?("#{settingsfile_path}")
   }
 
 else
-  puts "#{settingsfile_path} was NOT found!"
+  puts "#{outfile_path}was NOT found!"
   abort
 end
 
@@ -260,6 +243,7 @@ if verbose
   puts "Using morris levels = #{morris_levels}"
   puts "Random Number Seed = #{randseed}" if randseed != 0
 end
+
 
 # remove the first two rows of headers
 (1..2).each { |i|
@@ -271,20 +255,18 @@ uncertainty_parameters = UncertainParameters.new
 
 Dir.mkdir "#{path}/SA_Output" unless Dir.exist?("#{path}/SA_Output")
 
-puts 'Step 1: Generate uncertainty parameters distributions' if verbose
+if verbose
+  puts 'Step 1: Generate uncertainty parameters distributions'
+end
+
 file_name = "#{path}/SA_Output/UQ_#{building_name}.csv"
 uncertainty_parameters.find(model, uq_table, file_name, verbose)
 
-
-puts 'Step2: Generate Morris Design Matrix' if verbose
 morris = Morris.new
 file_path = "#{path}/SA_Output"
-#morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
-morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
+morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed)
 
-
-
-# step 3, run the simulations.  Get number runs from the size of Morris_CDF_Tran_Design
+# Step 3: Run Simulations
 samples = CSV.read("#{path}/SA_Output/Morris_CDF_Tran_Design.csv", headers: true)
 parameter_names = []
 parameter_types = []
@@ -293,61 +275,57 @@ samples.each do |sample|
   parameter_types << sample[0]
 end
 num_of_runs = samples[0].length-2
-puts "Step 3: Run #{num_of_runs} OSM simulations" if verbose
+
+if verbose
+  puts 'Step 2: Design Matrix for Morris SA was generated.'
+  puts "Step 3: Run #{num_of_runs} OSM simulations"
+end
 
 #wait_for_y if run_interactive
 if run_interactive
   puts "Step 3: Run #{num_of_runs} OSM Simulation may take a long time."
   wait_for_y if run_interactive
 end
-if noEP
-  if verbose
-    puts
-    puts '--noEP option selected, skipping running of EnergyPlus'
-    puts
+
+for k in 2..samples[0].length-1
+  model = OpenStudio::Model::Model::load(osm_path).get
+  parameter_value = []
+  samples.each { |sample| parameter_value << sample[k].to_f }
+  uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+  # add reporting meters
+  for meter_index in 1..(meters_table.length-1)
+    meter = OpenStudio::Model::Meter.new(model)
+    meter.setName("#{meters_table[meter_index][0]}")
+    meter.setReportingFrequency("#{meters_table[meter_index][1]}")
   end
-else
-  for k in 2..samples[0].length-1
-    model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
-    parameter_value = []
-    samples.each { |sample| parameter_value << sample[k].to_f }
-    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-    # add reporting meters
-    for meter_index in 1..(meters_table.length-1)
-      meter = OpenStudio::Model::Meter.new(model)
-      meter.setName("#{meters_table[meter_index][0]}")
-      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
-    end
-    variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-    variable.setReportingFrequency('Monthly')
-    variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-    variable.setReportingFrequency('Monthly')
+  variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
+  variable.setReportingFrequency('Monthly')
+  variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
+  variable.setReportingFrequency('Monthly')
 
-    # meters saved to sql file
-    model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
+  # meters saved to sql file
+  model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
 
-    # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
-    model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
-    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+  # new edit start from here Yuna add for thermostat algorithm
+  out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
+  model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
+  uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
-    puts "Sample#{k-1} is saved to the folder of Models" if verbose
-  end
-
-  # use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
-  runner = RunOSM.new()
-  runner.run_osm("#{path}/SA_Models",
-                 epw_path,
-                 "#{path}/SA_Simulations",
-                 num_of_runs,
-                 verbose)
+  puts "Sample#{k-1} is saved to the folder of Models" if verbose
 end
-               
-         
 
-puts "Step 4: Read simulation results, run Morris method analysis and plot sensitivity results" if verbose
+# use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
+runner = RunOSM.new()
+runner.run_osm("#{path}/SA_Models",
+               epw_path,
+               "#{path}/SA_Simulations",
+               num_of_runs,
+               verbose)
+
+# Step 4: Read Simulation Results
+# Run morris method to compute and plot sensitivity results
 project_path = "#{path}"
-OutPut.Read(num_of_runs, project_path, 'SA' , settingsfile_path, verbose)
+OutPut.Read(num_of_runs, project_path, 'SA')
 morris.compute_sensitivities("#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv", file_path, file_name)
 
 unless skip_cleanup
@@ -356,8 +334,9 @@ unless skip_cleanup
   File.delete("#{path}/SA_Output/Morris_CDF_Tran_Design.csv") if File.exists?("#{path}/SA_Output/Morris_CDF_Tran_Design.csv")
   File.delete("#{path}/SA_Output/Morris_0_1_Design.csv") if File.exists?("#{path}/SA_Output/Morris_0_1_Design.csv")
   File.delete("#{path}/SA_Output/Monthly_Weather.csv") if File.exists?("#{path}/SA_Output/Monthly_Weather.csv")
-  File.delete("#{path}/SA_Output/Meter_Electricity.csv") if File.exists?("#{path}/SA_Output/Meter_Electricity_Facility.csv")
-  File.delete("#{path}/SA_Output/Meter_Gas.csv") if File.exists?("#{path}/SA_Output/Meter_Gas_Facility.csv")
+  File.delete("#{path}/SA_Output/Monthly_Weather.csv") if File.exists?("#{path}/SA_Output/Monthly_Weather.csv")
+  File.delete("#{path}/SA_Output/Meter_Electricity.csv") if File.exists?("#{path}/SA_Output/Meter_Electricity.csv")
+  File.delete("#{path}/SA_Output/Meter_Gas.csv") if File.exists?("#{path}/SA_Output/Meter_Gas.csv")
   File.delete("#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv") if File.exists?("#{path}/SA_Output Simulation_Results_Building_Total_Energy.csv")
   File.delete("#{path}/Morris_design") if File.exists?("#{path}/Morris_design")
   FileUtils.remove_dir("#{path}/SA_Models") if Dir.exists?("#{path}/SA_Models")
