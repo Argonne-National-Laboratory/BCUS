@@ -214,7 +214,7 @@ class Morris
 		CSV.open("#{file_path}/Morris_0_1_Design.csv","wb")
 		CSV.open("#{file_path}/Morris_0_1_Design.csv","a+") do |csv|
 			while row_index <= design_matrix.row_count
-				csv<< design_matrix.row(row_index).to_a
+				csv << design_matrix.row(row_index).to_a
 				row_index +=1
 			end
 		end
@@ -245,30 +245,51 @@ class Morris
 		end
 	end # design matrix
 
-	def compute_sensitivities(model_response_file,output_folder,uq_file_name)
-    R.assign("y_file", model_response_file)
+	def compute_sensitivities(model_response_file,output_folder,uq_file_name, verbose = false, maxstring = 60)
+		# verbose 
+		# maxstring = maximum size of the parameter+object string in characters, default = 50
+		R.assign("y_file", model_response_file)
 		R.assign("output_folder",output_folder)
 		R.assign("uq_file_name",uq_file_name)
+		R.assign("maxstring", maxstring)
    
 		R.eval <<-RCODE
+	
       table_name<-read.csv(uq_file_name, header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
-      
-      # the following combines columns 1and first 20 char of column 2 into one string for the full 
-      # name of the parameter for sensitivity analysis, takes the transpose and converts back to a data frame
-      b= data.matrix(t(paste(table_name[[1]],substr(table_name[[2]],1,20),sep = ": ")))
+ 
+      # the following combines columns 1and column 2 into one string for the full 
+      # name of the parameter for sensitivity analysis, truncates to first maxstring char
+			# takes the transpose and converts back to a data frame
+      b = data.matrix(t(substr(paste(table_name[[1]],table_name[[2]],sep = ": "),1,maxstring)))
       library("sensitivity")
       load("#{output_folder}/Morris_design")
       Table <- read.csv(y_file,header=TRUE)
       Y <- data.matrix(Table)
+
       pdf(sprintf("%s/Sensitivity_Plots.pdf",output_folder))
       for (i in 1:dim(Y)[2]){
         # the following uses the data in Y and the morris info in design to generate the output table in design
-        tell(design,Y[, i]) 
-        write.csv(print(design), file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
+				tell(design,Y[, i])
+
+				# extract the data as per the instructions in the sensitivity package documentation
+				mu <- apply(design$ee, 2, mean)
+				mu.star <- apply(design$ee, 2, function(x) mean(abs(x)))
+				sigma <- apply(design$ee, 2, sd)
+				morrisout <- data.frame(mu, mu.star, sigma)
+				rownames(morrisout) <- colnames(design$ee)
+
+
+				write.csv(morrisout, file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
+				# write.csv(t(design[["ee"]]), file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
+
         plot(design, main = names(Table)[i])
       }
+			
+
       dev.off()
+			print("done with compute_sensitivities")
     RCODE
+		#puts R.morrisout
     
 	end # def compute_sensitivities
 end # Class Morris
