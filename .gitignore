@@ -8,10 +8,13 @@
 # BCUS Output Folders
 **/PreRuns_Simulations/
 **/PreRuns_Output/
+**/PreRuns_Models/
 **/SA_Output/
 **/SA_Simulations/
-**/UA_output/
+**/SA_Models/
+**/UA_Output/
 **/UA_Simulations/
+**/UA_Models/
 **/Calibrated_Model/
 **/Calibration_Output/
 
@@ -19,8 +22,12 @@
 **/cal_sim_runs.txt
 **/cal_utility_data.txt
 
+# Rstudio session files
+**/.Rhistory
+
 # Backup files from MS software (word, ppt, excel)
 **/~*
+**/*.bak
 
 # rubymine project files
 **/.idea/
@@ -30,4 +37,6 @@
 
 # Mac temporary files
 .DS_Store
+
+#
 
