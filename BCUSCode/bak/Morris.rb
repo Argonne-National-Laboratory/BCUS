@@ -96,6 +96,7 @@ class Morris
       library("sensitivity")
       load("#{file_path}/Morris_design")
       Table <- read.csv(y_file,header=TRUE)
+      puts Table
       Y <- data.matrix(Table)
       pdf(sprintf("%s/Sensitivity_Plots.pdf",file_path))
       for (i in 1:dim(Y)[2]){
