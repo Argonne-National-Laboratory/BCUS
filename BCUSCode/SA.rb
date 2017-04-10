@@ -286,6 +286,7 @@ morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, ve
 
 # step 3, run the simulations.  Get number runs from the size of Morris_CDF_Tran_Design
 samples = CSV.read("#{path}/SA_Output/Morris_CDF_Tran_Design.csv", headers: true)
+puts samples
 parameter_names = []
 parameter_types = []
 samples.each do |sample|
@@ -347,8 +348,12 @@ end
 
 puts "Step 4: Read simulation results, run Morris method analysis and plot sensitivity results" if verbose
 project_path = "#{path}"
+results_path = "#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv"
 OutPut.Read(num_of_runs, project_path, 'SA' , settingsfile_path, verbose)
-morris.compute_sensitivities("#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv", file_path, file_name)
+puts results_path
+puts file_path
+puts file_name
+morris.compute_sensitivities(results_path, file_path, file_name)
 
 unless skip_cleanup
   #delete intermediate files

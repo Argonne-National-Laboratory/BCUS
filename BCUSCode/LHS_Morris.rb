@@ -245,23 +245,26 @@ class Morris
 		end
 	end # design matrix
 
-	def compute_sensitivities(model_response_file,file_path,file_name)
+	def compute_sensitivities(model_response_file,output_folder,uq_file_name)
     R.assign("y_file", model_response_file)
-		R.assign("file_path",file_path)
-		R.assign("file_name",file_name)
+		R.assign("output_folder",output_folder)
+		R.assign("uq_file_name",uq_file_name)
    
 		R.eval <<-RCODE
-      table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
-      a=table_name[1]
-      b=t(a)
+      table_name<-read.csv(uq_file_name, header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
+      
+      # the following combines columns 1and first 20 char of column 2 into one string for the full 
+      # name of the parameter for sensitivity analysis, takes the transpose and converts back to a data frame
+      b= data.matrix(t(paste(table_name[[1]],substr(table_name[[2]],1,20),sep = ": ")))
       library("sensitivity")
-      load("#{file_path}/Morris_design")
+      load("#{output_folder}/Morris_design")
       Table <- read.csv(y_file,header=TRUE)
       Y <- data.matrix(Table)
-      pdf(sprintf("%s/Sensitivity_Plots.pdf",file_path))
+      pdf(sprintf("%s/Sensitivity_Plots.pdf",output_folder))
       for (i in 1:dim(Y)[2]){
-        tell(design,Y[, i])
-        write.csv(print(design), file = sprintf("%s/SA_wrt_%s.csv", file_path, names(Table)[i]),row.names = b)
+        # the following uses the data in Y and the morris info in design to generate the output table in design
+        tell(design,Y[, i]) 
+        write.csv(print(design), file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
         plot(design, main = names(Table)[i])
       }
       dev.off()
