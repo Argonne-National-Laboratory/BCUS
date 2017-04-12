@@ -287,7 +287,7 @@ class Morris
 			
 
       dev.off()
-			print("done with compute_sensitivities")
+			#print("done with compute_sensitivities")
     RCODE
 		#puts R.morrisout
     
