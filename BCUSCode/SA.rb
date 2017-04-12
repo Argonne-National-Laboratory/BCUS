@@ -189,7 +189,7 @@ if run_interactive
   wait_for_y
 end
 
-puts 'Not Cleaning Up Interim Files' if skip_cleanup
+puts 'Not Cleaning Up Interim Files' if (skip_cleanup && verbose)
 
 # set the user output base path to be the current working directory 
 path = Dir.pwd
@@ -236,6 +236,12 @@ else
   puts "#{uqrepo_path} was NOT found!"
   abort
 end
+# remove the first two rows of headers
+(1..2).each { |i|
+  uq_table.delete_at(0)
+  i += 1
+}
+
 
 if File.exist?("#{settingsfile_path}")
   puts "Using Output Settings = #{settingsfile_path}" if verbose
@@ -249,7 +255,6 @@ if File.exist?("#{settingsfile_path}")
     }
     meters_table.push(meters_table_row)
   }
-
 else
   puts "#{settingsfile_path} was NOT found!"
   abort
@@ -261,12 +266,6 @@ if verbose
   puts "Random Number Seed = #{randseed}" if randseed != 0
 end
 
-# remove the first two rows of headers
-(1..2).each { |i|
-  uq_table.delete_at(0)
-  i += 1
-}
-
 uncertainty_parameters = UncertainParameters.new
 
 Dir.mkdir "#{path}/SA_Output" unless Dir.exist?("#{path}/SA_Output")
@@ -275,14 +274,11 @@ puts 'Step 1: Generate uncertainty parameters distributions' if verbose
 file_name = "#{path}/SA_Output/UQ_#{building_name}.csv"
 uncertainty_parameters.find(model, uq_table, file_name, verbose)
 
-
 puts 'Step2: Generate Morris Design Matrix' if verbose
 morris = Morris.new
 file_path = "#{path}/SA_Output"
 #morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
 morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
-
-
 
 # step 3, run the simulations.  Get number runs from the size of Morris_CDF_Tran_Design
 samples = CSV.read("#{path}/SA_Output/Morris_CDF_Tran_Design.csv", headers: true)
@@ -343,15 +339,14 @@ else
                  num_of_runs,
                  verbose)
 end
-               
-         
 
 puts "Step 4: Read simulation results, run Morris method analysis and plot sensitivity results" if verbose
 project_path = "#{path}"
 results_path = "#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv"
 OutPut.Read(num_of_runs, project_path, 'SA' , settingsfile_path, verbose)
 
-morris.compute_sensitivities(results_path, file_path, file_name)
+num_variable_name_chars = 60 # set the maximum size of variable names for printout in sensitivity analysis
+morris.compute_sensitivities(results_path, file_path, file_name, verbose, num_variable_name_chars)
 
 unless skip_cleanup
   #delete intermediate files
@@ -366,4 +361,4 @@ unless skip_cleanup
   FileUtils.remove_dir("#{path}/SA_Models") if Dir.exists?("#{path}/SA_Models")
 end
 
-puts 'SA.rb Completed Successfully!'
+puts 'SA.rb Completed Successfully!' if verbose

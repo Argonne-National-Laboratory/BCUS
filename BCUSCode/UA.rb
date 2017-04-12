@@ -340,4 +340,4 @@ unless skip_cleanup
   FileUtils.remove_dir("#{path}/UA_Models") if Dir.exists?("#{path}/UA_Models")
 end
 
-puts 'UA.rb Completed Successfully!'
+puts 'UA.rb Completed Successfully!' if verbose

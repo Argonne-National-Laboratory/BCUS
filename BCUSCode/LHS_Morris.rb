@@ -183,9 +183,9 @@ class Morris
 	# => [1.0, 10.0]
 	#
 
-	def design_matrix(file_path,file_name, morris_R, morris_levels, randseed=0, verbose = false)
+	def design_matrix(file_path, file_name, morris_R, morris_levels, randseed=0, verbose = false)
     # file_path = path to SA_output directory
-    # file_name = full path name to 
+    # file_name = full path name to UQ output file
     # morris_R = number of morris repetitions (routes/tracks)
     # morris_L = number of morris levels
     puts "Randseed = #{randseed}" if verbose
@@ -252,21 +252,32 @@ class Morris
 		R.assign("output_folder",output_folder)
 		R.assign("uq_file_name",uq_file_name)
 		R.assign("maxstring", maxstring)
+    if verbose
+      R.assign("verbose",1)
+    else
+      R.assign("verbose",0)
+    end
    
 		R.eval <<-RCODE
-	
       table_name<-read.csv(uq_file_name, header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
  
       # the following combines columns 1and column 2 into one string for the full 
       # name of the parameter for sensitivity analysis, truncates to first maxstring char
 			# takes the transpose and converts back to a data frame
       b = data.matrix(t(substr(paste(table_name[[1]],table_name[[2]],sep = ": "),1,maxstring)))
+      #bframe = data.frame(t(b))
       library("sensitivity")
       load("#{output_folder}/Morris_design")
-      Table <- read.csv(y_file,header=TRUE)
+      Table <- read.csv(y_file,header=TRUE,check.names=FALSE) # use check.names=FALSE to keep spaces in output names
+      Tablenames <- names(Table)
+      Filenames <- gsub(' ','.',names(Table))
+      
       Y <- data.matrix(Table)
+      
+      outarray = list()
 
       pdf(sprintf("%s/Sensitivity_Plots.pdf",output_folder))
+
       for (i in 1:dim(Y)[2]){
         # the following uses the data in Y and the morris info in design to generate the output table in design
 				tell(design,Y[, i])
@@ -275,21 +286,32 @@ class Morris
 				mu <- apply(design$ee, 2, mean)
 				mu.star <- apply(design$ee, 2, function(x) mean(abs(x)))
 				sigma <- apply(design$ee, 2, sd)
-				morrisout <- data.frame(mu, mu.star, sigma)
-				rownames(morrisout) <- colnames(design$ee)
+				morrisout <- data.frame(mu, mu.star, sigma, row.names = colnames(design$ee))
+        outarray[[i]] = morrisout
+        
+        plot(design, main = Tablenames[i])
 
-
-				write.csv(morrisout, file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
-				# write.csv(t(design[["ee"]]), file = sprintf("%s/SA_wrt_%s.csv", output_folder, names(Table)[i]),row.names = b)
-
-        plot(design, main = names(Table)[i])
+        tablename = sprintf("SA_wrt_%s.csv", Filenames[i])
+				write.csv(morrisout, file = sprintf("%s/%s", output_folder, tablename), row.names = b)
+        
       }
-			
+      graphics.off() # use instead of dev.off() to avoid printout
+      
+      if (verbose > 0){
 
-      dev.off()
-			#print("done with compute_sensitivities")
+        # print table mapping X1, X2, etc to variable names
+        cat("\n Sensitivity Variable Table\n")
+        print(data.frame(t(b), row.names = colnames(design$ee)))
+      
+        # print out the sensitivity tables
+        cat("\nSensitivity Tables\n")
+        names(outarray) <- names(Table)  # rename the tables using sensitivity table names instead [[1]], [[2]], etc.
+        print(outarray) 
+      }
+       
     RCODE
-		#puts R.morrisout
+    
+
     
 	end # def compute_sensitivities
 end # Class Morris

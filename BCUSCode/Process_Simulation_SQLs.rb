@@ -126,7 +126,6 @@ module OutPut
       }
     }
 
-
     #table = data_table
     CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
       csv << header
@@ -149,7 +148,7 @@ module OutPut
       }
       meters_table.push(meters_table_row)
     }
-    
+      
     # loop through all the found meters and extract their data from the SQL file
     (1..(meters_table.length-1)).each { |meter_index|
       var_value = []
