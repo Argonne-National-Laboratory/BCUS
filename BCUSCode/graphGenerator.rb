@@ -75,19 +75,26 @@ This is the subfunction called by UbCRunner.rb to
 require_relative 'rinruby'
 
 module GraphGenerator
-  def GraphGenerator.graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder)
-
+  def GraphGenerator.graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder, verbose = false)
+  
+    if verbose
+      puts "Generating Posterior Distribution Plots"
+      R.assign('verbose',1)
+    else
+      R.assign('verbose',0)
+    end
+      
+    
     R.eval("source('graphPosteriors.R')")
     R.assign('params_filename', params_filename)
     R.assign('pvals_filename', pvals_filename)
     R.assign('burnin', burnin)
     R.assign('graphs_output_folder', graphs_output_folder)
-    R.eval('graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder)')
-
+    R.eval('graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder, verbose)')
   end
 
-  def GraphGenerator.graphPred(com_filename, field_filename, expred_filename, yyxpred_filename)
-
+  def GraphGenerator.graphPred(com_filename, field_filename, expred_filename, yyxpred_filename, verbose = false)
+    puts "Graphing prediction" if verbose
     R.eval("source('graphPred.R')")
     R.assign('com_filename', com_filename)
     R.assign('field_filename', field_filename)

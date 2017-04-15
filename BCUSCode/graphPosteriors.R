@@ -95,44 +95,52 @@
 
 #===============================================================%
 
-graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_output_folder){
+graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_output_folder, verbose){
 
 	#the following can be used for testing:
 	#pvals_filename = "../Output/pvals.csv"
 	#params_filename = "../Input/Calibration_Parameters_Prior.csv"
 	#burnin = 1
 
+
+	
 	source("readFromParamFile.R")
 	source("density.R")
-	theta_info <- readFromParamFile(params_filename)
+	
 
-	num_theta = length (theta_info);
-	pvals = read.csv(pvals_filename);
-	pvals = tail(pvals, nrow(pvals[1])-burnin); # significant difference when showing burnin-data
-
+	
 	#------------------------
 	library(ggplot2);
 	library(triangle);
 	library(gridExtra); # http://www.r-bloggers.com/extra-extra-get-your-gridextra/
 	library(car);
 	#------------------------
-	nBins = 32; # good: 100
+	nBins = 32 # good: 100
+	theta_info <- readFromParamFile(params_filename)
 
-	plots  = list(); # List of plots, later to be up in grid
-	plots2 = list(); # List of plots, later to be up in grid
-	Vs         = list(); # List of V1,V2, ... Vn
+	num_theta = length (theta_info)
+	pvals = read.csv(pvals_filename)
+	pvals = tail(pvals, nrow(pvals[1])-burnin); # significant difference when showing burnin-data
+
+
+
+	plots  = list() # List of plots, later to be up in grid
+	plots2 = list() # List of plots, later to be up in grid
+	Vs         = list() # List of V1,V2, ... Vn
 
 	for (i in 1:num_theta)
 	{
 		i<<-i; # make it global
-		max_x = theta_info [[i]]$max;
-		min_x = theta_info [[i]]$min;
-		rang_x =  max_x - min_x;
-		pvals[[i]] = pvals[[i]] * rang_x + min_x; # normalize pvals between min_x and max_x
-		#message("adjusted pvals")
+		max_x = theta_info [[i]]$max
+		min_x = theta_info [[i]]$min
+		rang_x =  max_x - min_x
+		
+	
+		pvals[[i]] = pvals[[i]] * rang_x + min_x # normalize pvals between min_x and max_x
 
-		histo = hist(pvals[[i]], breaks=seq(min_x, max_x, l=nBins), plot=FALSE); # good: 50 bins
-		#message("created histogram")
+
+		histo = hist(pvals[[i]], breaks=seq(min_x, max_x, l=nBins), plot=FALSE) # good: 50 bins
+
 
 		pvals<<-pvals; # make it global
 
@@ -156,36 +164,34 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		for (xi in 1:length(x)){
 			y = c(y, density2(theta_info[[i]]$prior, x[xi]))
 		}
-		#message("generated trangle ys")
 
 		# Area of triangle is 1, scale it's height so that
 		# the area becames the area of the original histogram.
 
-		ty = y * pval_area; # = altitude of ttiangle
+		ty = y * pval_area; # = altitude of triangle
 		prior = data.frame (x, ty); # the prior (triangular) distribution
-		#message("made triangle data frame")
 
 		Vs = c(Vs, pvals[[i]]); #---
 
 		# plot the histogram and triangular dist
-
+		
 		figureName <- paste(sprintf("%s/PosteriorVsPrior", graphs_output_folder), as.character(i), ".pdf")
 		pdf(figureName)
+		if (verbose == 1){message(sprintf("Generating plot %s",figureName))}
 		plot1 <- ggplot() +
 		geom_histogram (data=pvals, aes(x=pvals[[i]]), binwidth=delta_x) +
 		geom_line (data=prior, aes(x=x, y=ty),  color="red", size=1) +
-		xlim (min(pvals[i], min_x),max(pvals[i], max_x)) +
+		#xlim (min(pvals[i], min_x),max(pvals[i], max_x)) +
 		labs (x=theta_info[[i]]$name);
-
-
 		print (plot1);
+		
 		#dev.off()
-		#message ("--- generated plot ", i, " ---");
-		#message ("pval_area = ", pval_area);
-		#message ("nBins = ", nBins);
-		#message ("x range: ", min_x, " to ", max_x);
+		# message ("--- generated plot ", i, " ---");
+		# message ("pval_area = ", pval_area);
+		# message ("nBins = ", nBins);
+		# message ("x range: ", min_x, " to ", max_x);
 	}
-
+	
 
 	#------------------------------
 	scatter1Filename = sprintf("%s/posteriorScatterPlotsV1.pdf", graphs_output_folder)
@@ -201,6 +207,7 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
 		pdf(scatter2Filename)
 		#dev.off()
+		graphics.off()
 		var_labels = rep(0, times = num_theta)
 		for (i2 in 1:num_theta){
 			var_labels[i2] = theta_info[[i2]]$name
@@ -210,6 +217,7 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		reg.line=FALSE,
 		var.labels=var_labels);
 		#dev.off()
+
 	} else if (num_theta == 3){
 		pdf(scatter1Filename)
 		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
@@ -225,6 +233,7 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		scatterplotMatrix(~V1+V2+V3, data=pvals, smoother=FALSE, diagonal="density", pch='.',
 		reg.line=FALSE,
 		var.labels=var_labels);
+
 		#dev.off()
 	} else if (num_theta == 4){
 		pdf(scatter1Filename)
@@ -242,11 +251,13 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		reg.line=FALSE,
 		var.labels=var_labels);
 		#dev.off()
+
 	} else if (num_theta == 5){
 		pdf(scatter1Filename)
 		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
 		scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="histogram", pch='.',
 		col="black", reg.line=FALSE, var.labels=NULL); # main="title"
+		graphics.off()
 		pdf(scatter2Filename)
 		var_labels = rep(0, times = num_theta)
 		for (i2 in 1:num_theta){
@@ -256,6 +267,8 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		scatterplotMatrix(~V1+V2+V3+V4+V5, data=pvals, smoother=FALSE, diagonal="density", pch='.',
 		reg.line=FALSE,
 		var.labels=var_labels);
+		graphics.off()
+
 	} else if (num_theta == 6){
 		pdf(scatter1Filename)
 		#if num_theta changes to N, need to change to ~V1+V2+V3+...+VN.
@@ -270,7 +283,9 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin, graphs_outp
 		scatterplotMatrix(~V1+V2+V3+V4+V5+V6, data=pvals, smoother=FALSE, diagonal="density", pch='.',
 		reg.line=FALSE,
 		var.labels=var_labels);
+
 	} else{
 		message("scatter plot matrices not generated because scatterplotMatrix command is only set up for 2-6 parameters")
 	}
+
 }

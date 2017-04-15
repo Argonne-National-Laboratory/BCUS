@@ -53,9 +53,11 @@ require_relative 'Process_Simulation_SQLs'
 
 class Calibrated_OSM
   def gen_and_sim(osm_model_file, weather_file, prior_file, posterior_file,
-                  meter_set_file, calibrated_model_file, calibrated_model_name, run_manager_folder)
+                  meter_set_file, calibrated_model_file, calibrated_model_name, run_manager_folder, verbose = false)
     posterior = CSV.read(posterior_file, headers: true, converters: :numeric)
     headers = posterior.headers()
+    
+    puts "in gen and sim" if verbose
 
     def is_number?(object)
       true if Float(object) rescue false
@@ -73,7 +75,7 @@ class Calibrated_OSM
       end
       return sum/n
     end
-
+    
     posterior_average = [0]*headers.length()
     headers.each_with_index do |header, index|
       posterior_average[index] = average(posterior[header])

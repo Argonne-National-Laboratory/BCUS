@@ -123,7 +123,14 @@
 #   values, covariance matrix, and stepwidths for MCMC
 
 
-setupParams <- function(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps){
+setupParams <- function(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps, verbose){
+  #library("gridExtra")
+  if (verbose == 1){
+	message(sprintf("com_filename = %s", com_filename))
+ 	message(sprintf("field_filename = %s", field_filename))
+  	message(sprintf("numYvars = %s", numYVars))
+  	message(sprintf("numbXvars = %s", numXVars))
+  }
   
   DATACOMP <- read.csv(com_filename, header=FALSE, sep="\t")
   DATACOMP <- as.matrix(DATACOMP)

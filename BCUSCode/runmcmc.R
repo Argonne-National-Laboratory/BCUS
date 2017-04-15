@@ -205,18 +205,21 @@ runmcmc <- function(params_filename, com_filename, field_filename, numYVars, num
   source("setupParams.R")
   source("readFromParamFile.R")
 
-  theta_info <- readFromParamFile(params_filename)
-  
-  params <- setupParams(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps)  
+    theta_info <- readFromParamFile(params_filename)
+
+  params <- setupParams(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps, verbose)  
   pvals <- gaspmcmc(params, verbose, randseed)
-  
   posterior_dists <- matrix(nrow = nrow(pvals), ncol = length(theta_info))
   for (i in 1:length(theta_info)){
     tmin <- theta_info[[i]]$min
     tmax <- theta_info[[i]]$max
     posterior_dists[,i] <- pvals[,i]*(tmax - tmin) + tmin
   }
-  
+  if (verbose == 1){
+    message(sprintf("Writing %s",pvals_filename))
+	message(sprintf("writing %s", posterior_dists_filename)) 
+  }
+
   write.csv(pvals, pvals_filename, row.names = FALSE)
   write.csv(posterior_dists, posterior_dists_filename, row.names = FALSE)
   

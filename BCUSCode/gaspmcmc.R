@@ -128,7 +128,6 @@
 
 gaspmcmc = function(params, verbose = 0, randseed = 0){
 
-
   theta_w = params$theta_w;
   rho_eta_w = params$rho_eta_w;
   lambda_eta_w = params$lambda_eta_w;
@@ -165,8 +164,8 @@ gaspmcmc = function(params, verbose = 0, randseed = 0){
 
   # Start MCMC ...
 
-  print(sprintf('First Calculation...'))
-
+  if (verbose == 1){message(sprintf('First Calculation...'))
+	}
 
   # Evaluate logpost at params0
 
@@ -209,11 +208,9 @@ gaspmcmc = function(params, verbose = 0, randseed = 0){
   z1 <- z0
   distz1 <- distz0
   sigma_eta_tri1 <- sigma_eta_tri0
-  if (verbose == 1){
-    print(sprintf('randseed = %d',randseed));
-  }
+  if (verbose == 1){ message(sprintf('Looping, n = %d ...', nmcmc))}
 
-  print(sprintf('Looping, n = %d ...', nmcmc));
+
   if (randseed == 0) {
     set.seed(NULL)          # if randseed = 0 that means turn off seed setting by saving NULL
   } else {
@@ -494,13 +491,12 @@ gaspmcmc = function(params, verbose = 0, randseed = 0){
     }
     pvals_row = c(pvals_row, lpost0$tot[1], lpost0$tot[2])
     pvals[iter,] = pvals_row
+	if (verbose ==1){
     # Display iteration results on screen
-    if (iter%%5 == 0){
-      print(sprintf('%4d: ',iter));
-      #     fprintf(' %4.2f',pvals(iter,:));
-      #        fprintf('\n');
-    }
-
+		if (iter%%5 == 0){
+		  message(sprintf('%4d: ',iter));
+		}
+	}
   }
   return (pvals)
 }

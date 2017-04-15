@@ -27,6 +27,8 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 Modified Date and By:
 - August 2016 by Yuna Zhang
 - Created on Feb 15 2015 by Yuming Sun from Argonne National Laboratory
+- 08-Apr-2017 Ralph Muehleisen added -n and --noEP option for consistency with others but they don't do anything  
+                               This allows you to pass the same options to bc_setup and bc
 
 1. Introduction
 This is the main code used for running Bayesian calibration to generate posterior distributions and graphing results
@@ -123,7 +125,6 @@ require_relative 'graphGenerator'
 require_relative 'Calibrated_OS_Model'
 require_relative 'bCRunner'
 
-
 # parse commandline inputs from the user
 options = {:osmName => nil, :epwName => nil}
 parser = OptionParser.new do |opts|
@@ -197,14 +198,19 @@ parser = OptionParser.new do |opts|
     options[:noCleanup] = true
   end
   
-  options[:noep] = false
+  options[:noEP] = false
   opts.on('--noEP', 'Do not run EnergyPlus') do
-    options[:noEP] = true
+    options[:noeEP] = true
   end
   
   options[:verbose] = false
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
+  end
+  
+  options[:noplots] = false
+  opts.on('--noPlots','Do not produce any PDF plots') do 
+    options[:noplots] = true
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -225,7 +231,7 @@ if options[:osmName] == nil
 else # otherwise the --osmName option was used
   osm_name = options[:osmName]
 end
-# noinspection RubyScope
+
 building_model=File.basename(osm_name)
 building_name=File.basename(osm_name, '.osm')
 osm_path = File.absolute_path(osm_name)
@@ -244,7 +250,6 @@ else # otherwise the --epwName option was used
   epw_name = options[:epwName]
 end
 
-# noinspection RubyScope
 epw_path = File.absolute_path(epw_name)
 
 # require the following files from parametric simulations
@@ -286,6 +291,7 @@ randseed = Integer(options[:randseed])
 verbose = options[:verbose]
 no_run_cal= options[:noRunCal]
 noEP = options[:noEP]
+noplots = options[:noplots]
 
 skip_cleanup = options[:noCleanup]
 
@@ -297,9 +303,9 @@ if verbose
   puts "Using numWVars = #{numWVars}"
   puts "Using numMCMC = #{numMCMC}"
   puts "Using numBurnin = #{numBurnin}"
-  puts "Random Number Seed = #{randseed}"
-  puts "Posterior Values File = #{posts_name}"
-  puts "Pvals File = #{pvals_name}"
+  puts "Using Random Number Seed = #{randseed}"
+  puts "Writing to Posterior Values File = #{posts_name}"
+  puts "Writing to Pvals File = #{pvals_name}"
   puts "Using Code path = #{code_path}"
   puts
 end
@@ -338,6 +344,7 @@ posts_path = "#{cal_output_path}/#{posts_name}"
 pvals_filename = "#{cal_output_path}/#{pvals_name}"
 graphs_output_folder = "#{cal_output_path}/"
 
+
 BCRunner.runBC(code_path, priors_path, cal_data_com_path, cal_data_field_path,
                numOutVars, numWVars, numMCMC, pvals_filename, posts_path, verbose, randseed)
 
@@ -347,11 +354,12 @@ if numBurnin >= numMCMC
   numBurnin = 0
 end
 
-puts ('Generating Posterior Distribution Plots') if verbose
 #could pass in graph file names too
-GraphGenerator.graphPosteriors(priors_path, pvals_filename, numBurnin, graphs_output_folder)
+unless noplots
+  GraphGenerator.graphPosteriors(priors_path, pvals_filename, numBurnin, graphs_output_folder, verbose)
+end
+#calibrated_model = Calibrated_OSM.new
 
-calibrated_model = Calibrated_OSM.new
 meter_set_file = "#{path}/Simulation_Output_Settings.xlsx"
 calibrated_model_file = "#{path}/Calibrated_Model/Calibrated_#{building_model}"
 calibrated_osm_model_name = "Calibrated_#{building_name}"
@@ -359,17 +367,11 @@ run_manager_folder = "#{path}/Calibrated_Model"
 
 unless no_run_cal
   puts 'Generate and Running  Calibrated Model' if verbose
-  calibrated_model.gen_and_sim(osm_path,
-                               epw_path,
-                               priors_path,
-                               posts_path,
-                               meter_set_file,
-                               calibrated_model_file,
-                               calibrated_osm_model_name,
-                               run_manager_folder)
+  calibrated_model.gen_and_sim(osm_path,epw_path, priors_path, posts_path, meter_set_file, 
+                               calibrated_model_file, calibrated_osm_model_name, run_manager_folder, verbose)
 
 end
 
-puts 'BC.rb Completed Successfully!'
+puts 'BC.rb Completed Successfully!' if verbose
 
 

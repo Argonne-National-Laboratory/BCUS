@@ -30,6 +30,7 @@ Modified Date and By:
 
 08-Apr-2017 Ralph Muehleisen updated require_relative from LSH_Gen to LHS_Morris
 08-Apr-2017 Ralph Muehleisen add --noEP option to parser to avoid running EnergyPlus if the prerun files exist
+15-Apr-2017 Ralph Muehleisen converted code to read new columnar output of simulation meter files
 
 
 1. Introduction
@@ -204,7 +205,10 @@ if File.exist?("#{settingsfile_path}")
     }
     meters_table.push(meters_table_row)
   }
-
+  if verbose
+    puts "Meters Table"
+    puts meters_table
+  end
 else
   puts "#{settingsfile_path}was NOT found!"
   abort
@@ -232,7 +236,9 @@ lhs = LHSGenerator.new
 input_path = "#{path}"
 preruns_path = "#{path}/PreRuns_Output"
 
+puts "Generating LHS samples" if verbose
 lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, preruns_path, verbose, randseed)
+
 
 samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: true)
 parameter_names = []
@@ -262,12 +268,14 @@ else
       parameter_value << sample[k].to_f
     end
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-    # add reporting meters
+    
+    # add selected reporting meters to the OSM file
     for meter_index in 1..(meters_table.length-1)
       meter = OpenStudio::Model::Meter.new(model)
       meter.setName("#{meters_table[meter_index][0]}")
       meter.setReportingFrequency("#{meters_table[meter_index][1]}")
     end
+    # add monthly ave air temp and solar radiation meters to OSM.  These are used as inputs to the calibration
     variable = OpenStudio::Model::OutputVariable.new("Site Outdoor Air Drybulb Temperature", model)
     variable.setReportingFrequency("Monthly")
     variable = OpenStudio::Model::OutputVariable.new("Site Ground Reflected Solar Radiation Rate per Area", model)
@@ -281,7 +289,6 @@ else
     model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
     # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
-
     puts "Sample#{k-1} is saved to the folder of Models" if verbose
   }
 
@@ -289,16 +296,15 @@ else
   
   runner.run_osm("#{path}/PreRuns_Models", epw_path, "#{path}/PreRuns_Simulations", num_of_runs, verbose)
   
-                 
 end # if noEP
+
 # Read Simulation Results
 project_path = "#{path}"
 OutPut.Read(num_of_runs,project_path,'PreRuns',settingsfile_path, verbose)
 
-
 # clean up the temp files if skip cleanup not set
 if !skip_cleanup
-    File.delete("#{path}/PreRuns_Output/Random_LHS_Samples.csv") if File.exists?("#{path}/PreRuns_Output/Random_LHS_Samples.csv")
+    File.delete("#{path}/PreRuns_Output/LHS_Samples.csv") if File.exists?("#{path}/PreRuns_Output/LHS_Samples.csv")
     FileUtils.remove_dir("#{path}/PreRuns_Models") if Dir.exists?("#{path}/PreRuns_Models")
 end
 ## Prepare calibration input files
@@ -306,42 +312,53 @@ end
 
 y_sim = []
 if File.exists?("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv")
-    y_elec_table = CSV.read("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv",headers:false)
-    y_elec_table.delete_at(0)
-    y_elec_table.each do |run|
-        run.each do |data|
-            y_sim << data.to_f
-        end
-    end
+    y_elec_table = CSV.read("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv",:headers=> false)
+    y_elec_table.delete_at(0) # delete the first row of the table because its a header
+    # now we want to transpose and get rid of the first row and then flatten to concatenate all rows to one
+    y_temp = y_elec_table.transpose
+    y_temp.delete_at(0)
+    y_sim << y_temp.flatten
+end
+
+if verbose
+  puts "model electricty use table"
+  puts y_sim.inspect
 end
 
 if File.exists?("#{path}/PreRuns_Output/Meter_Gas_Facility.csv")
+    # read in the gas table and process just as we did for electricity above
     y_gas_table = CSV.read("#{path}/PreRuns_Output/Meter_Gas_Facility.csv",headers:false)
-    y_gas_table.delete_at(0)
-    row = 0
-    y_gas_table.each do |run|
-        run.each do |data|
-            y_sim[row] = [y_sim[row],data.to_f]
-            row += 1
-        end
-    end
+    y_gas_table.delete_at(0) # delete the first element of this table
+    y_temp = y_gas_table.transpose
+    y_temp.delete_at(0)
+    y_sim << y_temp.flatten
+    
 end
 
+# now get this back to a 2 column array
+y_sim = y_sim.transpose
+if verbose
+  puts "model electricity and gas use table"
+  puts y_sim.inspect
+end
 weather_table = CSV.read("#{path}/PreRuns_Output/Monthly_Weather.csv",headers:false)
 weather_table.delete_at(0)
 weather_table = weather_table.transpose
 monthly_temp = weather_table[0]
 monthly_solar = weather_table[1]
 
+# process the LHS parameter file
 cal_parameter_samples_table = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv",headers:false)
-cal_parameter_samples_table.delete_at(0)
+cal_parameter_samples_table.delete_at(0)  # delete the main header
 cal_parameter_samples_table = cal_parameter_samples_table.transpose
-cal_parameter_samples_table.delete_at(0)
-cal_parameter_samples_table.delete_at(0)
+cal_parameter_samples_table.delete_at(0)  # delete the 1st row (was first column)
+cal_parameter_samples_table.delete_at(0)  # delete the next row (was second column)
 
+# replicate each row y_elec_table.length times to get a y_elec_table.lengthx num cal parameter samples array 
+# this version should work with daily or hourly
 cal_parameter_samples = []
 cal_parameter_samples_table.each do |run|
-    for rep in 1..12 # Monthly
+    for rep in 1..y_elec_table.length # Monthly
         cal_parameter_samples << run
     end
 end
@@ -374,4 +391,4 @@ puts "cal_data_field length = #{cal_data_field.length}" if verbose
 writeToFile(cal_data_field,"#{path}/PreRuns_Output/cal_utility_data.txt")
 FileUtils.cp "#{path}/PreRuns_Output/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
 
-puts "BC_Setup.rb Completed Successfully!"
+puts "BC_Setup.rb Completed Successfully!" if verbose
