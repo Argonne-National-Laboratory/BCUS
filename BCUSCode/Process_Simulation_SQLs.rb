@@ -26,6 +26,8 @@ NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY
 
 Modified Date and By:
 - Created on Feb 27 by Yuming Sun from Argonne National Laboratory
+07-Apr-2017 Ralph Muehleisen, Updated to work with OS 1.14, change output file format, and clean up code
+15-Apr-2017 Ralph Muehleisen Updated to work for one or more than one OSM to analyze and cleaned up code
 
 1. Introduction
 This function reads simulation results generated in SQL.
@@ -91,11 +93,12 @@ end
 
 module OutPut
  
-  def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile_path, verbose=false)
-	
-  
+ # def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile, verbose=false)
+ def OutPut.Read(simulations_folder, output_folder, settingsfile, verbose=false)
+	  #simulations_folder = "#{project_path}/UA_Simulations"
+    #output_folder = "#{project_path}/UA_Output"
     # create a workbook to read in the simulation output settings file
-    workbook = RubyXL::Parser.parse(settingsfile_path)		
+    workbook = RubyXL::Parser.parse(settingsfile)		
 
     output_table = Array.new
     # find all the total energy tables requested in the simulation output settings file
@@ -114,30 +117,40 @@ module OutPut
       header[output_num - 1] = output_table[output_num].to_s[2..-3]
     }
     
-    # get the data from the SQL file
-    data_table = Array.new(num_of_runs){Array.new(output_table.length-1)}
-    (1..num_of_runs).each { |sample_num|
-      sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
-      sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
-      (1..(output_table.length-1)).each { |output_num|
-      
-        data_table[sample_num - 1][output_num - 1] = sql_table_lookup(output_table[output_num].to_s, sqlFile)
-        
-      }
-    }
+   
+    osmFiles = Dir.glob("#{simulations_folder}/*.osm")
+    num_of_runs = osmFiles.length
+     
+    sqlFiles = []
+    osmFiles.each do |f|
+      sqlFiles << "#{f.chomp(".osm")}/ModelToIDF/EnergyPlus-0/eplusout.sql"
+    end
 
-    #table = data_table
-    CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
+    data_table = Array.new(num_of_runs){Array.new(output_table.length-1)}
+    
+    if verbose
+      puts "List of SQL files to process in #{simulations_folder}"
+      puts sqlFiles
+    end
+    
+    sqlFiles.each_with_index do |f,index|
+      sqlFile = OpenStudio::SqlFile.new(f)
+      (1..(output_table.length-1)).each { |output_num|      
+        data_table[index][output_num - 1] = sql_table_lookup(output_table[output_num].to_s, sqlFile)
+      }
+    end
+
+    CSV.open("#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'wb') do |csv|
       csv << header
     end
 
-    CSV.open("#{project_path}/#{out_prefix}_Output/Simulation_Results_Building_Total_Energy.csv", 'a+') do |csv|
+    CSV.open("#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'a+') do |csv|
       data_table.each do |row|
         csv << row
       end
     end
 
-    puts 'Simulation_Results_Building_Total_Energy.csv is saved to the folder' if verbose
+    puts "Simulation results saved to #{output_folder}/Simulation_Results_Building_Total_Energy.csv" if verbose
 
     # look for all the requested meters using the same workbook as above
     meters_table = Array.new
@@ -157,12 +170,9 @@ module OutPut
       if meters_table[meter_index][1] == 'Timestep'
         meters_table[meter_index][1] = 'Zone Timestep'
       end
-      
-      (1..num_of_runs).each { |sample_num|
-      
-        sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample#{sample_num}/ModelToIdf/EnergyPlus-0/eplusout.sql"
-        sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
-        
+            
+      sqlFiles.each do |f|
+        sqlFile = OpenStudio::SqlFile.new(f)
         # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
         # we need this to make sure we only select data for actual weather period run and not the sizing runs
         query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods 
@@ -181,7 +191,7 @@ module OutPut
            
           var_value << sqlFile.execAndReturnVectorOfDouble(query_var_value).get
         end
-      }
+      end
 
       # create the first column of header from the meter time step info
       case meters_table[meter_index][1]
@@ -194,33 +204,27 @@ module OutPut
         else
           header = ['TimeStep']
       end
+      
       # create the rest of the columns from the simulation number
       (1..num_of_runs).each { |sample_num| 
         header << "Sim #{sample_num}"
       }
 
       csv_metername= "Meter_#{meters_table[meter_index][0].split(':')[0]}_#{meters_table[meter_index][0].split(':')[1]}"
-      csv_filename = "#{project_path}/#{out_prefix}_Output/" + csv_metername + '.csv'
+      csv_filename = "#{output_folder}/" + csv_metername + '.csv'
 
       CSV.open(csv_filename, 'wb') do |csv|
         csv << header
-      end
-
-      time =1
-      CSV.open(csv_filename, 'a+') do |csv|
-        var_value.transpose.each do |row|
-          row.insert(0,time)
+        var_value.transpose.each_with_index do |row,time|
+          row.insert(0,time+1)
           csv << row
-          time += 1
         end
         puts "#{csv_metername} is saved to the Output folder" if verbose
       end
     }
 
     weather_var = []
-
-    sqlFilePath = "#{project_path}/#{out_prefix}_Simulations/Sample1/ModelToIdf/EnergyPlus-0/eplusout.sql"
-    sqlFile = OpenStudio::SqlFile.new(sqlFilePath)
+    sqlFile = OpenStudio::SqlFile.new(sqlFiles[0])
 
     query_var_index = "SELECT ReportVariableDataDictionaryIndex FROM ReportVariableDataDictionary
            WHERE VariableName = 'Site Outdoor Air Drybulb Temperature' AND
@@ -254,11 +258,8 @@ module OutPut
 
     weather_out = (weather_var.transpose)*num_of_runs
 
-    CSV.open("#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'wb') do |csv|
+    CSV.open("#{output_folder}/Monthly_Weather.csv", 'wb') do |csv|
       csv << ['Monthly DryBuld Temp [C]', 'Monthly Horizontal Solar [W/m^2]']
-    end
-
-    CSV.open("#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'a+') do |csv|
       weather_out.each do |row|
         csv << row
       end

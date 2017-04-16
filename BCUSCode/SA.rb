@@ -49,7 +49,6 @@ References:
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'Process_Simulation_SQLs'
-#require_relative 'Morris'
 require_relative 'LHS_Morris'
 
 # use require to include functions from Ruby Library
@@ -198,8 +197,12 @@ path = Dir.pwd
 osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
-settingsfile_path = File.absolute_path(settingsfile_name)
+settingsfile = File.absolute_path(settingsfile_name)
 
+output_folder = "#{path}/SA_Output"
+models_folder = "#{path}/SA_Models"
+simulations_folder = "#{path}/SA_Simulations"
+uqtable_folder = output_folder
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name, '.osm')
 
@@ -236,16 +239,14 @@ else
   puts "#{uqrepo_path} was NOT found!"
   abort
 end
+
 # remove the first two rows of headers
-(1..2).each { |i|
-  uq_table.delete_at(0)
-  i += 1
-}
+uq_table.delete_at(0)
+uq_table.delete_at(0)
 
-
-if File.exist?("#{settingsfile_path}")
-  puts "Using Output Settings = #{settingsfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
+if File.exist?("#{settingsfile}")
+  puts "Using Output Settings = #{settingsfile}" if verbose
+  workbook = RubyXL::Parser.parse("#{settingsfile}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -256,7 +257,7 @@ if File.exist?("#{settingsfile_path}")
     meters_table.push(meters_table_row)
   }
 else
-  puts "#{settingsfile_path} was NOT found!"
+  puts "#{settingsfile} was NOT found!"
   abort
 end
 
@@ -268,20 +269,18 @@ end
 
 uncertainty_parameters = UncertainParameters.new
 
-Dir.mkdir "#{path}/SA_Output" unless Dir.exist?("#{path}/SA_Output")
+Dir.mkdir output_folder unless Dir.exist?(output_folder)
 
 puts 'Step 1: Generate uncertainty parameters distributions' if verbose
-file_name = "#{path}/SA_Output/UQ_#{building_name}.csv"
+file_name = "#{output_folder}/UQ_#{building_name}.csv"
 uncertainty_parameters.find(model, uq_table, file_name, verbose)
 
 puts 'Step2: Generate Morris Design Matrix' if verbose
 morris = Morris.new
-file_path = "#{path}/SA_Output"
-#morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
-morris.design_matrix(file_path, file_name, morris_R, morris_levels, randseed, verbose)
+morris.design_matrix(output_folder, file_name, morris_R, morris_levels, randseed, verbose)
 
 # step 3, run the simulations.  Get number runs from the size of Morris_CDF_Tran_Design
-samples = CSV.read("#{path}/SA_Output/Morris_CDF_Tran_Design.csv", headers: true)
+samples = CSV.read("#{output_folder}/Morris_CDF_Tran_Design.csv", headers: true)
 
 parameter_names = []
 parameter_types = []
@@ -321,11 +320,11 @@ else
     variable.setReportingFrequency('Monthly')
 
     # meters saved to sql file
-    model.save("#{path}/SA_Models/Sample#{k-1}.osm", true)
+    model.save("#{models_folder}/Sample#{k-1}.osm", true)
 
     # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
-    model_output_path = "#{path}/SA_Models/Sample#{k-1}.osm"
+    out_file_path_name_thermostat = "#{output_folder}/UQ_#{building_name}_thermostat.csv"
+    model_output_path = "#{models_folder}/Sample#{k-1}.osm"
     uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
     puts "Sample#{k-1} is saved to the folder of Models" if verbose
@@ -333,32 +332,26 @@ else
 
   # use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
   runner = RunOSM.new()
-  runner.run_osm("#{path}/SA_Models",
-                 epw_path,
-                 "#{path}/SA_Simulations",
-                 num_of_runs,
-                 verbose)
+  runner.run_osm(models_folder, epw_path, simulations_folder, num_of_runs, verbose)
+
 end
 
 puts "Step 4: Read simulation results, run Morris method analysis and plot sensitivity results" if verbose
-project_path = "#{path}"
-results_path = "#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv"
-OutPut.Read(num_of_runs, project_path, 'SA' , settingsfile_path, verbose)
-
+results_file = "#{output_folder}/Simulation_Results_Building_Total_Energy.csv"
+OutPut.Read(simulations_folder, output_folder, settingsfile, verbose)
 num_variable_name_chars = 60 # set the maximum size of variable names for printout in sensitivity analysis
-morris.compute_sensitivities(results_path, file_path, file_name, verbose, num_variable_name_chars)
+morris.compute_sensitivities(results_file, output_folder, file_name, verbose, num_variable_name_chars)
 
-unless skip_cleanup
-  #delete intermediate files
-
-  File.delete("#{path}/SA_Output/Morris_CDF_Tran_Design.csv") if File.exists?("#{path}/SA_Output/Morris_CDF_Tran_Design.csv")
-  File.delete("#{path}/SA_Output/Morris_0_1_Design.csv") if File.exists?("#{path}/SA_Output/Morris_0_1_Design.csv")
-  File.delete("#{path}/SA_Output/Monthly_Weather.csv") if File.exists?("#{path}/SA_Output/Monthly_Weather.csv")
-  File.delete("#{path}/SA_Output/Meter_Electricity.csv") if File.exists?("#{path}/SA_Output/Meter_Electricity_Facility.csv")
-  File.delete("#{path}/SA_Output/Meter_Gas.csv") if File.exists?("#{path}/SA_Output/Meter_Gas_Facility.csv")
-  File.delete("#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv") if File.exists?("#{path}/SA_Output Simulation_Results_Building_Total_Energy.csv")
+unless skip_cleanup #delete intermediate files unless skip_cleanup was selected.
+  
+  File.delete("#{output_folder}/Morris_CDF_Tran_Design.csv") if File.exists?("#{path}/SA_Output/Morris_CDF_Tran_Design.csv")
+  File.delete("#{output_folder}/Morris_0_1_Design.csv") if File.exists?("#{path}/SA_Output/Morris_0_1_Design.csv")
+  File.delete("#{output_folder}/Monthly_Weather.csv") if File.exists?("#{path}/SA_Output/Monthly_Weather.csv")
+  File.delete("#{output_folder}/Meter_Electricity.csv") if File.exists?("#{path}/SA_Output/Meter_Electricity_Facility.csv")
+  File.delete("#{output_folder}/Meter_Gas.csv") if File.exists?("#{path}/SA_Output/Meter_Gas_Facility.csv")
+  File.delete("#{output_folder}/Simulation_Results_Building_Total_Energy.csv") if File.exists?("#{output_folder}/Simulation_Results_Building_Total_Energy.csv")
   File.delete("#{path}/Morris_design") if File.exists?("#{path}/Morris_design")
-  FileUtils.remove_dir("#{path}/SA_Models") if Dir.exists?("#{path}/SA_Models")
+  FileUtils.remove_dir(models_folder) if Dir.exists?(models_folder)
 end
 
 puts 'SA.rb Completed Successfully!' if verbose

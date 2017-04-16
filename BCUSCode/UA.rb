@@ -29,6 +29,7 @@ Modified Date and By:
 - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
 - 02-Apr-2017: RTM: Added noEP option
+15-Apr-2017: Updated call to output.read to reflect input file/dir formats/names and cleaned up code
 
 
 1. Introduction
@@ -43,7 +44,6 @@ Refer to 'Function Call Structure_UA.pptx'
 
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-#require_relative 'LHS_Gen'
 require_relative 'LHS_Morris'
 require_relative 'Process_Simulation_SQLs'
 
@@ -188,7 +188,7 @@ osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
 outfile_path = File.absolute_path(outfile_name)
-settingsfile_path = File.absolute_path(settingsfile_name)
+settingsfile = File.absolute_path(settingsfile_name)
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name, '.osm')
@@ -210,7 +210,12 @@ else
   abort
 end
 
-Dir.mkdir "#{path}/UA_Output" unless Dir.exist?("#{path}/UA_Output")
+output_folder = "#{path}/UA_Output"
+models_folder = "#{path}/UA_Models"
+simulations_folder = "#{path}/UA_Simulations"
+uqtable_folder = output_folder
+
+Dir.mkdir output_folder unless Dir.exist?(output_folder)
 
 # Load UQ repository
 if File.exist?("#{uqrepo_path}")
@@ -230,9 +235,9 @@ else
   abort
 end
 
-if File.exist?("#{settingsfile_path}")
-  puts "Using Output Settings = #{settingsfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
+if File.exist?("#{settingsfile}")
+  puts "Using Output Settings = #{settingsfile}" if verbose
+  workbook = RubyXL::Parser.parse("#{settingsfile}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -244,7 +249,7 @@ if File.exist?("#{settingsfile_path}")
   }
 
 else
-  puts "#{settingsfile_path} was NOT found!"
+  puts "#{settingsfile} was NOT found!"
   abort
 end
 
@@ -259,23 +264,21 @@ end
 }
 
 # Define the output path of building specific uncertainty table
-out_file_path_name = "#{path}/UA_Output/UQ_#{building_name}.csv"
+uq_out_file_path_name = "#{output_folder}/UQ_#{building_name}.csv"
 uncertainty_parameters = UncertainParameters.new
-uncertainty_parameters.find(model, uq_table, out_file_path_name, verbose)
+uncertainty_parameters.find(model, uq_table, uq_out_file_path_name, verbose)
 
 if run_interactive
-  puts "Check the #{path}/UA_Output/UQ_#{building_name}.csv"
+  puts "Check the #{uq_out_file_path_name}"
   wait_for_y
 end
 
-uqtablefilePath = "#{path}/UA_Output"
-outputfilePath = "#{path}/UA_Output"
-
 # Generate LHS samples
 lhs = LHSGenerator.new
-lhs.lhs_samples_generator(uqtablefilePath, 'UQ_'+ building_name + '.csv', num_LHS_runs, outputfilePath, verbose, randseed)
+# run generator and make the uqtable_folder the same as the output_folder
+lhs.lhs_samples_generator(output_folder, 'UQ_'+ building_name + '.csv', num_LHS_runs, output_folder, verbose, randseed)
 
-samples = CSV.read("#{path}/UA_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{output_folder}/LHS_Samples.csv", headers: true)
 parameter_names = []
 parameter_types = []
 
@@ -290,7 +293,6 @@ if run_interactive
   puts "Going to run #{num_LHS_runs} models.  This could take a while"
   wait_for_y
 end
-
 
 if noEP
   if verbose
@@ -315,29 +317,31 @@ else
     variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
     variable.setReportingFrequency('Monthly')
     # meters saved to sql file
-    model.save("#{path}/UA_Models/Sample#{k-1}.osm", true)
+    model.save("#{models_folder}/Sample#{k-1}.osm", true)
 
     # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{path}/UA_Output/UQ_#{building_name}_thermostat.csv"
-    model_output_path = "#{path}/UA_Models/Sample#{k-1}.osm"
-    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+    out_file_path_name_thermostat = "#{output_folder}/UQ_#{building_name}_thermostat.csv"
+    model_output_file = "#{models_folder}/Sample#{k-1}.osm"
+    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_file, parameter_types, parameter_value)
 
     puts "Sample#{k-1} is saved to the folder of Models" if verbose
   }
 
   # run all the OSM simulation files 
   runner = RunOSM.new
-  runner.run_osm("#{path}/UA_Models", epw_path, "#{path}/UA_Simulations", num_LHS_runs, verbose)
+  runner.run_osm(models_folder, epw_path, simulations_folder, num_LHS_runs, verbose)
 end
 
 # Read Simulation Results
 project_path = "#{path}"
-OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile_path, verbose)
+
+#OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile, verbose)
+OutPut.Read("#{path}/UA_Simulations", "#{path}/UA_Output",  settingsfile, verbose)
 
 #delete intermediate files
 unless skip_cleanup
-  File.delete("#{path}/UA_Output/Monthly_Weather.csv") if File.exists?("#{path}/UA_Output/Monthly_Weather.csv")
-  FileUtils.remove_dir("#{path}/UA_Models") if Dir.exists?("#{path}/UA_Models")
+  File.delete("#{output_folder}/Monthly_Weather.csv") if File.exists?("#{output_folder}/Monthly_Weather.csv")
+  FileUtils.remove_dir(models_folder) if Dir.exists?(models_folder)
 end
 
 puts 'UA.rb Completed Successfully!' if verbose

@@ -180,22 +180,29 @@ noEP = options[:noEP]
 path = Dir.pwd
 
 # expand filenames to full paths
-osm_path = File.absolute_path(osm_name)     
-epw_path = File.absolute_path(epw_name)
+osm_file = File.absolute_path(osm_name)     
+epw_file = File.absolute_path(epw_name)
 outfile_path = File.absolute_path(outfile_name)
-settingsfile_path = File.absolute_path(settingsfile_name)
+settings_file = File.absolute_path(settingsfile_name)
+
+
+output_folder = "#{path}/PreRuns_Output"
+models_folder = "#{path}/PreRuns_Models"
+simulations_folder = "#{path}/PreRuns_Simulations"
+#uqtable_folder = output_folder
+
 
 #extract out just the base filename from the OSM file as the building name
 building_name=File.basename(osm_name,".osm")
 
-if not Dir.exist?("#{path}/PreRuns_Output")
-  Dir.mkdir "#{path}/PreRuns_Output"
+unless Dir.exist?(output_folder)
+  Dir.mkdir(output_folder)
 end
 
 
-if File.exist?("#{settingsfile_path}")
-  puts "Using Output Settings = #{settingsfile_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile_path}")
+if File.exist?(settings_file)
+  puts "Using Output Settings = #{settings_file}" if verbose
+  workbook = RubyXL::Parser.parse("#{settings_file}")
   meters_table = Array.new
   meters_table_row = Array.new
   workbook['Meters'].each { |row|
@@ -210,24 +217,24 @@ if File.exist?("#{settingsfile_path}")
     puts meters_table
   end
 else
-  puts "#{settingsfile_path}was NOT found!"
+  puts "#{settings_file}was NOT found!"
   abort
 end
 
 # check if .osm model exists and if so, load it
-if File.exist?("#{osm_path}")
-  model = OpenStudio::Model::Model::load(osm_path).get
-  puts "Using OSM file #{osm_path}" if verbose
+if File.exist?("#{osm_file}")
+  model = OpenStudio::Model::Model::load(osm_file).get
+  puts "Using OSM file #{osm_file}" if verbose
 else
-  puts "OpenStudio file #{osm_path} not found!"
+  puts "OpenStudio file #{osm_file} not found!"
   abort
 end
 
 # check if .epw exists
-if File.exist?("#{epw_path}")
-  puts "Using EPW file #{epw_path}" if verbose
+if File.exist?("#{epw_file}")
+  puts "Using EPW file #{epw_file}" if verbose
 else
-  puts "Weather model #{epw_path} not found!"
+  puts "Weather model #{epw_file} not found!"
   abort
 end
 
@@ -237,10 +244,10 @@ input_path = "#{path}"
 preruns_path = "#{path}/PreRuns_Output"
 
 puts "Generating LHS samples" if verbose
-lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, preruns_path, verbose, randseed)
+lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, output_folder, verbose, randseed)
 
 
-samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{output_folder}/LHS_Samples.csv", headers: true)
 parameter_names = []
 parameter_types = []
 
@@ -250,7 +257,6 @@ samples.each do |sample|
 end
 
 uncertainty_parameters = UncertainParameters.new
-
 priors_table = "#{path}/#{priors_name}"
 
 if noEP
@@ -262,7 +268,7 @@ if noEP
 else
   (2..samples[0].length-1).each { |k|
   
-    model = OpenStudio::Model::Model::load(osm_path).get  # reload the model to get the same starting point each time
+    model = OpenStudio::Model::Model::load(osm_file).get  # reload the model to get the same starting point each time
     parameter_value = []
     samples.each do |sample|
       parameter_value << sample[k].to_f
@@ -282,37 +288,37 @@ else
     variable.setReportingFrequency("Monthly")
 
     # meters saved to sql file
-    model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
+    model.save("#{models_folder}/Sample#{k-1}.osm", true)
 
     # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
-    model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
+    out_file_path_name_thermostat = "#{models_folder}/UQ_#{building_name}_thermostat.csv"
+    model_output_path = "#{models_folder}/Sample#{k-1}.osm"
     # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
     puts "Sample#{k-1} is saved to the folder of Models" if verbose
   }
 
   runner = RunOSM.new()
-  
-  runner.run_osm("#{path}/PreRuns_Models", epw_path, "#{path}/PreRuns_Simulations", num_of_runs, verbose)
+  runner.run_osm(models_folder, epw_file, simulations_folder, num_of_runs, verbose)
   
 end # if noEP
 
 # Read Simulation Results
-project_path = "#{path}"
-OutPut.Read(num_of_runs,project_path,'PreRuns',settingsfile_path, verbose)
+#project_path = "#{path}"
+#OutPut.Read(num_of_runs,project_path,'PreRuns',settings_file, verbose)
+OutPut.Read(simulations_folder, output_folder, settings_file, verbose)
 
 # clean up the temp files if skip cleanup not set
-if !skip_cleanup
-    File.delete("#{path}/PreRuns_Output/LHS_Samples.csv") if File.exists?("#{path}/PreRuns_Output/LHS_Samples.csv")
-    FileUtils.remove_dir("#{path}/PreRuns_Models") if Dir.exists?("#{path}/PreRuns_Models")
+unless skip_cleanup
+    File.delete("#{output_folder}/LHS_Samples.csv") if File.exists?("#{output_folder}/LHS_Samples.csv")
+    FileUtils.remove_dir(models_folder) if Dir.exists?(models_folder)
 end
 ## Prepare calibration input files
 # # y_sim, Monthly Drybuld, Monthly Solar Horizontal, Calibration parameter samples...
 
 y_sim = []
-if File.exists?("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv")
-    y_elec_table = CSV.read("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv",:headers=> false)
+if File.exists?("#{output_folder}/Meter_Electricity_Facility.csv")
+    y_elec_table = CSV.read("#{output_folder}/Meter_Electricity_Facility.csv",:headers=> false)
     y_elec_table.delete_at(0) # delete the first row of the table because its a header
     # now we want to transpose and get rid of the first row and then flatten to concatenate all rows to one
     y_temp = y_elec_table.transpose
@@ -320,14 +326,14 @@ if File.exists?("#{path}/PreRuns_Output/Meter_Electricity_Facility.csv")
     y_sim << y_temp.flatten
 end
 
-if verbose
-  puts "model electricty use table"
-  puts y_sim.inspect
-end
+# if verbose
+  # puts "model electricty use table"
+  # puts y_sim.inspect
+# end
 
-if File.exists?("#{path}/PreRuns_Output/Meter_Gas_Facility.csv")
+if File.exists?("#{output_folder}/Meter_Gas_Facility.csv")
     # read in the gas table and process just as we did for electricity above
-    y_gas_table = CSV.read("#{path}/PreRuns_Output/Meter_Gas_Facility.csv",headers:false)
+    y_gas_table = CSV.read("#{output_folder}/Meter_Gas_Facility.csv",headers:false)
     y_gas_table.delete_at(0) # delete the first element of this table
     y_temp = y_gas_table.transpose
     y_temp.delete_at(0)
@@ -337,11 +343,8 @@ end
 
 # now get this back to a 2 column array
 y_sim = y_sim.transpose
-if verbose
-  puts "model electricity and gas use table"
-  puts y_sim.inspect
-end
-weather_table = CSV.read("#{path}/PreRuns_Output/Monthly_Weather.csv",headers:false)
+
+weather_table = CSV.read("#{output_folder}/Monthly_Weather.csv",headers:false)
 weather_table.delete_at(0)
 weather_table = weather_table.transpose
 monthly_temp = weather_table[0]
@@ -368,8 +371,8 @@ y_sim.each_with_index do |y,index|
     cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
 end
 
-writeToFile(cal_data_com,"#{path}/PreRuns_Output/cal_sim_runs.txt", verbose)
-FileUtils.cp "#{path}/PreRuns_Output/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
+writeToFile(cal_data_com,"#{output_folder}/cal_sim_runs.txt", verbose)
+FileUtils.cp "#{output_folder}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
 
 utility_file=options[:utilityData]
 
@@ -387,8 +390,7 @@ y_meter.each_with_index do |y,index|
     cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
 end
 
-puts "cal_data_field length = #{cal_data_field.length}" if verbose
-writeToFile(cal_data_field,"#{path}/PreRuns_Output/cal_utility_data.txt")
-FileUtils.cp "#{path}/PreRuns_Output/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
+writeToFile(cal_data_field,"#{output_folder}/cal_utility_data.txt")
+FileUtils.cp "#{output_folder}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
 
 puts "BC_Setup.rb Completed Successfully!" if verbose

@@ -122,7 +122,7 @@ require 'fileutils'
 
 # load in our own libraries
 require_relative 'graphGenerator'
-require_relative 'Calibrated_OS_Model'
+require_relative 'calibrateOSModel'
 require_relative 'bCRunner'
 
 # parse commandline inputs from the user
@@ -212,7 +212,12 @@ parser = OptionParser.new do |opts|
   opts.on('--noPlots','Do not produce any PDF plots') do 
     options[:noplots] = true
   end
-
+  
+ options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
+    options[:settingsFile] = settingsFile
+  end
+  
   opts.on('-h', '--help', 'Displays Help') do
     puts opts
     exit
@@ -250,7 +255,7 @@ else # otherwise the --epwName option was used
   epw_name = options[:epwName]
 end
 
-epw_path = File.absolute_path(epw_name)
+epw_file = File.absolute_path(epw_name)
 
 # require the following files from parametric simulations
 # Calibration_Parameters_Prior.csv
@@ -274,14 +279,15 @@ epw_path = File.absolute_path(epw_name)
 #input file names
 
 path = Dir.pwd
-cal_output_path = "#{path}/Calibration_Output/"
+output_folder = "#{path}/Calibration_Output"
 
-priors_path = File.absolute_path(options[:priorsFile])
+priors_file = File.absolute_path(options[:priorsFile])
 
 cal_data_com_path = File.absolute_path(options[:comFile])
 cal_data_field_path = File.absolute_path(options[:fieldFile])
 posts_name = options[:postsFile]
 pvals_name = options[:pvalsFile]
+settings_file = File.absolute_path(options[:settingsFile])
 
 numMCMC = Integer(options[:numMCMC])
 numOutVars = Integer(options[:numOutVars])
@@ -293,12 +299,14 @@ no_run_cal= options[:noRunCal]
 noEP = options[:noEP]
 noplots = options[:noplots]
 
+
 skip_cleanup = options[:noCleanup]
 
 code_path = ENV['BCUSCODE']
 
 if verbose
   puts 'Not Cleaning Up Interim Files' if skip_cleanup
+  puts "Using output_folder = #{output_folder}"
   puts "Using numOutVars = #{numOutVars}"
   puts "Using numWVars = #{numWVars}"
   puts "Using numMCMC = #{numMCMC}"
@@ -315,10 +323,10 @@ end
 # check for existence of input files
 
 # check if priors file exists
-if File.exist?("#{priors_path}")
-  puts "Using Priors CSV file #{priors_path}" if verbose
+if File.exist?("#{priors_file}")
+  puts "Using Priors CSV file #{priors_file}" if verbose
 else
-  puts "Priors file #{priors_path} not found!"
+  puts "Priors file #{priors_file} not found!"
   abort
 end
 
@@ -338,15 +346,13 @@ else
   abort
 end
 
-Dir.mkdir "#{cal_output_path}" unless Dir.exist?("#{cal_output_path}")
+Dir.mkdir "#{output_folder}" unless Dir.exist?("#{output_folder}")
 
-posts_path = "#{cal_output_path}/#{posts_name}"
-pvals_filename = "#{cal_output_path}/#{pvals_name}"
-graphs_output_folder = "#{cal_output_path}/"
+posts_file = "#{output_folder}/#{posts_name}"
+pvals_file = "#{output_folder}/#{pvals_name}"
 
-
-BCRunner.runBC(code_path, priors_path, cal_data_com_path, cal_data_field_path,
-               numOutVars, numWVars, numMCMC, pvals_filename, posts_path, verbose, randseed)
+BCRunner.runBC(code_path, priors_file, cal_data_com_path, cal_data_field_path,
+               numOutVars, numWVars, numMCMC, pvals_file, posts_file, verbose, randseed)
 
 
 if numBurnin >= numMCMC
@@ -356,19 +362,19 @@ end
 
 #could pass in graph file names too
 unless noplots
-  GraphGenerator.graphPosteriors(priors_path, pvals_filename, numBurnin, graphs_output_folder, verbose)
+  GraphGenerator.graphPosteriors(priors_file, pvals_file, numBurnin, output_folder, verbose)
 end
-#calibrated_model = Calibrated_OSM.new
+calibrated_model = Calibrated_OSM.new
 
 meter_set_file = "#{path}/Simulation_Output_Settings.xlsx"
-calibrated_model_file = "#{path}/Calibrated_Model/Calibrated_#{building_model}"
+calibrated_output_folder = "#{path}/Calibrated_Model"
+calibrated_model_file = "#{output_folder}/Calibrated_#{building_model}"
 calibrated_osm_model_name = "Calibrated_#{building_name}"
-run_manager_folder = "#{path}/Calibrated_Model"
 
 unless no_run_cal
-  puts 'Generate and Running  Calibrated Model' if verbose
-  calibrated_model.gen_and_sim(osm_path,epw_path, priors_path, posts_path, meter_set_file, 
-                               calibrated_model_file, calibrated_osm_model_name, run_manager_folder, verbose)
+  puts 'Generate and Run the Calibrated Model' if verbose
+  calibrated_model.gen_and_sim(osm_path,epw_file, priors_file, posts_file, settings_file, 
+                               calibrated_model_file, calibrated_osm_model_name, output_folder, verbose)
 
 end
 
