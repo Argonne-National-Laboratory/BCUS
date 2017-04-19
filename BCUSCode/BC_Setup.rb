@@ -58,7 +58,7 @@ require 'fileutils'
 require 'csv'
 require 'rubyXL'
 
-def writeToFile(results, filename, verbose = false)
+def write_to_file(results, filename, verbose = false)
   File.open(filename, 'w+') do |f|
     results.each do |results_row|
       results_row.each do |r|
@@ -349,7 +349,7 @@ y_sim.each_with_index do |y, index|
   cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
 end
 
-writeToFile(cal_data_com, "#{output_folder}/cal_sim_runs.txt", verbose)
+write_to_file(cal_data_com, "#{output_folder}/cal_sim_runs.txt", verbose)
 FileUtils.cp "#{output_folder}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
 
 utility_file = options[:utilityData]
@@ -368,7 +368,7 @@ y_meter.each_with_index do |y, index|
   cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
 end
 
-writeToFile(cal_data_field, "#{output_folder}/cal_utility_data.txt")
+write_to_file(cal_data_field, "#{output_folder}/cal_utility_data.txt")
 FileUtils.cp "#{output_folder}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
 
 puts 'BC_Setup.rb Completed Successfully!' if verbose

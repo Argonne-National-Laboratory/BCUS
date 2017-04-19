@@ -1,43 +1,42 @@
-=begin comments
-Copyright © 2016 , UChicago Argonne, LLC
-All Rights Reserved
-OPEN SOURCE LICENSE
+# begin comments
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Copyright © 2016 , UChicago Argonne, LLC
+# All Rights Reserved
+# OPEN SOURCE LICENSE
 
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  Software changes, modifications, or derivative works, should be noted with comments and the author and organization’s name.
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  Software changes, modifications, or derivative works, should be noted with comments and the author and organization’s name.
 
-3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
-4. The software and the end-user documentation included with the redistribution, if any, must include the following acknowledgment:
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
-   "This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+# 4. The software and the end-user documentation included with the redistribution, if any, must include the following acknowledgment:
 
-******************************************************************************************************
-DISCLAIMER
+#    "This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.”
 
-THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+# ******************************************************************************************************
+# DISCLAIMER
 
-NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+# THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 
-***************************************************************************************************
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
-Modified Date and By:
-- Updates 27-mar-2017 by RTM to pass verbose to Uncertain_Parameters call
-- Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
-- Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
-- 02-Apr-2017: RTM: Added noEP option
-15-Apr-2017: Updated call to output.read to reflect input file/dir formats/names and cleaned up code
+# ***************************************************************************************************
 
+# Modified Date and By:
+# - Updates 27-mar-2017 by RTM to pass verbose to Uncertain_Parameters call
+# - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
+# - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
+# - 02-Apr-2017: RTM: Added noEP option
+# 15-Apr-2017: Updated call to output.read to reflect input file/dir formats/names and cleaned up code
 
-1. Introduction
-This is the main function of uncertainty analysis.
+# 1. Introduction
+# This is the main function of uncertainty analysis.
 
-2. Call structure
-Refer to 'Function Call Structure_UA.pptx'
-=end
+# 2. Call structure
+# Refer to 'Function Call Structure_UA.pptx'
 
 # use require_relative to include ruby functions developed in the project
 # Run_All_OSMs.rb is developed by OpenStudio team at NREL
@@ -54,23 +53,20 @@ require 'rubyXL'
 require 'optparse'
 require 'fileutils'
 
-# define prompt to wait for user to enter y or Y to continue for interactive 
+# define prompt to wait for user to enter y or Y to continue for interactive
 def wait_for_y
   check = 'n'
-  while check != 'y' and check != 'Y'
+  while check != 'y' && check != 'Y'
     puts 'Please enter "Y" or "y" to continue, "n" or "N" or "CTRL-Z" to quit\n'
-    #check = Readline.readline().squeeze(" ").strip.downcase
+    # check = Readline.readline().squeeze(" ").strip.downcase
     # read from keyboard, strip leading and trailing spaces and convert to lower case
     check = $stdin.gets.strip.downcase
-    if check == 'n'
-      abort
-    end
+    abort if check == 'n'
   end
 end
 
-
 # parse commandline inputs from the user
-options = {:osmName => nil, :epwName => nil}
+options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: UA.rb [options]'
 
@@ -117,10 +113,10 @@ parser = OptionParser.new do |opts|
   end
 
   options[:verbose] = false
-  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do 
+  opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
   end
-  
+
   options[:noep] = false
   opts.on('--noEP', 'Do not run EnergyPlus') do
     options[:noEP] = true
@@ -133,10 +129,10 @@ parser = OptionParser.new do |opts|
 end
 parser.parse!
 
-if options[:osmName] == nil
+if options[:osmName].nil?
   if ARGV.grep(/.osm/).any?
-    temp=ARGV.grep /.osm/
-    osm_name=temp[0]
+    temp = ARGV.grep(/.osm/)
+    osm_name = temp[0]
   else
     puts 'An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line'
     abort
@@ -146,10 +142,10 @@ else # otherwise the --osmName option was used
 end
 
 # if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
-if options[:epwName] == nil
+if options[:epwName].nil?
   if ARGV.grep(/.epw/).any?
-    temp=ARGV.grep /.epw/
-    epw_name=temp[0]
+    temp = ARGV.grep(/.osm/)
+    epw_name = temp[0]
   else
     puts 'An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line'
     abort
@@ -160,7 +156,7 @@ end
 
 verbose = options[:verbose]
 uqrepo_name = options[:uqRepo]
-outfile_name = options[:settingsFile]
+#outfile_name = options[:settingsFile]
 settingsfile_name = options[:settingsFile]
 run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
@@ -169,9 +165,7 @@ randseed = Integer(options[:randseed])
 noEP = options[:noEP]
 
 # if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
-if noEP
-  skip_cleanup = true
-end
+skip_cleanup = true if noEP
 
 if run_interactive
   puts 'Running Interactively'
@@ -187,14 +181,14 @@ path = Dir.pwd
 osm_path = File.absolute_path(osm_name)
 epw_path = File.absolute_path(epw_name)
 uqrepo_path = File.absolute_path(uqrepo_name)
-outfile_path = File.absolute_path(outfile_name)
+#outfile_path = File.absolute_path(outfile_name)
 settingsfile = File.absolute_path(settingsfile_name)
 
-#extract out just the base filename from the OSM file as the building name
-building_name=File.basename(osm_name, '.osm')
+# extract out just the base filename from the OSM file as the building name
+building_name = File.basename(osm_name, '.osm')
 
 # check if .osm model exists and if so, load it
-if File.exist?("#{osm_path}")
+if File.exist?(osm_path.to_s)
   model = OpenStudio::Model::Model::load(osm_path).get
   puts "Using OSM file #{osm_path}" if verbose
 else
@@ -203,7 +197,7 @@ else
 end
 
 # check if .epw exists
-if File.exist?("#{epw_path}")
+if File.exist?(epw_path.to_s)
   puts "Using EPW file #{epw_path}" if verbose
 else
   puts "Weather model #{epw_path} not found!"
@@ -213,41 +207,40 @@ end
 output_folder = "#{path}/UA_Output"
 models_folder = "#{path}/UA_Models"
 simulations_folder = "#{path}/UA_Simulations"
-uqtable_folder = output_folder
+#uqtable_folder = output_folder
 
 Dir.mkdir output_folder unless Dir.exist?(output_folder)
 
 # Load UQ repository
-if File.exist?("#{uqrepo_path}")
+if File.exist?(uqrepo_path.to_s)
   puts "Using UQ repository = #{uqrepo_path}" if verbose
-  workbook = RubyXL::Parser.parse("#{uqrepo_path}")
-  uq_table = Array.new
-  uq_table_row = Array.new
-  workbook['UQ'].each { |row|
+  workbook = RubyXL::Parser.parse(uqrepo_path.to_s)
+  uq_table = []
+  uq_table_row = []
+  workbook['UQ'].each do |row|
     uq_table_row = []
-    row.cells.each { |cell|
+    row.cells.each do |cell|
       uq_table_row.push(cell.value)
-    }
+    end
     uq_table.push(uq_table_row)
-  }
+  end
 else
   puts "#{uqrepo_path} was NOT found!"
   abort
 end
 
-if File.exist?("#{settingsfile}")
+if File.exist?(settingsfile.to_s)
   puts "Using Output Settings = #{settingsfile}" if verbose
-  workbook = RubyXL::Parser.parse("#{settingsfile}")
-  meters_table = Array.new
-  meters_table_row = Array.new
-  workbook['Meters'].each { |row|
+  workbook = RubyXL::Parser.parse(settingsfile.to_s)
+  meters_table = []
+  meters_table_row = []
+  workbook['Meters'].each do |row|
     meters_table_row = []
-    row.cells.each { |cell|
+    row.cells.each do |cell|
       meters_table_row.push(cell.value)
-    }
+    end
     meters_table.push(meters_table_row)
-  }
-
+  end
 else
   puts "#{settingsfile} was NOT found!"
   abort
@@ -258,10 +251,9 @@ if verbose
   puts "Using Random Seed = #{randseed}"
 end
 
-# remove the header rows
-(1..2).each { |i|
-  uq_table.delete_at(0)
-}
+# remove the 2 header rows
+uq_table.delete_at(0)
+uq_table.delete_at(0)
 
 # Define the output path of building specific uncertainty table
 uq_out_file_path_name = "#{output_folder}/UQ_#{building_name}.csv"
@@ -276,7 +268,7 @@ end
 # Generate LHS samples
 lhs = LHSGenerator.new
 # run generator and make the uqtable_folder the same as the output_folder
-lhs.lhs_samples_generator(output_folder, 'UQ_'+ building_name + '.csv', num_LHS_runs, output_folder, verbose, randseed)
+lhs.lhs_samples_generator(output_folder, 'UQ_' + building_name + '.csv', num_LHS_runs, output_folder, verbose, randseed)
 
 samples = CSV.read("#{output_folder}/LHS_Samples.csv", headers: true)
 parameter_names = []
@@ -301,17 +293,17 @@ if noEP
     puts
   end
 else
-  (2..samples[0].length-1).each { |k|
+  (2..samples[0].length - 1).each do |k|
     model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
     parameter_value = []
     samples.each { |sample| parameter_value << sample[k].to_f }
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
     # add reporting meters
-    (1..(meters_table.length-1)).each { |meter_index|
+    (1..(meters_table.length - 1)).each do |meter_index|
       meter = OpenStudio::Model::Meter.new(model)
-      meter.setName("#{meters_table[meter_index][0]}")
-      meter.setReportingFrequency("#{meters_table[meter_index][1]}")
-    }
+      meter.setName(meters_table[meter_index][0].to_s)
+      meter.setReportingFrequency(meters_table[meter_index][1].to_s)
+    end
     variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
     variable.setReportingFrequency('Monthly')
     variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
@@ -325,23 +317,20 @@ else
     uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_file, parameter_types, parameter_value)
 
     puts "Sample#{k-1} is saved to the folder of Models" if verbose
-  }
+  end
 
-  # run all the OSM simulation files 
+  # run all the OSM simulation files
   runner = RunOSM.new
   runner.run_osm(models_folder, epw_path, simulations_folder, num_LHS_runs, verbose)
 end
 
 # Read Simulation Results
-project_path = "#{path}"
+OutPut.Read("#{path}/UA_Simulations", "#{path}/UA_Output", settingsfile, verbose)
 
-#OutPut.Read(num_LHS_runs, project_path, 'UA',  settingsfile, verbose)
-OutPut.Read("#{path}/UA_Simulations", "#{path}/UA_Output",  settingsfile, verbose)
-
-#delete intermediate files
+# delete intermediate files
 unless skip_cleanup
-  File.delete("#{output_folder}/Monthly_Weather.csv") if File.exists?("#{output_folder}/Monthly_Weather.csv")
-  FileUtils.remove_dir(models_folder) if Dir.exists?(models_folder)
+  File.delete("#{output_folder}/Monthly_Weather.csv") if File.exist?("#{output_folder}/Monthly_Weather.csv")
+  FileUtils.remove_dir(models_folder) if Dir.exist?(models_folder)
 end
 
 puts 'UA.rb Completed Successfully!' if verbose
