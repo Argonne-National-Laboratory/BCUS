@@ -73,7 +73,7 @@ def writeToFile(results, filename, verbose = false)
     end
     puts "Run results have been written to #{filename}" if verbose
 end
-
+ARGV = ["../Install/test.osm", "../Install/test.epw", "-v","-n","-s ../Install/Simulation_Output_Settings.xlsx"]
 # parse commandline inputs from the user
 options = {:osmName=> nil, :epwName=>nil}
 parser = OptionParser.new do |opts|
@@ -91,12 +91,12 @@ parser = OptionParser.new do |opts|
   # opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
     # options[:outFile] = outFile
   # end
-  
+
   options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
   opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
     options[:settingsFile] = settingsFile
   end
-  
+
   options[:priorsFile]="priors.csv"
   opts.on('--priors priorsFile', 'CSV File with prior uncertainty distribution info (default=priors.csv)') do |priorsFile|
     options[:priorsFile] = priorsFile
@@ -126,7 +126,7 @@ parser = OptionParser.new do |opts|
   opts.on('-v', '--verbose', 'Run in verbose mode with more output info printed') do
     options[:verbose] = true
   end
-  
+
   options[:noep] = false
   opts.on('--noEP', 'Do not run EnergyPlus') do
     options[:noEP] = true
@@ -180,7 +180,7 @@ noEP = options[:noEP]
 path = Dir.pwd
 
 # expand filenames to full paths
-osm_file = File.absolute_path(osm_name)     
+osm_file = File.absolute_path(osm_name)
 epw_file = File.absolute_path(epw_name)
 outfile_path = File.absolute_path(outfile_name)
 settings_file = File.absolute_path(settingsfile_name)
@@ -265,16 +265,15 @@ if noEP
     puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
     puts
   end
-else
-  (2..samples[0].length-1).each { |k|
-  
+else  (2..samples[0].length-1).each { |k|
+
     model = OpenStudio::Model::Model::load(osm_file).get  # reload the model to get the same starting point each time
     parameter_value = []
     samples.each do |sample|
       parameter_value << sample[k].to_f
     end
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-    
+
     # add selected reporting meters to the OSM file
     for meter_index in 1..(meters_table.length-1)
       meter = OpenStudio::Model::Meter.new(model)
@@ -300,12 +299,10 @@ else
 
   runner = RunOSM.new()
   runner.run_osm(models_folder, epw_file, simulations_folder, num_of_runs, verbose)
-  
+
 end # if noEP
 
 # Read Simulation Results
-#project_path = "#{path}"
-#OutPut.Read(num_of_runs,project_path,'PreRuns',settings_file, verbose)
 OutPut.Read(simulations_folder, output_folder, settings_file, verbose)
 
 # clean up the temp files if skip cleanup not set
@@ -326,10 +323,7 @@ if File.exists?("#{output_folder}/Meter_Electricity_Facility.csv")
     y_sim << y_temp.flatten
 end
 
-# if verbose
-  # puts "model electricty use table"
-  # puts y_sim.inspect
-# end
+
 
 if File.exists?("#{output_folder}/Meter_Gas_Facility.csv")
     # read in the gas table and process just as we did for electricity above
@@ -338,7 +332,7 @@ if File.exists?("#{output_folder}/Meter_Gas_Facility.csv")
     y_temp = y_gas_table.transpose
     y_temp.delete_at(0)
     y_sim << y_temp.flatten
-    
+
 end
 
 # now get this back to a 2 column array
@@ -357,7 +351,7 @@ cal_parameter_samples_table = cal_parameter_samples_table.transpose
 cal_parameter_samples_table.delete_at(0)  # delete the 1st row (was first column)
 cal_parameter_samples_table.delete_at(0)  # delete the next row (was second column)
 
-# replicate each row y_elec_table.length times to get a y_elec_table.lengthx num cal parameter samples array 
+# replicate each row y_elec_table.length times to get a y_elec_table.lengthx num cal parameter samples array
 # this version should work with daily or hourly
 cal_parameter_samples = []
 cal_parameter_samples_table.each do |run|
@@ -372,7 +366,7 @@ y_sim.each_with_index do |y,index|
 end
 
 writeToFile(cal_data_com,"#{output_folder}/cal_sim_runs.txt", verbose)
-FileUtils.cp "#{output_folder}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
+#FileUtils.cp "#{output_folder}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
 
 utility_file=options[:utilityData]
 
@@ -391,6 +385,6 @@ y_meter.each_with_index do |y,index|
 end
 
 writeToFile(cal_data_field,"#{output_folder}/cal_utility_data.txt")
-FileUtils.cp "#{output_folder}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
+#FileUtils.cp "#{output_folder}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
 
 puts "BC_Setup.rb Completed Successfully!" if verbose

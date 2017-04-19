@@ -285,6 +285,9 @@ priors_file = File.absolute_path(options[:priorsFile])
 
 cal_data_com_path = File.absolute_path(options[:comFile])
 cal_data_field_path = File.absolute_path(options[:fieldFile])
+
+com_name = options[:comFile]
+field_name = options[:fieldFile]
 posts_name = options[:postsFile]
 pvals_name = options[:pvalsFile]
 settings_file = File.absolute_path(options[:settingsFile])
@@ -319,8 +322,11 @@ if verbose
 end
 
 #output file names
-
-# check for existence of input files
+Dir.mkdir "#{output_folder}" unless Dir.exist?("#{output_folder}")
+posts_file = "#{output_folder}/#{posts_name}"
+pvals_file = "#{output_folder}/#{pvals_name}"
+com_file = "#{path}/Preruns_Output/#{com_name}"
+field_file = "#{path}/Preruns_Output/#{field_name}"
 
 # check if priors file exists
 if File.exist?("#{priors_file}")
@@ -331,31 +337,27 @@ else
 end
 
 # check if COM file exists
-if File.exist?("#{cal_data_com_path}")
-  puts "Using Simulation Output file= #{cal_data_com_path}" if verbose
+if File.exist?("#{com_file}")
+  puts "Using Simulation Output file= #{com_file}" if verbose
 else
-  puts "com.txt file #{cal_data_com_path} not found!"
+  puts "com.txt file #{com_file} not found!"
   abort
 end
 
 # check if FIELD file exists
-if File.exist?("#{cal_data_field_path}")
-  puts "Using Utility Data file= #{cal_data_field_path}" if verbose
+if File.exist?("#{field_file}")
+  puts "Using Utility Data file= #{field_file}" if verbose
 else
-  puts "field.txt file #{cal_data_field_path} not found!"
+  puts "field.txt file #{field_file} not found!"
   abort
 end
 
-Dir.mkdir "#{output_folder}" unless Dir.exist?("#{output_folder}")
 
-posts_file = "#{output_folder}/#{posts_name}"
-pvals_file = "#{output_folder}/#{pvals_name}"
-
-BCRunner.runBC(code_path, priors_file, cal_data_com_path, cal_data_field_path,
-               numOutVars, numWVars, numMCMC, pvals_file, posts_file, verbose, randseed)
+BCRunner.runBC(code_path, priors_file, com_file, field_file, numOutVars, numWVars, numMCMC, 
+               pvals_file, posts_file, verbose, randseed)
 
 
-if numBurnin >= numMCMC
+ if numBurnin >= numMCMC
   print "warning: numBurnin should be less than numMCMC. numBurnin has been reset to 0.\n"
   numBurnin = 0
 end
@@ -373,7 +375,7 @@ calibrated_osm_model_name = "Calibrated_#{building_name}"
 
 unless no_run_cal
   puts 'Generate and Run the Calibrated Model' if verbose
-  calibrated_model.gen_and_sim(osm_path,epw_file, priors_file, posts_file, settings_file, 
+  calibrated_model.gen_and_sim(osm_path, epw_file, priors_file, posts_file, settings_file, 
                                calibrated_model_file, calibrated_osm_model_name, output_folder, verbose)
 
 end

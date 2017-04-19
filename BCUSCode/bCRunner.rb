@@ -74,7 +74,7 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 require_relative 'rinruby'
 
 module BCRunner
-  def BCRunner.runBC(code_path, priors_filename, com_filename, field_filename, numOutputVars, 
+  def BCRunner.runBC(code_path, priors_filename, com_filename, field_filename, numOutputVars,
     numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose = false, randseed = 0)
 
 
@@ -88,10 +88,7 @@ module BCRunner
     R.eval('setwd(work_dir)')
     R.eval("source('runmcmc.R')")
     R.assign('randseed', randseed)
-    
-    
-    
-    
+
     R.assign('params_filename', priors_filename)
     R.assign('com_filename', com_filename)
     R.assign('field_filename', field_filename)
