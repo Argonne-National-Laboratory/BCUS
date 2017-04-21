@@ -1,35 +1,49 @@
 # Copyright © 2016 , UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
-
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  Software changes, modifications, or derivative works, should be noted with comments and the author and organization’s name.
-
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-# 4. The software and the end-user documentation included with the redistribution, if any, must include the following acknowledgment:
-
-#    "This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.”
-
-# ******************************************************************************************************
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.  Software changes,
+#    modifications, or derivative works, should be noted with comments and the
+#    author and organization’s name.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+#    the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# 4. The software and the end-user documentation included with the
+#    redistribution, if any, must include the following acknowledgment:
+#
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#
+# *****************************************************************************
 # DISCLAIMER
-
+#
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
-
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
-
-# ***************************************************************************************************
+#
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+#
+# *****************************************************************************
 
 # Modified Date and By:
 
 # - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
-# - Sep 2015 Cleaned up and new parsing added by Ralph Muehleisen from Argonne National Laboratory
+# - Sep 2015 Cleaned up and new parsing added by Ralph Muehleisen from Argonne
 # - Created on Feb27 2015 by Yuming Sun from Argonne National Laboratory
 # - 02-Apr-2017: RTM: Added noEP option
-
 
 # 1. Introduction
 # This is the main function of sensitivity analysis using Morris Method[1].
@@ -39,7 +53,8 @@
 # 2.2 Called by: The main function to execute from command line.
 
 # References:
-# [1] M. D. Morris, 1991, Factorial sampling plans for preliminary computational experiments, Technometrics, 33, 161–174.
+# [1] M. D. Morris, 1991, Factorial sampling plans for preliminary
+#     computational experiments, Technometrics, 33, 161–174.
 
 # use require_relative to include ruby functions developed in the project
 # Run_All_OSMs.rb is developed by OpenStudio team at NREL
@@ -60,7 +75,7 @@ def wait_for_y
   check = 'n'
   while check != 'y' && check != 'Y'
     puts "Please enter 'Y' or 'y' to continue, 'n' or 'N' or 'CTRL-Z' to quit"
-    # read from keyboard, strip leading and trailing spaces and convert to lower case
+    # read from kbd, strip leading and trailing spaces, convert to lower case
     check = $stdin.gets.strip.downcase
     abort if check == 'n'
   end
@@ -167,7 +182,8 @@ morris_levels = Integer(options[:morrisL])
 randseed = Integer(options[:randseed])
 noEP = options[:noEP]
 
-# if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
+# if we are choosing noEP we also want to skip cleanup even
+# if it hasn't been selected
 skip_cleanup = true if noEP
 
 if run_interactive
@@ -175,7 +191,7 @@ if run_interactive
   wait_for_y
 end
 
-puts 'Not Cleaning Up Interim Files' if (skip_cleanup && verbose)
+puts 'Not Cleaning Up Interim Files' if skip_cleanup && verbose
 
 # set the user output base path to be the current working directory
 path = Dir.pwd
@@ -194,7 +210,7 @@ building_name = File.basename(osm_name, '.osm')
 
 # check if .osm model exists and if so, load it
 if File.exist?(osm_path.to_s)
-  model = OpenStudio::Model::Model::load(osm_path).get
+  model = OpenStudio::Model::Model.load(osm_path).get
   puts "Using OSM file #{osm_path}" if verbose
 else
   puts "OpenStudio file #{osm_path} not found!"
@@ -290,7 +306,7 @@ if noEP
   end
 else
   (2..(samples[0].length - 1)).each do |k|
-    model = OpenStudio::Model::Model::load(osm_path).get # reload the model to get the same starting point each time
+    model = OpenStudio::Model::Model.load(osm_path).get # reload the model to get the same starting point each time
     parameter_value = []
     samples.each { |sample| parameter_value << sample[k].to_f }
     uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
@@ -316,7 +332,8 @@ else
     puts "Sample#{k - 1} is saved to the folder of Models" if verbose
   end
 
-  # use the run manager to run through all the files put in SA_Models, saving stuff in SA_Simulations
+  # use the run manager to run through all the files put in SA_Models,
+  # saving stuff in SA_Simulations
   runner = RunOSM.new
   runner.run_osm(models_folder, epw_path, simulations_folder, num_of_runs, verbose)
 
@@ -325,17 +342,19 @@ end
 puts 'Step 4: Read simulation results, run Morris method analysis and plot sensitivity results' if verbose
 results_file = "#{output_folder}/Simulation_Results_Building_Total_Energy.csv"
 OutPut.Read(simulations_folder, output_folder, settingsfile, verbose)
-num_variable_name_chars = 60 # set the maximum size of variable names for printout in sensitivity analysis
+
+# set the maximum size of variable names for printout in sensitivity analysis
+num_variable_name_chars = 60
 morris.compute_sensitivities(results_file, output_folder, file_name, verbose, num_variable_name_chars)
 
-unless skip_cleanup # delete intermediate files unless skip_cleanup was selected.
+unless skip_cleanup # delete intermediate files unless skip_cleanup chosen
 
   File.delete("#{output_folder}/Morris_CDF_Tran_Design.csv") if File.exist?("#{path}/SA_Output/Morris_CDF_Tran_Design.csv")
   File.delete("#{output_folder}/Morris_0_1_Design.csv") if File.exist?("#{path}/SA_Output/Morris_0_1_Design.csv")
   File.delete("#{output_folder}/Monthly_Weather.csv") if File.exist?("#{path}/SA_Output/Monthly_Weather.csv")
   File.delete("#{output_folder}/Meter_Electricity.csv") if File.exist?("#{path}/SA_Output/Meter_Electricity_Facility.csv")
   File.delete("#{output_folder}/Meter_Gas.csv") if File.exist?("#{path}/SA_Output/Meter_Gas_Facility.csv")
-  File.delete("#{output_folder}/Simulation_Results_Building_Total_Energy.csv") if File.exists?("#{output_folder}/Simulation_Results_Building_Total_Energy.csv")
+  File.delete("#{output_folder}/Simulation_Results_Building_Total_Energy.csv") if File.exist?("#{output_folder}/Simulation_Results_Building_Total_Energy.csv")
   File.delete("#{path}/Morris_design") if File.exist?("#{path}/Morris_design")
   FileUtils.remove_dir(models_folder) if Dir.exist?(models_folder)
 end

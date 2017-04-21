@@ -1,33 +1,48 @@
 # Copyright © 2016 , UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
-
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  Software changes, modifications, or derivative works, should be noted with comments and the author and organization’s name.
-
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-# 4. The software and the end-user documentation included with the redistribution, if any, must include the following acknowledgment:
-
-#    "This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.”
-
-# ******************************************************************************************************
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.  Software changes,
+#    modifications, or derivative works, should be noted with comments and the
+#    author and organization’s name.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+#    the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# 4. The software and the end-user documentation included with the
+#    redistribution, if any, must include the following acknowledgment:
+#
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#
+# *****************************************************************************
 # DISCLAIMER
-
+#
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
-
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
-
-# ***************************************************************************************************
+#
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+#
+# *****************************************************************************
 
 # Modified Date and By:
 # - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 # - Updated on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
-# - Created on Feb 27 2015 by Yuming Sun and Matt Riddle from Argonne National Laboratory
-
+# - Created on Feb 27 2015 by Yuming Sun and Matt Riddle from Argonne
+#
 # 1. Introduction
 # This is the main code used for generating random variables using LHS
 
@@ -43,7 +58,8 @@
 
 # 08-Apr-2017 Ralph Muehleisen
 # combined LHS_gen.rb and Morris.rb into one .rb file and pulled cdf_inverse
-# out of each Class and into a common def to eliminate identical code in two classes
+# out of each Class and into a common def to eliminate identical code in two
+# classes
 
 require_relative 'rinruby'
 require 'csv'
@@ -92,7 +108,7 @@ def cdf_inverse(lhs_random_num, prob_distribution)
   else
     R.samples = []
   end
-  return R.samples
+  R.samples
 end # cdf_inverse
 
 # This class is used for generating random numbers and latin hypercube samples
@@ -121,7 +137,7 @@ class LHSGenerator
     end
 
     puts "Random_LHS_Samples.csv with the size of #{lhs_table.row_count} rows and #{lhs_table.column_count} columns is generated" if verbose
-    return lhs_table
+    lhs_table
   end # random_num_generate
 
   def lhs_samples_generator(uqtable_folder, file_name, n_runs, output_folder, verbose = false, randseed = 0)
@@ -157,21 +173,21 @@ end
 
 # Compute the sensitivities for the given model via the Morris method
 class Morris
-# model is a method (obtained by a call to method(:mymodelfunction)) representing the model to test
-# model should take, as input, a vector of length n_params
-# n_repetitions is the number of repetitions that will be performed during the Morris sampling
-# param_lower_bounds and param_upper_bounds are both vectors of length n_params, giving the upper
-# and lower bounds for each parameter
-#
-#
-# example usage:
-#
-# def myfun(x):
-#	return x[0]+10*x[1]
-# end
-# Morris.compute_sensitivities(methd(:myfun), 2, 10, [0,0], [1,1])
-# => [1.0, 10.0]
-#
+  # model is a method (obtained by a call to method(:mymodelfunction)) representing the model to test
+  # model should take, as input, a vector of length n_params
+  # n_repetitions is the number of repetitions that will be performed during the Morris sampling
+  # param_lower_bounds and param_upper_bounds are both vectors of length n_params, giving the upper
+  # and lower bounds for each parameter
+  #
+  #
+  # example usage:
+  #
+  # def myfun(x):
+  #	return x[0]+10*x[1]
+  # end
+  # Morris.compute_sensitivities(methd(:myfun), 2, 10, [0,0], [1,1])
+  # => [1.0, 10.0]
+  #
 
   def design_matrix(file_path, file_name, morris_R, morris_levels, randseed = 0, verbose = false)
     # file_path = path to SA_output directory
@@ -193,7 +209,7 @@ class Morris
         set.seed(NULL)
       }
       design <- morris(NULL, n, mR, binf=0.05, bsup=0.95,
-        scale=FALSE, design = list(type = "oat", levels = #{morris_levels}, grid.jump = #{(morris_levels/2+0.5).to_i}))
+        scale=FALSE, design = list(type = "oat", levels = #{morris_levels}, grid.jump = #{(morris_levels / 2 + 0.5).to_i}))
       X <- design$X
       save (design, file="#{file_path}/Morris_design")
     RCODE
