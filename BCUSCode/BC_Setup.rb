@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -42,13 +42,17 @@
 # - August 2016 by Yuna Zhang
 # - Created on February 15 2015 by Yuming Sun from Argonne National Laboratory
 #
-# 08-Apr-2017 Ralph Muehleisen updated require_relative from LSH_Gen to LHS_Morris
-# 08-Apr-2017 Ralph Muehleisen add --noEP option to parser to avoid running EnergyPlus if the prerun files exist
-# 15-Apr-2017 Ralph Muehleisen converted code to read new columnar output of simulation meter files
+# 08-Apr-2017 Ralph Muehleisen updated require_relative from LSH_Gen to
+# LHS_Morris
+# 08-Apr-2017 Ralph Muehleisen add --noEP option to parser to avoid running
+# EnergyPlus if the prerun files exist
+# 15-Apr-2017 Ralph Muehleisen converted code to read new columnar output of
+# simulation meter files
 # 21-Apr-2017 RTM ran rubocop linter for code cleanup
 
 # 1. Introduction
-# This is the main code used for setting up files for running Bayesian calibration.
+# This is the main code used for setting up files for running Bayesian
+# calibration.
 
 #===============================================================%
 #     author: Yuming Sun and Matt Riddle										    %
@@ -56,11 +60,9 @@
 #===============================================================%
 
 # Main code used for setting up files for running Bayesian calibration
-#
 
 require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
-# require_relative 'LHS_Gen'
 require_relative 'LHS_Morris'
 require_relative 'Process_Simulation_SQLs'
 require_relative 'rinruby'
@@ -73,8 +75,8 @@ require 'rubyXL'
 
 def writeToFile(results, filename, verbose = false)
   File.open(filename, 'w+') do |f|
-    for resultsRow in results
-      for r in resultsRow
+    results.each do |resultsRow|
+      resultsRow.each do |r|
         f.write(r)
         f.write("\t")
       end
@@ -84,7 +86,6 @@ def writeToFile(results, filename, verbose = false)
   puts "Run results have been written to #{filename}" if verbose
 end
 
-# ARGV = ["../Install/test.osm", "../Install/test.epw", "-v","-n","-s ../Install/Simulation_Output_Settings.xlsx"]
 # parse commandline inputs from the user
 options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
@@ -97,11 +98,6 @@ parser = OptionParser.new do |opts|
   opts.on('--epwName epwName', 'epwName') do |epwName|
     options[:epwName] = epwName
   end
-
-  # options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  # opts.on('-o', '--outfile outFile', 'Simulation Output Setting File (default=Simulation_Output_Settings.xlsx)') do |outFile|
-  # options[:outFile] = outFile
-  # end
 
   options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
   opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
@@ -151,10 +147,11 @@ end
 
 parser.parse!
 
-# if the user didn't give the --osmName option, parse the rest of the input arguments for a *.osm
+# if the user didn't give the --osmName option, parse the rest of the input
+# arguments for a *.osm
 if options[:osmName].nil?
   if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep /.osm/
+    temp = ARGV.grep(/.osm/)
     osm_name = temp[0]
   else
     puts 'An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line'
@@ -167,7 +164,7 @@ end
 # if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
 if options[:epwName].nil?
   if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep /.epw/
+    temp = ARGV.grep(/.epw/)
     epw_name = temp[0]
   else
     puts 'An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line'
@@ -288,7 +285,8 @@ else  (2..samples[0].length - 1).each do |k|
           meter.setName((meters_table[meter_index][0]).to_s)
           meter.setReportingFrequency((meters_table[meter_index][1]).to_s)
         end
-        # add monthly ave air temp and solar radiation meters to OSM.  These are used as inputs to the calibration
+        # add monthly ave air temp and solar radiation meters to OSM.
+        # These are used as inputs to the calibration
         variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
         variable.setReportingFrequency('Monthly')
         variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
