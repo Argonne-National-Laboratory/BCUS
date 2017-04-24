@@ -81,18 +81,7 @@ def get_y_sim(elec_file, gas_file)
   y_sim = y_sim.transpose
 end
 
-def get_param_names_types_values(samples_table)
-  # parse the sampletable  of format:  name, type, values to get a list of all the names and types
-  samples_array = samples_table.to_a # convert CSV table to a real array
-  param_values = samples_array.transpose # transpose to get better access to columns and put in
-  param_names = param_values[0] # names are the 1st column of samples, 1st row of transpose
-  param_types = param_values[1] # types are in the 2nd column of samples, 2nd row of transpose
-  param_values.delete_at(0)
-  param_values.delete_at(0)
-  param_values = param_values.map { |arr| arr.map(&:to_f) } # convert entire array to floats
 
-  [param_names, param_types, param_values]
-end
 
 def get_cal_data_com(y_sim, y_length, lhs_table, temp, solar)
   cal_parameter_samples_table = lhs_table.transpose

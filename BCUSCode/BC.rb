@@ -146,56 +146,56 @@ options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: Bayesian_Calibration.rb [options]'
 
-  opts.on('--osmName osmName', 'Name of .osm file to run') do |osmName|
-    options[:osmName] = osmName
+  opts.on('--osmName osmName', 'Name of .osm file to run') do |osm_name|
+    options[:osmName] = osm_name
   end
 
-  opts.on('--epwName epwName', 'Name of .epw weather file to use') do |epwName|
-    options[:epwName] = epwName
+  opts.on('--epwName epwName', 'Name of .epw weather file to use') do |epw_name|
+    options[:epwName] = epw_name
   end
 
   options[:comFile] = 'cal_sim_runs.txt'
-  opts.on('--comFile comFile', 'Filename of simulation outputs (default = "cal_sim_runs.txt")') do |comFile|
-    options[:comFile] = comFile
+  opts.on('--comFile comFile', 'Filename of simulation outputs (default = "cal_sim_runs.txt")') do |com_file|
+    options[:comFile] = com_file
   end
 
   options[:fieldFile] = 'cal_utility_data.txt'
-  opts.on('--fieldFile fieldFile', 'Filename of utility data for comparison (default = "cal_utility_data.txt")') do |fieldFile|
-    options[:fieldFile] = fieldFile
+  opts.on('--fieldFile fieldFile', 'Filename of utility data for comparison (default = "cal_utility_data.txt")') do |field_file|
+    options[:fieldFile] = field_file
   end
 
   options[:numMCMC] = 30_000
-  opts.on('--numMCMC numMCMC', 'Number of MCMC steps (default = 30000)') do |numMCMC|
-    options[:numMCMC] = numMCMC
+  opts.on('--numMCMC numMCMC', 'Number of MCMC steps (default = 30000)') do |num_mcmc|
+    options[:numMCMC] = num_mcmc
   end
 
   options[:numOutVars] = 1
-  opts.on('--numOutVars numOutVars', 'Number of output variables, 1 or 2 (default=1)') do |numOutVars|
-    options[:numOutVars] = numOutVars
+  opts.on('--numOutVars numOutVars', 'Number of output variables, 1 or 2 (default=1)') do |num_out_vars|
+    options[:numOutVars] = num_out_vars
   end
   options[:numWVars] = 2
-  opts.on('--numWVars numWVars', 'Number of weather variables (default = 2)') do |numWVars|
-    options[:numWVars] = numWVvars
+  opts.on('--numWVars numWVars', 'Number of weather variables (default = 2)') do |num_w_vars|
+    options[:numWVars] = num_w_vars
   end
 
   options[:numBurnin] = 500
-  opts.on('--numBurnin numBurnin', 'Number of burning samples to throw out (default = 500)') do |numBurnin|
-    options[:numBurnin] = numBurnin
+  opts.on('--numBurnin numBurnin', 'Number of burning samples to throw out (default = 500)') do |num_burnin|
+    options[:numBurnin] = num_burnin
   end
 
   options[:priorsFile] = 'priors.csv'
-  opts.on('--priorsFile priorsFile', 'Filename of priors distributions (default = "priors.csv")') do |priorsFile|
-    options[:priorsFile] = priorsFile
+  opts.on('--priorsFile priorsFile', 'Filename of priors distributions (default = "priors.csv")') do |priors_file|
+    options[:priorsFile] = priors_file
   end
 
   options[:postsFile] = 'posteriors.csv'
-  opts.on('--postsFile postsFile', 'Filename of posterior distributions (default = "posteriors.csv")') do |postsFile|
-    options[:postsFile] = postsFile
+  opts.on('--postsFile postsFile', 'Filename of posterior distributions (default = "posteriors.csv")') do |posts_file|
+    options[:postsFile] = posts_file
   end
 
   options[:pvalsFile] = 'pvals.csv'
-  opts.on('--pvalsFile pvalsFile', 'Filename of pvals (default = "pvals.csv")') do |pvalsFile|
-    options[:pvalsFile] = pvalsFile
+  opts.on('--pvalsFile pvalsFile', 'Filename of pvals (default = "pvals.csv")') do |pvals_file|
+    options[:pvalsFile] = pvals_file
   end
 
   options[:randseed] = 0
@@ -229,8 +229,8 @@ parser = OptionParser.new do |opts|
   end
 
   options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
-    options[:settingsFile] = settingsFile
+  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settings_file|
+    options[:settingsFile] = settings_file
   end
 
   opts.on('-h', '--help', 'Displays Help') do
@@ -339,13 +339,11 @@ unless no_plots
 end
 calibrated_model = Calibrated_OSM.new
 
-
 # calibrated_model_file = "#{output_folder}/Calibrated_#{building_model}"
 # calibrated_osm_model_name = "Calibrated_#{building_name}"
 
 calibrated_osm_model_name = "Calibrated_#{building_name}"
-calibrated_model_file = File.join(output_folder,'Calibrated_#{building_model}')
-
+calibrated_model_file = File.join(output_folder, "Calibrated_#{building_model}")
 
 unless no_run_cal
   puts 'Generate and Run the Calibrated Model' if verbose
