@@ -138,7 +138,9 @@ require 'fileutils'
 require_relative 'graphGenerator'
 require_relative 'calibrateOSModel'
 require_relative 'bCRunner'
+require_relative 'bcus_utils'
 
+# rubocop:disable LineLength
 # parse commandline inputs from the user
 options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
@@ -238,39 +240,16 @@ parser = OptionParser.new do |opts|
 end
 parser.parse!
 
-if options[:osmName].nil?
-  if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep(/.osm/)
-    osm_name = temp[0]
-  else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option'\
-         'or giving a filename ending with .osm on the command line'
-    abort
-  end
-else # otherwise the --osmName option was used
-  osm_name = options[:osmName]
-end
+error_msg = 'An OpenStudio OSM file must be indicated by the --osm option or giving a filename ending with .osm on the command line'
+osm_file = File.absolute_path(parse_argv(options[:osmName], '.osm', error_msg))
 
-building_model = File.basename(osm_name)
-building_name = File.basename(osm_name, '.osm')
-osm_path = File.absolute_path(osm_name)
+error_msg = 'An .epw weather file must be indicated by the --epw option or giving a filename ending with .epw on the command line'
+epw_file = File.absolute_path(parse_argv(options[:epwName], '.epw', error_msg))
 
-# if the user didn't give the --epwName option, parse the rest of the input
-# arguments for a *.epw
-if options[:epwName].nil?
-  if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep(/.epw/)
-    epw_name = temp[0]
-  else
-    puts 'An .epw weather file must be indicated by the --epwNAME option '\
-        'or giving a filename ending with .epw on the command line'
-    abort
-  end
-else # otherwise the --epwName option was used
-  epw_name = options[:epwName]
-end
+building_model = File.basename(osm_file)
+building_name = File.basename(osm_file, '.osm')
 
-epw_file = File.absolute_path(epw_name)
+# rubocop:enable LineLength
 
 # require the following files from parametric simulations
 # Calibration_Parameters_Prior.csv
@@ -293,37 +272,39 @@ epw_file = File.absolute_path(epw_name)
 
 # input file names
 path = Dir.pwd
-output_folder = "#{path}/Calibration_Output"
+
+output_folder = File.join(path, 'Calibration_Output')
+Dir.mkdir output_folder unless Dir.exist?(output_folder)
+
+preruns_folder = File.join(path, 'Preruns_Output')
 
 priors_file = File.absolute_path(options[:priorsFile])
+settings_file = File.absolute_path(options[:settingsFile])
 
 com_name = options[:comFile]
 field_name = options[:fieldFile]
 posts_name = options[:postsFile]
 pvals_name = options[:pvalsFile]
-settings_file = File.absolute_path(options[:settingsFile])
 
-num_MCMC = Integer(options[:numMCMC])
+num_mcmc = Integer(options[:numMCMC])
 num_out_vars = Integer(options[:numOutVars])
 num_w_vars = Integer(options[:numWVars])
 num_burnin = Integer(options[:numBurnin])
 randseed = Integer(options[:randseed])
 verbose = options[:verbose]
 no_run_cal = options[:noRunCal]
-noplots = options[:noplots]
+no_plots = options[:noplots]
 
 skip_cleanup = options[:noCleanup]
 
 code_path = ENV['BCUSCODE']
 
 if verbose
-  puts 'this is a test'\
-        ' of a multiline string concatenation'
   puts 'Not Cleaning Up Interim Files' if skip_cleanup
   puts "Using output_folder = #{output_folder}"
   puts "Using num_out_vars = #{num_out_vars}"
   puts "Using num_w_vars = #{num_w_vars}"
-  puts "Using num_MCMC = #{num_MCMC}"
+  puts "Using num_mcmc = #{num_mcmc}"
   puts "Using num_burnin = #{num_burnin}"
   puts "Using Random Number Seed = #{randseed}"
   puts "Writing to Posterior Values File = #{posts_name}"
@@ -333,58 +314,42 @@ if verbose
 end
 
 # output file names
-Dir.mkdir output_folder.to_s unless Dir.exist?(output_folder.to_s)
-posts_file = "#{output_folder}/#{posts_name}"
-pvals_file = "#{output_folder}/#{pvals_name}"
-com_file = "#{path}/Preruns_Output/#{com_name}"
-field_file = "#{path}/Preruns_Output/#{field_name}"
 
-# check if priors file exists
-if File.exist?(priors_file.to_s)
-  puts "Using Priors CSV file #{priors_file}" if verbose
-else
-  puts "Priors file #{priors_file} not found!"
-  abort
-end
+posts_file = File.join(output_folder, posts_name)
+pvals_file = File.join(output_folder, pvals_name)
+com_file = File.join(preruns_folder, com_name)
+field_file = File.join(preruns_folder, field_name)
 
-# check if COM file exists
-if File.exist?(com_file.to_s)
-  puts "Using Simulation Output file= #{com_file}" if verbose
-else
-  puts "com.txt file #{com_file} not found!"
-  abort
-end
-
-# check if FIELD file exists
-if File.exist?(field_file.to_s)
-  puts "Using Utility Data file= #{field_file}" if verbose
-else
-  puts "field.txt file #{field_file} not found!"
-  abort
-end
+check_file_exist(priors_file, 'Priors CSV File', verbose)
+check_file_exist(com_file, 'Computer Simulation File', verbose)
+check_file_exist(field_file, 'Utility Data File', verbose)
 
 BCRunner.runBC(code_path, priors_file, com_file, field_file, num_out_vars,
-               num_w_vars, num_MCMC, pvals_file, posts_file, verbose, randseed)
+               num_w_vars, num_mcmc, pvals_file, posts_file, verbose, randseed)
 
-if num_burnin >= num_MCMC
-  puts 'warning: num_burnin should be less than num_MCMC. '\
+if num_burnin >= num_mcmc
+  puts 'warning: num_burnin should be less than num_mcmc. '\
        'num_burnin has been reset to 0'
   num_burnin = 0
 end
 
 # could pass in graph file names too
-unless noplots
-  GraphGenerator.graphPosteriors(priors_file, pvals_file, num_burnin,
-                                 output_folder, verbose)
+unless no_plots
+  GraphGenerator.graphPosteriors(priors_file, pvals_file, num_burnin, output_folder, verbose)
 end
 calibrated_model = Calibrated_OSM.new
 
-calibrated_model_file = "#{output_folder}/Calibrated_#{building_model}"
+
+# calibrated_model_file = "#{output_folder}/Calibrated_#{building_model}"
+# calibrated_osm_model_name = "Calibrated_#{building_name}"
+
 calibrated_osm_model_name = "Calibrated_#{building_name}"
+calibrated_model_file = File.join(output_folder,'Calibrated_#{building_model}')
+
 
 unless no_run_cal
   puts 'Generate and Run the Calibrated Model' if verbose
-  calibrated_model.gen_and_sim(osm_path, epw_file, priors_file, posts_file,
+  calibrated_model.gen_and_sim(osm_file, epw_file, priors_file, posts_file,
                                settings_file, calibrated_model_file,
                                calibrated_osm_model_name, output_folder,
                                verbose)

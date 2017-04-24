@@ -231,6 +231,28 @@ def write_to_file(results, filename, verbose = false)
   puts "Run results have been written to #{filename}" if verbose
 end
 
+def get_param_names_types_values(samples_table)
+  # parse the sampletable  of format:  name, type, values to get a list of all the names and types
+  samples_array = samples_table.to_a # convert CSV table to a real array
+  param_values = samples_array.transpose # transpose to get better access to columns and put in
+  param_names = param_values[0] # names are the 1st column of samples, 1st row of transpose
+  param_types = param_values[1] # types are in the 2nd column of samples, 2nd row of transpose
+  param_values.delete_at(0)
+  param_values.delete_at(0)
+  param_values = param_values.map { |arr| arr.map(&:to_f) } # convert entire array to floats
+
+  [param_names, param_types, param_values]
+end
+
+def check_file_exist(file, file_string, verbose = false)
+  if File.exist?(file)
+    puts "Using #{file_string} #{file}" if verbose
+  else
+    puts "#{file_string} #{priors_file} not found!"
+    abort
+  end
+end
+
 # def convert_meter_names_to_filenames(_input_meter_list)
 #   output_list = []
 #   input_list.each_with_index do |_filename, _index|
