@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -73,7 +73,7 @@ class ThermostatUncertainty < OpenStudio::Model::Model
       # setup new cooling setpoint schedule
       clg_set_sch = thermostat.coolingSetpointTemperatureSchedule
       next if clg_set_sch.empty?
-      # clone of not alredy in hash
+      # clone if not alredy in hash
       if clg_set_schs.key?(clg_set_sch.get.name.to_s)
         new_clg_set_sch = clg_set_schs[clg_set_sch.get.name.to_s]
       else
@@ -85,7 +85,6 @@ class ThermostatUncertainty < OpenStudio::Model::Model
       end
       # hook up clone to thermostat
       thermostat.setCoolingSetpointTemperatureSchedule(new_clg_set_sch)
-      # end unless clg_set_sch.empty?
     end
     clg_set_schs.each do |_k, v| # old name and new object for schedule
       clg_set_schedules_name = v.name.to_s
@@ -107,15 +106,14 @@ class ThermostatUncertainty < OpenStudio::Model::Model
       profiles.each do |sch_day|
         day_time_vector = sch_day.times
         day_value_vector = sch_day.values
-        for i in 0..(day_time_vector.size - 1)
+        (0..(day_time_vector.size - 1)).each do |i|
+          # for i in 0..(day_time_vector.size - 1)
           @clg_set_schs_name << "#{clg_set_schedules_name}time #{i}"
           @clg_sch_set_values << day_value_vector[i].to_f
           target_value = day_value_vector[i] - adjust_value_cooling
           sch_day.addValue(day_time_vector[i], target_value)
         end
       end # end of profiles.each do
-
-      # end of unless
     end # end clg_set_schs.each do
     model.save(model_output_path.to_s, true)
   end
@@ -140,25 +138,25 @@ class ThermostatUncertainty < OpenStudio::Model::Model
       end
       # hook up clone to thermostat
       thermostat.setHeatingSetpointTemperatureSchedule(new_htg_set_sch)
-      # end if not htg_set_sch.empty?
+      # end unless htg_set_sch.empty?
     end
 
     htg_set_schs.each do |_k, v| # old name and new object for schedule
       htg_set_schedules_name = v.name.to_s
       next if v.to_ScheduleRuleset.empty?
-      profiles_1 = []
+      profiles1 = []
       schedule = v.to_ScheduleRuleset.get
       # push default profiles to array
       default_rule = schedule.defaultDaySchedule
-      profiles_1 << default_rule
+      profiles1 << default_rule
       # push profiles to array
       rules = schedule.scheduleRules
       rules.each do |rule|
         day_sch = rule.daySchedule
-        profiles_1 << day_sch
+        profiles1 << day_sch
       end
 
-      profiles_1.each do |sch_day|
+      profiles1.each do |sch_day|
         day_time_vector = sch_day.times
         day_value_vector = sch_day.values
         for i in 0..(day_time_vector.size - 1)

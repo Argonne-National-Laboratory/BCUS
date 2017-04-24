@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -72,7 +72,8 @@ class BoilerUncertainty < OpenStudio::Model::Model
   end
 
   # find thermal efficiency for boiler
-  def boiler_efficiency_method(model, parameter_types, _parameter_names, parameter_value)
+  def boiler_efficiency_method(model, parameter_types, _parameter_names,
+                               parameter_value)
     parameter_types.each_with_index do |type, index|
       if type =~ /HotWaterBoiler/
         model.getBoilerHotWaters.each do |boiler_water|

@@ -66,6 +66,7 @@ require_relative 'Uncertain_Parameters'
 require_relative 'LHS_Morris'
 require_relative 'Process_Simulation_SQLs'
 require_relative 'rinruby'
+require_relative 'bcus_utils'
 
 require 'openstudio'
 require 'optparse'
@@ -73,29 +74,73 @@ require 'fileutils'
 require 'csv'
 require 'rubyXL'
 
-def writeToFile(results, filename, verbose = false)
-  File.open(filename, 'w+') do |f|
-    results.each do |resultsRow|
-      resultsRow.each do |r|
-        f.write(r)
-        f.write("\t")
-      end
-      f.write("\n")
-    end
-  end
-  puts "Run results have been written to #{filename}" if verbose
+def get_y_sim(elec_file, gas_file)
+  y_sim = []
+  y_sim = add_to_table(y_sim, elec_file)
+  y_sim = add_to_table(y_sim, gas_file)
+  y_sim = y_sim.transpose
 end
 
+def get_param_names_types_values(samples_table)
+  # parse the sampletable  of format:  name, type, values to get a list of all the names and types
+  samples_array = samples_table.to_a # convert CSV table to a real array
+  param_values = samples_array.transpose # transpose to get better access to columns and put in
+  param_names = param_values[0] # names are the 1st column of samples, 1st row of transpose
+  param_types = param_values[1] # types are in the 2nd column of samples, 2nd row of transpose
+  param_values.delete_at(0)
+  param_values.delete_at(0)
+  param_values = param_values.map { |arr| arr.map(&:to_f) } # convert entire array to floats
+
+  [param_names, param_types, param_values]
+end
+
+def get_cal_data_com(y_sim, y_length, lhs_table, temp, solar)
+  cal_parameter_samples_table = lhs_table.transpose
+  cal_parameter_samples_table.delete_at(0)  # delete the 1st row (was first column)
+  cal_parameter_samples_table.delete_at(0)  # delete the next row (was second column)
+
+  cal_parameter_samples = []
+  cal_parameter_samples_table.each do |run|
+    (1..y_length).each { cal_parameter_samples << run }
+  end
+
+  cal_data_com = []
+  y_sim.each_with_index do |y, index|
+    cal_data_com << y + [temp[index]] + [solar[index]] + cal_parameter_samples[index]
+  end
+  cal_data_com
+end
+
+def get_cal_data_field(utility_file, monthly_temp, monthly_solar)
+  # read in the utility meter data
+  y_meter = CSV.read(utility_file, headers: false)
+  y_meter.delete_at(0)
+  y_meter = y_meter.transpose
+  y_meter.delete_at(0)
+  y_meter = y_meter.transpose
+  # puts "#{y_meter.length} months of data read from #{utility_file}" if verbose
+
+  # generate the cal_data_field as a table with y_meter, monthly drybulb, monthly solar horizontal
+  cal_data_field = []
+  y_meter.each_with_index do |y, index|
+    cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
+  end
+  cal_data_field
+end
+
+# rubocop:disable LineLength
 # parse commandline inputs from the user
 options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: PreRuns_Calibration.rb [options]'
 
-  opts.on('--osmName osmName', 'osmName') do |osmName|
+  # osm_name: OpenStudio Model Name in .osm
+  opts.on('-o', '--osm osmName', 'osmName') do |osmName|
     options[:osmName] = osmName
   end
 
-  opts.on('--epwName epwName', 'epwName') do |epwName|
+  # epw_name: weather file used to run simulation in .epw
+  opts.on('-e', '--epw epwName', 'epwName') do |epwName|
     options[:epwName] = epwName
   end
 
@@ -147,166 +192,106 @@ end
 
 parser.parse!
 
-# if the user didn't give the --osmName option, parse the rest of the input
-# arguments for a *.osm
-if options[:osmName].nil?
-  if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep(/.osm/)
-    osm_name = temp[0]
-  else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line'
-    abort
-  end
-else # otherwise the --osmName option was used
-  osm_name = options[:osmName]
-end
+error_msg = 'An OpenStudio OSM file must be indicated by the --osm option or giving a filename ending with .osm on the command line'
+osm_file = File.absolute_path(parse_argv(options[:osmName], '.osm', error_msg))
 
-# if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
-if options[:epwName].nil?
-  if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep(/.epw/)
-    epw_name = temp[0]
-  else
-    puts 'An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line'
-    abort
-  end
-else # otherwise the --epwName option was used
-  epw_name = options[:epwName]
-end
+error_msg = 'An .epw weather file must be indicated by the --epw option or giving a filename ending with .epw on the command line'
+epw_file = File.absolute_path(parse_argv(options[:epwName], '.epw', error_msg))
+# rubocop:enable LineLength
 
-outfile_name = options[:outFile]
-outfile_name = options[:settingsFile]
-settingsfile_name = options[:settingsFile]
+settings_file = File.absolute_path(options[:settingsFile])
+utility_file = File.absolute_path(options[:utilityData])
+
 priors_name = options[:priorsFile]
-num_of_runs = Integer(options[:numLHS])
+num_lhs_runs = Integer(options[:numLHS])
 verbose = options[:verbose]
 skip_cleanup = options[:noCleanup]
 randseed = Integer(options[:randseed])
-noEP = options[:noEP]
+no_ep = options[:noEP]
 
-# if we are choosing noEP we also want to skip cleanup even
+# if we are choosing no_ep we also want to skip cleanup even
 # if it hasn't been selected
-skip_cleanup = true if noEP
+skip_cleanup = true if no_ep
+
+puts 'Not Cleaning Up Interim Files' if skip_cleanup && verbose
 
 # get the current working directory as the path
 path = Dir.pwd
 
-# expand filenames to full paths
-osm_file = File.absolute_path(osm_name)
-epw_file = File.absolute_path(epw_name)
-outfile_path = File.absolute_path(outfile_name)
-settings_file = File.absolute_path(settingsfile_name)
+# use file join rather than string concatentation to get file separator right
+output_folder = File.join(path, 'PreRuns_Output')
+models_folder = File.join(path, 'PreRuns_Models')
+simulations_folder = File.join(path, 'PreRuns_Simulations')
 
-output_folder = "#{path}/PreRuns_Output"
-models_folder = "#{path}/PreRuns_Models"
-simulations_folder = "#{path}/PreRuns_Simulations"
-# uqtable_folder = output_folder
+Dir.mkdir output_folder unless Dir.exist?(output_folder)
+Dir.mkdir models_folder unless Dir.exist?(models_folder)
+Dir.mkdir simulations_folder unless Dir.exist?(simulations_folder)
 
 # extract out just the base filename from the OSM file as the building name
-building_name = File.basename(osm_name, '.osm')
+building_name = File.basename(osm_file, '.osm')
 
-Dir.mkdir(output_folder) unless Dir.exist?(output_folder)
-
-if File.exist?(settings_file)
-  puts "Using Output Settings = #{settings_file}" if verbose
-  workbook = RubyXL::Parser.parse(settings_file.to_s)
-  meters_table = []
-  meters_table_row = []
-  workbook['Meters'].each do |row|
-    meters_table_row = []
-    row.cells.each do |cell|
-      meters_table_row.push(cell.value)
-    end
-    meters_table.push(meters_table_row)
-  end
-  if verbose
-    puts 'Meters Table'
-    puts meters_table
-  end
-else
-  puts "#{settings_file}was NOT found!"
-  abort
-end
-
-# check if .osm model exists and if so, load it
-if File.exist?(osm_file.to_s)
-  model = OpenStudio::Model::Model.load(osm_file).get
-  puts "Using OSM file #{osm_file}" if verbose
-else
-  puts "OpenStudio file #{osm_file} not found!"
-  abort
-end
-
-# check if .epw exists
-if File.exist?(epw_file.to_s)
-  puts "Using EPW file #{epw_file}" if verbose
-else
-  puts "Weather model #{epw_file} not found!"
-  abort
-end
+model = read_osm_file(osm_file.to_s, verbose)
+check_epw_file(epw_file.to_s, verbose)
+meters_table = read_meters_table(settings_file.to_s, verbose)
 
 # Generate LHS samples
 lhs = LHSGenerator.new
 input_path = path.to_s
-preruns_path = "#{path}/PreRuns_Output"
+# preruns_path = "#{path}/PreRuns_Output"
 
+priors_file = File.join(input_path, priors_name)
 puts 'Generating LHS samples' if verbose
-lhs.lhs_samples_generator(input_path, priors_name, num_of_runs, output_folder, verbose, randseed)
 
-samples = CSV.read("#{output_folder}/LHS_Samples.csv", headers: true)
-parameter_names = []
-parameter_types = []
+lhs.lhs_samples_generator(priors_file, num_lhs_runs, output_folder, verbose, randseed)
 
-samples.each do |sample|
-  parameter_names << sample[1]
-  parameter_types << sample[0]
-end
+lhs_samples = CSV.read(File.join(output_folder, 'LHS_Samples.csv'), headers: false)
+lhs_samples.delete_at(0) # remove the headers
+
+param_names, param_types, param_values = get_param_names_types_values(lhs_samples)
 
 uncertainty_parameters = UncertainParameters.new
-priors_table = "#{path}/#{priors_name}"
+# priors_table = "#{path}/#{priors_name}"
 
-if noEP
+if no_ep
   if verbose
     puts
-    puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
+    puts '--noEP option selected, skipping creation of OpenStudio files and running of EnergyPlus'
     puts
   end
-else  (2..samples[0].length - 1).each do |k|
-        model = OpenStudio::Model::Model.load(osm_file).get # reload the model to get the same starting point each time
-        parameter_value = []
-        samples.each do |sample|
-          parameter_value << sample[k].to_f
-        end
-        uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+else
+  puts "Going to run #{num_lhs_runs} models. This could take a while" if verbose
 
-        # add selected reporting meters to the OSM file
-        for meter_index in 1..(meters_table.length - 1)
-          meter = OpenStudio::Model::Meter.new(model)
-          meter.setName((meters_table[meter_index][0]).to_s)
-          meter.setReportingFrequency((meters_table[meter_index][1]).to_s)
-        end
-        # add monthly ave air temp and solar radiation meters to OSM.
-        # These are used as inputs to the calibration
-        variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-        variable.setReportingFrequency('Monthly')
-        variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-        variable.setReportingFrequency('Monthly')
+  (0..(param_values.length - 1)).each do |k|
+    model = OpenStudio::Model::Model.load(osm_file).get
 
-        # meters saved to sql file
-        model.save("#{models_folder}/Sample#{k - 1}.osm", true)
+    uncertainty_parameters.apply(model, param_types, param_names, param_values[k])
 
-        # new edit start from here Yuna add for thermostat algorithm
-        out_file_path_name_thermostat = "#{models_folder}/UQ_#{building_name}_thermostat.csv"
-        model_output_path = "#{models_folder}/Sample#{k - 1}.osm"
-        # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+    # add reporting meters to model
+    add_reporting_meters_to_model(model, meters_table)
 
-        puts "Sample#{k - 1} is saved to the folder of Models" if verbose
-      end
+    # add weather variable reporting to model and set its frequency
+    add_output_variable_to_model(model, 'Site Outdoor Air Drybulb Temperature', 'Monthly')
+    add_output_variable_to_model(model, 'Site Ground Reflected Solar Radiation Rate per Area', 'Monthly')
 
-      runner = RunOSM.new
-      runner.run_osm(models_folder, epw_file, simulations_folder, num_of_runs, verbose)
+    # meters saved to sql file
+    model_output_file = File.join(models_folder, "Sample#{k + 1}.osm")
+    model.save(model_output_file, true)
 
-end # if noEP
+    # cannot calibrate thermostats yet so keep thise code commented out.
+    # need to generate priors_table in the proper format for the thermostat algorithm
+    # before this can be used.  Originally the uncertainty routine would parse but not any more
+    #
+    # thermostat_output_file = File.join(models_folder, "UQ_#{building_name}_thermostat.csv")
+    # uncertainty_parameters.thermostat_adjust(model, priors_table, thermostat_output_file,
+    #                                          model_output_file, param_types, param_values[k])
+
+    puts "Sample#{k + 1} is saved to the folder of Models" if verbose
+  end
+
+  runner = RunOSM.new
+  runner.run_osm(models_folder, epw_file, simulations_folder, num_lhs_runs, verbose)
+
+end # if no_ep
 
 # Read Simulation Results
 OutPut.Read(simulations_folder, output_folder, settings_file, verbose)
@@ -319,76 +304,22 @@ end
 ## Prepare calibration input files
 # # y_sim, Monthly Drybuld, Monthly Solar Horizontal, Calibration parameter samples...
 
-y_sim = []
-if File.exist?("#{output_folder}/Meter_Electricity_Facility.csv")
-  y_elec_table = CSV.read("#{output_folder}/Meter_Electricity_Facility.csv", headers: false)
-  y_elec_table.delete_at(0) # delete the first row of the table because its a header
-  # now we want to transpose and get rid of the first row and then flatten to concatenate all rows to one
-  y_temp = y_elec_table.transpose
-  y_temp.delete_at(0)
-  y_sim << y_temp.flatten
-end
+elec_file = File.join(output_folder, 'Meter_Electricity_Facility.csv')
+gas_file = File.join(output_folder, 'Meter_Gas_Facility.csv')
+cal_sim_runs_file = File.join(output_folder, 'cal_sim_runs.txt')
+cal_utility_data_file = File.join(output_folder, 'cal_utility_data.txt')
+monthly_weather_file = File.join(output_folder, 'Monthly_Weather.csv')
 
-if File.exist?("#{output_folder}/Meter_Gas_Facility.csv")
-  # read in the gas table and process just as we did for electricity above
-  y_gas_table = CSV.read("#{output_folder}/Meter_Gas_Facility.csv", headers: false)
-  y_gas_table.delete_at(0) # delete the first element of this table
-  y_temp = y_gas_table.transpose
-  y_temp.delete_at(0)
-  y_sim << y_temp.flatten
+monthly_temp, monthly_solar = read_monthly_weather_file(monthly_weather_file)
 
-end
+y_sim = get_y_sim(elec_file, gas_file)
+y_length = get_table_length(elec_file)
 
-# now get this back to a 2 column array
-y_sim = y_sim.transpose
+cal_data_com = get_cal_data_com(y_sim, y_length, lhs_samples, monthly_temp, monthly_solar)
+write_to_file(cal_data_com, cal_sim_runs_file, verbose)
 
-weather_table = CSV.read("#{output_folder}/Monthly_Weather.csv", headers: false)
-weather_table.delete_at(0)
-weather_table = weather_table.transpose
-monthly_temp = weather_table[0]
-monthly_solar = weather_table[1]
-
-# process the LHS parameter file
-cal_parameter_samples_table = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: false)
-cal_parameter_samples_table.delete_at(0)  # delete the main header
-cal_parameter_samples_table = cal_parameter_samples_table.transpose
-cal_parameter_samples_table.delete_at(0)  # delete the 1st row (was first column)
-cal_parameter_samples_table.delete_at(0)  # delete the next row (was second column)
-
-# replicate each row y_elec_table.length times to get a y_elec_table.lengthx num cal parameter samples array
-# this version should work with daily or hourly
-cal_parameter_samples = []
-cal_parameter_samples_table.each do |run|
-  for rep in 1..y_elec_table.length # Monthly
-    cal_parameter_samples << run
-  end
-end
-
-cal_data_com = []
-y_sim.each_with_index do |y, index|
-  cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
-end
-
-writeToFile(cal_data_com, "#{output_folder}/cal_sim_runs.txt", verbose)
-# FileUtils.cp "#{output_folder}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt"
-
-utility_file = options[:utilityData]
-
-# read in the utility meter data
-y_meter = CSV.read("#{path}/#{utility_file}", headers: false)
-y_meter.delete_at(0)
-y_meter = y_meter.transpose
-y_meter.delete_at(0)
-y_meter = y_meter.transpose
-puts "#{y_meter.length} months of data read from #{utility_file}" if verbose
-
-# generate the cal_data_field as a table with columns of y_meter, monthly drybulb, monthly solar horizontal
-cal_data_field = []
-y_meter.each_with_index do |y, index|
-  cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
-end
-
-writeToFile(cal_data_field, "#{output_folder}/cal_utility_data.txt")
+cal_data_field = get_cal_data_field(utility_file, monthly_temp, monthly_solar)
+write_to_file(cal_data_field, cal_utility_data_file, verbose)
 # FileUtils.cp "#{output_folder}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
 
 puts 'BC_Setup.rb Completed Successfully!' if verbose

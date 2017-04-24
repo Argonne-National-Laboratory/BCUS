@@ -84,10 +84,10 @@
 #  COMMENTS: some columns may be left blank, depending on the distribution type
 #
 # cal_data_com.txt: file with results of computer model runs
-#   first columns (# columns specified in numOutVars): model output
-#   next columns (# columns specified in numWVars):
+#   first columns (# columns specified in num_out_vars): model output
+#   next columns (# columns specified in num_w_vars):
 #     values for x (e.g., weather) variables used in model runs
-#   remaining columns (# columns should match number of rows in params_filename):
+#   remaining columns: # columns should match number of rows in params_filename
 #     values for theta parameters used in model runs
 #
 # cal_data_field.txt: file with observed data used for calibration
@@ -99,16 +99,16 @@
 #	this is called from Ruby:
 # projectName: name of project
 #	used to name folders for storing inputs and outputs
-# numMCMC: the number of steps to run the mcmc algorithm for
-# numOutVars = number of y (output) variables in input files
-# numWVars = number of x (e.g., weather) variables in input files
-# numBurnin: number of steps from mcmc results to be discarded
+# num_MCMC: the number of steps to run the mcmc algorithm for
+# num_out_vars = number of y (output) variables in input files
+# num_w_vars = number of x (e.g., weather) variables in input files
+# num_burnin: number of steps from mcmc results to be discarded
 #   before showing posterior distributions
 # osmName:
 # epwName:
 #
 # an example of how to call it is:
-#   ruby -S BC.rb test.osm test.epw --numMCMC 3000 --numbBurnin 30
+#   ruby -S BC.rb test.osm test.epw --num_MCMC 3000 --numbBurnin 30
 
 #===============================================================#
 #                           OUTPUTS                             #
@@ -127,8 +127,6 @@
 #		These will be generated only if 2 <= numTheta <= 6
 #
 #===============================================================%
-# $LOAD_PATH.unshift('/Applications/OpenStudio 1.5.0/Ruby')
-# $: << File.join(File.dirname(__FILE__))
 
 # load in the required ruby libraries
 require 'openstudio'
@@ -175,7 +173,7 @@ parser = OptionParser.new do |opts|
   end
   options[:numWVars] = 2
   opts.on('--numWVars numWVars', 'Number of weather variables (default = 2)') do |numWVars|
-    options[:numWVars] = numWVars
+    options[:numWVars] = numWVvars
   end
 
   options[:numBurnin] = 500
@@ -245,7 +243,8 @@ if options[:osmName].nil?
     temp = ARGV.grep(/.osm/)
     osm_name = temp[0]
   else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line'
+    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option'\
+         'or giving a filename ending with .osm on the command line'
     abort
   end
 else # otherwise the --osmName option was used
@@ -256,13 +255,15 @@ building_model = File.basename(osm_name)
 building_name = File.basename(osm_name, '.osm')
 osm_path = File.absolute_path(osm_name)
 
-# if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
+# if the user didn't give the --epwName option, parse the rest of the input
+# arguments for a *.epw
 if options[:epwName].nil?
   if ARGV.grep(/.epw/).any?
     temp = ARGV.grep(/.epw/)
     epw_name = temp[0]
   else
-    puts 'An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line'
+    puts 'An .epw weather file must be indicated by the --epwNAME option '\
+        'or giving a filename ending with .epw on the command line'
     abort
   end
 else # otherwise the --epwName option was used
@@ -302,14 +303,13 @@ posts_name = options[:postsFile]
 pvals_name = options[:pvalsFile]
 settings_file = File.absolute_path(options[:settingsFile])
 
-numMCMC = Integer(options[:numMCMC])
-numOutVars = Integer(options[:numOutVars])
-numWVars = Integer(options[:numWVars])
-numBurnin = Integer(options[:numBurnin])
+num_MCMC = Integer(options[:numMCMC])
+num_out_vars = Integer(options[:numOutVars])
+num_w_vars = Integer(options[:numWVars])
+num_burnin = Integer(options[:numBurnin])
 randseed = Integer(options[:randseed])
 verbose = options[:verbose]
 no_run_cal = options[:noRunCal]
-noEP = options[:noEP]
 noplots = options[:noplots]
 
 skip_cleanup = options[:noCleanup]
@@ -317,12 +317,14 @@ skip_cleanup = options[:noCleanup]
 code_path = ENV['BCUSCODE']
 
 if verbose
+  puts 'this is a test'\
+        ' of a multiline string concatenation'
   puts 'Not Cleaning Up Interim Files' if skip_cleanup
   puts "Using output_folder = #{output_folder}"
-  puts "Using numOutVars = #{numOutVars}"
-  puts "Using numWVars = #{numWVars}"
-  puts "Using numMCMC = #{numMCMC}"
-  puts "Using numBurnin = #{numBurnin}"
+  puts "Using num_out_vars = #{num_out_vars}"
+  puts "Using num_w_vars = #{num_w_vars}"
+  puts "Using num_MCMC = #{num_MCMC}"
+  puts "Using num_burnin = #{num_burnin}"
   puts "Using Random Number Seed = #{randseed}"
   puts "Writing to Posterior Values File = #{posts_name}"
   puts "Writing to Pvals File = #{pvals_name}"
@@ -361,17 +363,19 @@ else
   abort
 end
 
-BCRunner.runBC(code_path, priors_file, com_file, field_file, numOutVars, numWVars, numMCMC,
-               pvals_file, posts_file, verbose, randseed)
+BCRunner.runBC(code_path, priors_file, com_file, field_file, num_out_vars,
+               num_w_vars, num_MCMC, pvals_file, posts_file, verbose, randseed)
 
-if numBurnin >= numMCMC
-  print "warning: numBurnin should be less than numMCMC. numBurnin has been reset to 0.\n"
-  numBurnin = 0
+if num_burnin >= num_MCMC
+  puts 'warning: num_burnin should be less than num_MCMC. '\
+       'num_burnin has been reset to 0'
+  num_burnin = 0
 end
 
 # could pass in graph file names too
 unless noplots
-  GraphGenerator.graphPosteriors(priors_file, pvals_file, numBurnin, output_folder, verbose)
+  GraphGenerator.graphPosteriors(priors_file, pvals_file, num_burnin,
+                                 output_folder, verbose)
 end
 calibrated_model = Calibrated_OSM.new
 
@@ -380,8 +384,10 @@ calibrated_osm_model_name = "Calibrated_#{building_name}"
 
 unless no_run_cal
   puts 'Generate and Run the Calibrated Model' if verbose
-  calibrated_model.gen_and_sim(osm_path, epw_file, priors_file, posts_file, settings_file,
-                               calibrated_model_file, calibrated_osm_model_name, output_folder, verbose)
+  calibrated_model.gen_and_sim(osm_path, epw_file, priors_file, posts_file,
+                               settings_file, calibrated_model_file,
+                               calibrated_osm_model_name, output_folder,
+                               verbose)
 
 end
 

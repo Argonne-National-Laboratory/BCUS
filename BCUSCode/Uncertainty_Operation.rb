@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -40,8 +40,10 @@
 
 # Modified Date and By:
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-# 21-Apr-2017 RTM used rubocop linter to clean up code
-
+## - 01-apr-2017: Refactored to better match ruby coding standards by RTM
+# 21-Apr-2017 RTM ran through rubocop linter for code cleanup
+#
+#
 # 1. Introduction
 # This is the subfunction called by Uncertain_Parameters to set uncertainty
 # for operational parameters
@@ -83,9 +85,9 @@ class OperationUncertainty < OpenStudio::Model::Model
       unless space_type.electricEquipment.empty?
         @plugload_space_type << space_type.name
         if space_type.electricEquipment.size == 1
-          space_type.electricEquipment.each do |electricEquipment|
-            if !electricEquipment.powerPerFloorArea.empty?
-              @plugload_watts_per_floor_area << electricEquipment.powerPerFloorArea.get
+          space_type.electricEquipment.each do |electric_equipment|
+            if !electric_equipment.powerPerFloorArea.empty?
+              @plugload_watts_per_floor_area << electric_equipment.powerPerFloorArea.get
             else
               @plugload_watts_per_floor_area << nil
             end
@@ -107,7 +109,8 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def lights_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
+  def lights_watts_per_area_method(model, parameter_types, parameter_names,
+                                   parameter_value)
     parameter_types.each_with_index do |type, index|
       next unless type =~ /Lights_WattsPerSpaceFloorArea/
       # Space type is required entry to define a thermal space
@@ -124,7 +127,8 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def plugload_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
+  def plugload_watts_per_area_method(model, parameter_types, parameter_names,
+                                     parameter_value)
     parameter_types.each_with_index do |type, index|
       next unless type =~ /PlugLoad_WattsPerSpaceFloorArea/
       # Space type is required entry to define a thermal space
@@ -140,7 +144,8 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def people_area_per_person_method(model, parameter_types, parameter_names, parameter_value)
+  def people_area_per_person_method(model, parameter_types, parameter_names,
+                                    parameter_value)
     parameter_types.each_with_index do |type, index|
       next unless type =~ /People_SpaceFloorAreaPerPerson/
       # Space type is required entry to define a thermal space
@@ -151,8 +156,8 @@ class OperationUncertainty < OpenStudio::Model::Model
           new_people_def = OpenStudio::Model::PeopleDefinition.new(model)
           new_people_def.setSpaceFloorAreaperPerson(parameter_value[index])
           people.setPeopleDefinition(new_people_def)
-        end
-      end
-    end
-  end
-end
+        end # space_type.people each do
+      end # space_types.each do
+    end # paramater_types.each do
+  end # def people_area_per_person
+end # Class

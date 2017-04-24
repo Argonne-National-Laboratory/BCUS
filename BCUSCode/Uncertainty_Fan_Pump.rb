@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -44,8 +44,10 @@
 # 21-Apr-2017 RTM Used rubocop linter for code cleanup
 
 # 1. Introduction
-# This is the subfunction called by Uncertain_Parameters to generate fan and pump uncertainty distribution.
-# This method applies the uncertainty analysis to all the fans and pumps in the loop. It cannot detect single fan on certain loop
+# This is the subfunction called by Uncertain_Parameters to generate fan and
+# pump uncertainty distribution.
+# This method applies the uncertainty analysis to all the fans and pumps in
+# the loop. It cannot detect single fan on certain loop
 class FanPumpUncertainty
   attr_reader :fan_ConstantVolume_name
   attr_reader :fan_ConstantVolume_efficiency
@@ -80,17 +82,17 @@ class FanPumpUncertainty
       # find fans on the loop
       supply_components.each do |supply_component|
         unless supply_component.to_FanConstantVolume.empty?
-          hVACComponent = supply_component.to_FanConstantVolume.get
-          @fan_ConstantVolume_name << hVACComponent.name.to_s
-          @fan_ConstantVolume_efficiency << hVACComponent.fanEfficiency.to_f
-          @fan_ConstantVolume_motorEfficiency << hVACComponent.motorEfficiency.to_f
+          hvac_component = supply_component.to_FanConstantVolume.get
+          @fan_ConstantVolume_name << hvac_component.name.to_s
+          @fan_ConstantVolume_efficiency << hvac_component.fanEfficiency.to_f
+          @fan_ConstantVolume_motorEfficiency << hvac_component.motorEfficiency.to_f
         end
 
         next if supply_component.to_FanVariableVolume.empty?
-        hVACComponent = supply_component.to_FanVariableVolume.get
-        @fan_VariableVolume_name << hVACComponent.name.to_s
-        @fan_VariableVolume_efficiency << hVACComponent.fanEfficiency.to_f
-        @fan_VariableVolume_motorEfficiency << hVACComponent.motorEfficiency.to_f
+        hvac_component = supply_component.to_FanVariableVolume.get
+        @fan_VariableVolume_name << hvac_component.name.to_s
+        @fan_VariableVolume_efficiency << hvac_component.fanEfficiency.to_f
+        @fan_VariableVolume_motorEfficiency << hvac_component.motorEfficiency.to_f
       end
     end
   end
@@ -104,15 +106,15 @@ class FanPumpUncertainty
       # find pumps on the loop
       supply_components.each do |supply_component|
         unless supply_component.to_PumpConstantSpeed.empty?
-          hVACComponent = supply_component.to_PumpConstantSpeed.get
-          @pump_ConstantSpeed_name << hVACComponent.name.to_s
-          @pump_ConstantSpeed_motorEfficiency << hVACComponent.motorEfficiency.to_f
+          hvac_component = supply_component.to_PumpConstantSpeed.get
+          @pump_ConstantSpeed_name << hvac_component.name.to_s
+          @pump_ConstantSpeed_motorEfficiency << hvac_component.motorEfficiency.to_f
         end
 
         next if supply_component.to_PumpVariableSpeed.empty?
-        hVACComponent = supply_component.to_PumpVariableSpeed.get
-        @pump_VariableSpeed_name << hVACComponent.name.to_s
-        @pump_VariableSpeed_motorEfficiency << hVACComponent.motorEfficiency.to_f
+        hvac_component = supply_component.to_PumpVariableSpeed.get
+        @pump_VariableSpeed_name << hvac_component.name.to_s
+        @pump_VariableSpeed_motorEfficiency << hvac_component.motorEfficiency.to_f
       end
     end
   end
@@ -123,8 +125,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_FanConstantVolume.empty?
-              hVACComponent = supply_component.to_FanConstantVolume.get
-              hVACComponent.setFanEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_FanConstantVolume.get
+              hvac_component.setFanEfficiency(parameter_value[index])
             end
           end
         end
@@ -132,8 +134,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_FanConstantVolume.empty?
-              hVACComponent = supply_component.to_FanConstantVolume.get
-              hVACComponent.setMotorEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_FanConstantVolume.get
+              hvac_component.setMotorEfficiency(parameter_value[index])
             end
           end
         end
@@ -141,8 +143,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_FanVariableVolume.empty?
-              hVACComponent = supply_component.to_FanVariableVolume.get
-              hVACComponent.setFanEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_FanVariableVolume.get
+              hvac_component.setFanEfficiency(parameter_value[index])
             end
           end
         end
@@ -150,8 +152,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_FanVariableVolume.empty?
-              hVACComponent = supply_component.to_FanVariableVolume.get
-              hVACComponent.setMotorEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_FanVariableVolume.get
+              hvac_component.setMotorEfficiency(parameter_value[index])
             end
           end
         end
@@ -165,8 +167,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_PumpConstantSpeed.empty?
-              hVACComponent = supply_component.to_PumpConstantSpeed.get
-              hVACComponent.setMotorEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_PumpConstantSpeed.get
+              hvac_component.setMotorEfficiency(parameter_value[index])
             end
           end
         end
@@ -174,8 +176,8 @@ class FanPumpUncertainty
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_PumpVariableSpeed.empty?
-              hVACComponent = supply_component.to_PumpVariableSpeed.get
-              hVACComponent.setMotorEfficiency(parameter_value[index])
+              hvac_component = supply_component.to_PumpVariableSpeed.get
+              hvac_component.setMotorEfficiency(parameter_value[index])
             end
           end
         end

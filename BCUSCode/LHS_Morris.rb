@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -113,7 +113,8 @@ end # cdf_inverse
 
 # This class is used for generating random numbers and latin hypercube samples
 class LHSGenerator
-  def random_num_generate(n_runs, n_parameters, output_folder, verbose = false, randseed = 0)
+  def random_num_generate(n_runs, n_parameters, output_folder,
+                          verbose = false, randseed = 0)
     R.assign('numRuns', n_runs)
     R.assign('numParams', n_parameters)
     R.assign('randseed', randseed) # set the random seed.
@@ -129,30 +130,34 @@ class LHSGenerator
     RCODE
     lhs_table = R.lhs.transpose
 
-    CSV.open("#{output_folder}/Random_LHS_Samples.csv", 'wb')
-    CSV.open("#{output_folder}/Random_LHS_Samples.csv", 'a+') do |csv|
+    CSV.open(File.join(output_folder, 'Random_LHS_Samples.csv'), 'wb') do |csv|
       (0..lhs_table.row_count).each do |row_index|
         csv << lhs_table.row(row_index).to_a
       end
     end
 
-    puts "Random_LHS_Samples.csv with the size of #{lhs_table.row_count} rows and #{lhs_table.column_count} columns is generated" if verbose
+    if verbose
+      puts "Random_LHS_Samples.csv with the size of #{lhs_table.row_count} "\
+      "rows and #{lhs_table.column_count} columns is generated"
+    end
     lhs_table
   end # random_num_generate
 
-  def lhs_samples_generator(uqtable_folder, file_name, n_runs, output_folder, verbose = false, randseed = 0)
-    table = CSV.read("#{uqtable_folder}/#{file_name}")
+  def lhs_samples_generator(uq_file_name, n_runs, output_folder,
+                            verbose = false, randseed = 0)
+
+    table = CSV.read(uq_file_name)
     n_parameters = table.count - 1 # the first row is the header
-    lhs_random_table = random_num_generate(n_runs, n_parameters, output_folder, verbose, randseed)
+    lhs_random_table = random_num_generate(n_runs, n_parameters, output_folder,
+                                           verbose, randseed)
     row_index = 0
-    CSV.open("#{output_folder}/LHS_Samples.csv", 'wb')
-    CSV.open("#{output_folder}/LHS_Samples.csv", 'a+') do |csv|
+    CSV.open(File.join(output_folder, 'LHS_Samples.csv'), 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..n_runs).each do |sample_index|
         header << "Run #{sample_index}"
       end
       csv << header
-      CSV.foreach("#{uqtable_folder}/#{file_name}", headers: true) do |parameter|
+      CSV.foreach(uq_file_name, headers: true) do |parameter|
         prob_distribution = [parameter['Parameter Base Value'].to_f,
                              parameter['Distribution'],
                              parameter['Mean or Mode'].to_f,
@@ -163,20 +168,22 @@ class LHSGenerator
         csv << table[row_index + 1].to_a[0, 2] + cdf_inverse(q, prob_distribution)
         row_index += 1
       end
-    end
-    if verbose
-      puts 'LHS_Samples.csv is generated and saved to the folder!'
-      puts "It includes #{n_runs} simulation runs"
-    end
+    end # CSV.open
+    return unless verbose # using guard clause as per ruby style guide
+    puts "#{uq_file_name} has been generated and saved!"
+    puts "#{uq_file_name} includes #{n_runs} simulation runs"
   end # lhs_samples_generator
 end
 
 # Compute the sensitivities for the given model via the Morris method
 class Morris
-  # model is a method (obtained by a call to method(:mymodelfunction)) representing the model to test
+  # model is a method (obtained by a call to method(:mymodelfunction))
+  # representing the model to test
   # model should take, as input, a vector of length n_params
-  # n_repetitions is the number of repetitions that will be performed during the Morris sampling
-  # param_lower_bounds and param_upper_bounds are both vectors of length n_params, giving the upper
+  # n_repetitions is the number of repetitions that will be performed during
+  # the Morris sampling
+  # param_lower_bounds and param_upper_bounds are both vectors of length
+  # n_params, giving the upper
   # and lower bounds for each parameter
   #
   #
@@ -189,7 +196,8 @@ class Morris
   # => [1.0, 10.0]
   #
 
-  def design_matrix(file_path, file_name, morris_R, morris_levels, randseed = 0, verbose = false)
+  def design_matrix(output_folder, file_name, morris_R, morris_levels,
+                    randseed = 0, verbose = false)
     # file_path = path to SA_output directory
     # file_name = full path name to UQ output file
     # morris_R = number of morris repetitions (routes/tracks)
@@ -209,16 +217,18 @@ class Morris
         set.seed(NULL)
       }
       design <- morris(NULL, n, mR, binf=0.05, bsup=0.95,
-        scale=FALSE, design = list(type = "oat", levels = #{morris_levels}, grid.jump = #{(morris_levels / 2 + 0.5).to_i}))
+        scale=FALSE, design = list(type = "oat", levels = #{morris_levels},
+        grid.jump = #{(morris_levels / 2 + 0.5).to_i}))
       X <- design$X
-      save (design, file="#{file_path}/Morris_design")
+      save (design, file="#{output_folder}/Morris_design")
     RCODE
 
     design_matrix = R.X
 
     row_index = 0
-    CSV.open("#{file_path}/Morris_0_1_Design.csv", 'wb')
-    CSV.open("#{file_path}/Morris_0_1_Design.csv", 'a+') do |csv|
+    #CSV.open("#{output_folder}/Morris_0_1_Design.csv", 'wb')
+    #CSV.open("#{output_folder}/Morris_0_1_Design.csv", 'a+') do |csv|
+    CSV.open(File.join(output_folder, 'Morris_0_1_Design.csv'), 'wb') do |csv|
       while row_index <= design_matrix.row_count
         csv << design_matrix.row(row_index).to_a
         row_index += 1
@@ -227,8 +237,9 @@ class Morris
 
     # CDF transform
     row_index = 0
-    CSV.open("#{file_path}/Morris_CDF_Tran_Design.csv", 'wb')
-    CSV.open("#{file_path}/Morris_CDF_Tran_Design.csv", 'a+') do |csv|
+    #CSV.open("#{output_folder}/Morris_CDF_Tran_Design.csv", 'wb')
+    #CSV.open("#{output_folder}/Morris_CDF_Tran_Design.csv", 'a+') do |csv|
+    CSV.open(File.join(output_folder, 'Morris_CDF_Tran_Design.csv'), 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..design_matrix.row_count).each do |sample_index|
         header << "Run #{sample_index}"
@@ -253,8 +264,7 @@ class Morris
 
   def compute_sensitivities(model_response_file, output_folder, uq_file_name,
                             verbose = false, maxstring = 60)
-    # verbose
-    # maxstring = maximum size of the parameter+object string in characters, default = 50
+    # maxstring = maximum size of the parameter+object string in characters
     R.assign('y_file', model_response_file)
     R.assign('output_folder', output_folder)
     R.assign('uq_file_name', uq_file_name)
@@ -266,16 +276,19 @@ class Morris
     end
 
     R.eval <<-RCODE
-      table_name<-read.csv(uq_file_name, header = TRUE,fill = TRUE, strip.white = TRUE, stringsAsFactors = TRUE)
+      table_name<-read.csv(uq_file_name, header = TRUE,fill = TRUE,
+       strip.white = TRUE, stringsAsFactors = TRUE)
 
-      # the following combines columns 1and column 2 into one string for the full
-      # name of the parameter for sensitivity analysis, truncates to first maxstring char
-			# takes the transpose and converts back to a data frame
+      # the following combines columns 1and column 2 into one string for the
+      # full name of the parameter for sensitivity analysis, truncates to first
+      # maxstring char takes the transpose and converts back to a data frame
+
       b = data.matrix(t(substr(paste(table_name[[1]],table_name[[2]],sep = ": "),1,maxstring)))
       #bframe = data.frame(t(b))
       library("sensitivity")
       load("#{output_folder}/Morris_design")
-      Table <- read.csv(y_file,header=TRUE,check.names=FALSE) # use check.names=FALSE to keep spaces in output names
+      # use check.names=FALSE to keep spaces in output names
+      Table <- read.csv(y_file,header=TRUE,check.names=FALSE)
       Tablenames <- names(Table)
       Filenames <- gsub(' ','.',names(Table))
 
@@ -312,10 +325,10 @@ class Morris
 
         # print out the sensitivity tables
         cat("\nSensitivity Tables\n")
-        names(outarray) <- names(Table)  # rename the tables using sensitivity table names instead [[1]], [[2]], etc.
+        # rename the tables using sensitivity table names instead
+        names(outarray) <- names(Table)
         print(outarray)
       }
-
     RCODE
   end # def compute_sensitivities
 end # Class Morris

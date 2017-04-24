@@ -29,9 +29,10 @@ require 'csv'
 require 'openstudio'
 require 'openstudio/energyplus/find_energyplus'
 
+# class to run OpenStudio
 class RunOSM
   def run_osm(model_dir, weather_dir, output_dir, sim_num, verbose = false)
-    osmDir = OpenStudio::Path.new(model_dir)
+    osm_dir = OpenStudio::Path.new(model_dir)
 
     weatherFileDir = OpenStudio.system_complete(OpenStudio::Path.new(weather_dir))
 
@@ -45,25 +46,27 @@ class RunOSM
     puts 'Creating RunManager database at ' + runManagerDBPath.to_s if verbose
     OpenStudio.remove(runManagerDBPath) if OpenStudio.exists(runManagerDBPath)
 
-    # create a run manager instance and set new database = true to overwrite any existing, false to start in paused mode,
-    # and ui initialize to same as verbose so it will only show up if verbose = true
+    # create a run manager instance and set the following
+    # new database = true to overwrite any existing database
+    # start in paused mode = false,
+    # ui initialize to same as verbose so it will show up if verbose = true
     runManager = OpenStudio::Runmanager::RunManager.new(runManagerDBPath, true, false, verbose)
 
     # find energyplus
     co = OpenStudio::Runmanager::ConfigOptions.new
     co.fastFindEnergyPlus
 
-    filenames = Dir.glob(osmDir.to_s + '/*.osm')
+    filenames = Dir.glob(osm_dir.to_s + '/*.osm')
 
     n = 0
     filenames.each do |filename|
       break if !nSim.empty? && (nSim.get <= n)
 
       # copy osm file
-      relativeFilePath = OpenStudio.relativePath(OpenStudio::Path.new(filename), osmDir)
+      relativeFilePath = OpenStudio.relativePath(OpenStudio::Path.new(filename), osm_dir)
       puts 'Queuing simulation job for ' + relativeFilePath.to_s if verbose
 
-      originalOsmPath = osmDir / relativeFilePath
+      originalOsmPath = osm_dir / relativeFilePath
       outputOsmPath = outputDir / relativeFilePath
       puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s if verbose
       OpenStudio.makeParentFolder(outputOsmPath, OpenStudio::Path.new, true)
@@ -78,7 +81,8 @@ class RunOSM
       jobDirectory = outputOsmPath.parent_path / OpenStudio::Path.new(outputOsmPath.stem) / OpenStudio::Path.new('/')
       puts "Job directory will be '" + jobDirectory.to_s if verbose
       job = workflow.create(jobDirectory)
-      runManager.enqueue(job, true) # queue up a job and process even if its out of date
+      # queue up a job and process even if its out of date
+      runManager.enqueue(job, true)
       n += 1
     end
 

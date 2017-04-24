@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -243,15 +243,17 @@ class EnvelopUncertainty < OpenStudio::Model::Model
   end
 
   # Infiltration object is unique at building level
-  def infiltration_flow_per_ext_surface_method(model, parameter_types, parameter_names, parameter_value)
+  def infiltration_flow_per_ext_surface_method(model, parameter_types,
+                                               parameter_names, parameter_value)
     parameter_types.each_with_index do |type, index|
       next unless parameter_names[index] =~ /FlowPerExteriorArea/
       case type
       when /Infiltration/
         space_infiltration_objects = model.getSpaceInfiltrationDesignFlowRates
         space_infiltration_objects.each(&:remove)
-        # loop through spacetypes used in the model adding space infiltration objects
-        space_types = model.getSpaceTypes # Space type is required entry to define a thermal space
+        # loop through spacetypes used in the model adding space infiltration
+        # objects; Space type is required entry to define a thermal space
+        space_types = model.getSpaceTypes
         space_types.each do |space_type|
           next if space_type.spaces.empty?
           new_space_type_infil = OpenStudio::Model::SpaceInfiltrationDesignFlowRate.new(model)

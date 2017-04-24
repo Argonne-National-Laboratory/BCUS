@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -40,10 +40,10 @@
 
 # Modified Date and By:
 # - August 2016 by Yuna Zhang
-# - Created on Feb 27, 2015 by Yuming Sun and Matt Riddle from Argonne National Laboratory
+# - Created on Feb 27, 2015 by Yuming Sun and Matt Riddle from Argonne
 
 # 1. Introduction
-# This is the main code used for setting up files for running Bayesian calibration.
+# This is the main code used for setting up files for running Bayesian cal
 
 # 2. Call structure
 # Refer to 'Function Call Structure_Bayesian Calibration.pptx'
@@ -63,8 +63,10 @@ require_relative 'Uncertain_Parameters'
 require_relative 'Process_Simulation_SQLs'
 
 class Calibrated_OSM
-  def gen_and_sim(osm_file, epw_file, priors_file, posts_file, meter_settings_file,
-                  calibrated_model_file, _calibrated_model_name, cal_output_folder, verbose = false)
+  def gen_and_sim(osm_file, epw_file, priors_file, posts_file,
+                  meter_settings_file,
+                  calibrated_model_file,
+                  _calibrated_model_name, cal_output_folder, verbose = false)
     posts = CSV.read(posts_file, headers: true, converters: :numeric)
     headers = posts.headers()
 
@@ -101,7 +103,8 @@ class Calibrated_OSM
 
     uncertainty_parameters = UncertainParameters.new
     parameter_value = posts_average
-    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
+    uncertainty_parameters.apply(model, parameter_types, parameter_names,
+                                 parameter_value)
     workbook = RubyXL::Parser.parse(meter_settings_file)
     meters_table = []
     meters_table_row = []
@@ -131,6 +134,7 @@ class Calibrated_OSM
     runner.run_osm(cal_output_folder, epw_file, cal_simulations_folder, 1)
 
     # Read Simulation Results
-    OutPut.Read(cal_simulations_folder, cal_output_folder, meter_settings_file, verbose)
+    OutPut.Read(cal_simulations_folder, cal_output_folder,
+                meter_settings_file, verbose)
   end
 end

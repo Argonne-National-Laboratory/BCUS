@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -43,7 +43,8 @@
 # - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
 # - Created on March 15 2015 by Yuming Sun from Argonne National Laboratory
 # - 02-Apr-2017: RTM: Added noEP option
-# 15-Apr-2017: Updated call to output.read to reflect input file/dir formats/names and cleaned up code
+# 15-Apr-2017: Updated call to output.read to reflect input file/dir
+# formats/names and cleaned up code
 
 # 1. Introduction
 # This is the main function of uncertainty analysis.
@@ -58,6 +59,7 @@ require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'LHS_Morris'
 require_relative 'Process_Simulation_SQLs'
+require_relative 'bcus_utils'
 
 # use require to include functions from Ruby Library
 require 'openstudio'
@@ -66,31 +68,18 @@ require 'rubyXL'
 require 'optparse'
 require 'fileutils'
 
-# define prompt to wait for user to enter y or Y to continue for interactive
-def wait_for_y
-  check = 'n'
-  while check != 'y' && check != 'Y'
-    puts 'Please enter "Y" or "y" to continue, "n" or "N" or "CTRL-Z" to quit\n'
-
-    # read from keyboard, strip leading and trailing spaces and convert to lower case
-    check = $stdin.gets.strip.downcase
-    abort if check == 'n'
-  end
-end
-
+# rubocop:disable LineLength
 # parse commandline inputs from the user
 options = { osmName: nil, epwName: nil }
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: UA.rb [options]'
 
-  # osmName: OpenStudio Model Name in .osm
-  opts.on('--osmName osmName', 'osmName') do |osmName|
-    options[:osmName] = osmName
+  opts.on('-o', '--osm osmName', 'osmName') do |osm|
+    options[:osmName] = osm
   end
 
-  # epwName: weather file used to run simulation in .epw
-  opts.on('--epwName epwName', 'epwName') do |epwName|
-    options[:epwName] = epwName
+  opts.on('-e', '--epw epwName', 'epwName') do |epw|
+    options[:epwName] = epw
   end
 
   options[:interactive] = false
@@ -103,21 +92,21 @@ parser = OptionParser.new do |opts|
     options[:noCleanup] = true
   end
 
-  options[:uqRepo] = 'Parameter UQ Repository V1.0.xlsx'
-  opts.on('-u', '--uqRepo uqRepo', 'UQ Repository file (default "Parameter UQ Repositorty V1.0.xlsx")') do |uqRepo|
-    options[:uqRepo] = uqRepo
+  options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
+  opts.on('-u', '--uqRepo uqRepo', 'UQ Repository file (default "Parameter_UQ_Repository_V1.0.xlsx")') do |uq_repo_file|
+    options[:uqRepo] = uq_repo_file
   end
 
   options[:settingsFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settingsFile|
-    options[:settingsFile] = settingsFile
+  opts.on('-s', '--settingsfile outFile', 'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")') do |settings_file|
+    options[:settingsFile] = settings_file
   end
 
-  # numLHS: the number of sample points of Monte Carlo simulation with Latin Hypercube Design
-  # If not user specified, 500 will be used as the default.
+  # num_LHS: the number of sample points of Monte Carlo simulation with Latin
+  # Hypercube Design. If not user specified, 500 will be used as the default.
   options[:numLHS] = 500
-  opts.on('--numLHS numLHS', 'numLHS') do |numLHS|
-    options[:numLHS] = numLHS
+  opts.on('--numLHS numLHS', 'numLHS') do |num_lhs|
+    options[:numLHS] = num_lhs
   end
 
   options[:randseed] = 0
@@ -130,7 +119,7 @@ parser = OptionParser.new do |opts|
     options[:verbose] = true
   end
 
-  options[:noep] = false
+  options[:noEP] = false
   opts.on('--noEP', 'Do not run EnergyPlus') do
     options[:noEP] = true
   end
@@ -140,208 +129,132 @@ parser = OptionParser.new do |opts|
     exit
   end
 end
+
 parser.parse!
 
-if options[:osmName].nil?
-  if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep(/.osm/)
-    osm_name = temp[0]
-  else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option or giving a filename ending with .osm on the command line'
-    abort
-  end
-else # otherwise the --osmName option was used
-  osm_name = options[:osmName]
-end
+error_msg = 'An OpenStudio OSM file must be indicated by the --osm option or giving a filename ending with .osm on the command line'
+osm_file = File.absolute_path(parse_argv(options[:osmName], '.osm', error_msg))
 
-# if the user didn't give the --epwName option, parse the rest of the input arguments for a *.epw
-if options[:epwName].nil?
-  if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep(/.epw/)
-    epw_name = temp[0]
-  else
-    puts 'An .epw weather file must be indicated by the --epwNAME option or giving a filename ending with .epw on the command line'
-    abort
-  end
-else # otherwise the --epwName option was used
-  epw_name = options[:epwName]
-end
+error_msg = 'An .epw weather file must be indicated by the --epw option or giving a filename ending with .epw on the command line'
+epw_file = File.absolute_path(parse_argv(options[:epwName], '.epw', error_msg))
+# rubocop:enable LineLength
 
-verbose = options[:verbose]
-uqrepo_name = options[:uqRepo]
-settingsfile_name = options[:settingsFile]
+settings_file = File.absolute_path(options[:settingsFile])
+uq_repo_file = File.absolute_path(options[:uqRepo])
+
 run_interactive = options[:interactive]
 skip_cleanup = options[:noCleanup]
-num_LHS_runs = Integer(options[:numLHS])
+
+num_lhs_runs = Integer(options[:numLHS])
+verbose = options[:verbose]
+
 randseed = Integer(options[:randseed])
-noEP = options[:noEP]
+no_ep = options[:noEP]
 
-# if we are choosing noEP we also want to skip cleanup even if it hasn't been selected
-skip_cleanup = true if noEP
-
-if run_interactive
-  puts 'Running Interactively'
-  wait_for_y
-end
-
+# if we are choosing no_ep we also want to skip cleanup even if it hasn't been selected
+skip_cleanup = true if no_ep
 puts 'Not Cleaning Up Interim Files' if skip_cleanup && verbose
+
+wait_for_y('Running Interactively') if run_interactive
 
 # Acquire the path of the working directory that is the user's project folder.
 path = Dir.pwd
 
-# expand filenames to full paths
-osm_path = File.absolute_path(osm_name)
-epw_path = File.absolute_path(epw_name)
-uqrepo_path = File.absolute_path(uqrepo_name)
-settingsfile = File.absolute_path(settingsfile_name)
-
 # extract out just the base filename from the OSM file as the building name
-building_name = File.basename(osm_name, '.osm')
+building_name = File.basename(osm_file, '.osm')
 
 # check if .osm model exists and if so, load it
-if File.exist?(osm_path.to_s)
-  model = OpenStudio::Model::Model.load(osm_path).get
-  puts "Using OSM file #{osm_path}" if verbose
-else
-  puts "OpenStudio file #{osm_path} not found!"
-  abort
-end
+model = read_osm_file(osm_file, verbose)
+check_epw_file(epw_file, verbose)
 
-# check if .epw exists
-if File.exist?(epw_path.to_s)
-  puts "Using EPW file #{epw_path}" if verbose
-else
-  puts "Weather model #{epw_path} not found!"
-  abort
-end
-
-output_folder = "#{path}/UA_Output"
-models_folder = "#{path}/UA_Models"
-simulations_folder = "#{path}/UA_Simulations"
+# use file join rather than string concatentation to get file separator right
+output_folder = File.join(path, 'UA_Output')
+models_folder = File.join(path, 'UA_Models')
+simulations_folder = File.join(path, 'UA_Simulations')
 
 Dir.mkdir output_folder unless Dir.exist?(output_folder)
+Dir.mkdir models_folder unless Dir.exist?(models_folder)
+Dir.mkdir simulations_folder unless Dir.exist?(simulations_folder)
 
-# Load UQ repository
-if File.exist?(uqrepo_path.to_s)
-  puts "Using UQ repository = #{uqrepo_path}" if verbose
-  workbook = RubyXL::Parser.parse(uqrepo_path.to_s)
-  uq_table = []
-  uq_table_row = []
-  workbook['UQ'].each do |row|
-    uq_table_row = []
-    row.cells.each do |cell|
-      uq_table_row.push(cell.value)
-    end
-    uq_table.push(uq_table_row)
-  end
-else
-  puts "#{uqrepo_path} was NOT found!"
-  abort
-end
+meters_table = read_meters_table(settings_file, verbose)
 
-if File.exist?(settingsfile.to_s)
-  puts "Using Output Settings = #{settingsfile}" if verbose
-  workbook = RubyXL::Parser.parse(settingsfile.to_s)
-  meters_table = []
-  meters_table_row = []
-  workbook['Meters'].each do |row|
-    meters_table_row = []
-    row.cells.each do |cell|
-      meters_table_row.push(cell.value)
-    end
-    meters_table.push(meters_table_row)
-  end
-
-else
-  puts "#{settingsfile} was NOT found!"
-  abort
-end
-
-if verbose
-  puts "Using Number of LHS samples  = #{num_LHS_runs}"
-  puts "Using Random Seed = #{randseed}"
-end
-
-# remove the header rows
+uq_table = read_uq_table(uq_repo_file, verbose)
+# remove the first two header rows from the table
 uq_table.delete_at(0)
 uq_table.delete_at(0)
 
 # Define the output path of building specific uncertainty table
-uq_out_file_path_name = "#{output_folder}/UQ_#{building_name}.csv"
-uncertainty_parameters = UncertainParameters.new
-uncertainty_parameters.find(model, uq_table, uq_out_file_path_name, verbose)
+uq_table_name = File.join(output_folder, 'UQ_' + building_name + '.csv')
 
-if run_interactive
-  puts "Check the #{uq_out_file_path_name}"
-  wait_for_y
+uncertainty_parameters = UncertainParameters.new
+uncertainty_parameters.find(model, uq_table, uq_table_name, verbose)
+
+wait_for_y("Check the #{uq_table_name}") if run_interactive
+
+if verbose
+  puts "Using Number of LHS samples  = #{num_lhs_runs}"
+  puts "Using Random Seed = #{randseed}"
 end
 
-# Generate LHS samples
+# run LHS sample generator and put the LHS sample file in output_folder
 lhs = LHSGenerator.new
-# run generator and make the uqtable_folder the same as the output_folder
-lhs.lhs_samples_generator(output_folder, 'UQ_' + building_name + '.csv', num_LHS_runs, output_folder, verbose, randseed)
+lhs.lhs_samples_generator(uq_table_name, num_lhs_runs, output_folder, verbose, randseed)
 
-samples = CSV.read("#{output_folder}/LHS_Samples.csv", headers: true)
-parameter_names = []
-parameter_types = []
+samples = CSV.read(File.join(output_folder, 'LHS_Samples.csv'), headers: true)
 
-samples.each do |sample|
-  parameter_names << sample[1]
-  parameter_types << sample[0]
-end
+param_names, param_types, param_values = get_param_names_types_values(samples)
 
-uncertainty_parameters = UncertainParameters.new
-
-if run_interactive
-  puts "Going to run #{num_LHS_runs} models.  This could take a while"
-  wait_for_y
-end
-
-if noEP
+if no_ep
   if verbose
     puts
-    puts '--noEP option selected, skipping generation of OpenStudio files and running of EnergyPlus'
+    puts '--noEP option selected, skipping creation of OpenStudio files and running of EnergyPlus'
     puts
   end
 else
-  (2..(samples[0].length - 1)).each do |k|
-    model = OpenStudio::Model::Model.load(osm_path).get # reload the model to get the same starting point each time
-    parameter_value = []
-    samples.each { |sample| parameter_value << sample[k].to_f }
-    uncertainty_parameters.apply(model, parameter_types, parameter_names, parameter_value)
-    # add reporting meters
-    (1..(meters_table.length - 1)).each do |meter_index|
-      meter = OpenStudio::Model::Meter.new(model)
-      meter.setName(meters_table[meter_index][0].to_s)
-      meter.setReportingFrequency(meters_table[meter_index][1].to_s)
-    end
-    variable = OpenStudio::Model::OutputVariable.new('Site Outdoor Air Drybulb Temperature', model)
-    variable.setReportingFrequency('Monthly')
-    variable = OpenStudio::Model::OutputVariable.new('Site Ground Reflected Solar Radiation Rate per Area', model)
-    variable.setReportingFrequency('Monthly')
+  puts "Going to run #{num_lhs_runs} models. This could take a while" if verbose
+  wait_for_y if run_interactive
+  uncertainty_parameters = UncertainParameters.new
+
+  (0..(param_values.length - 1)).each do |k|
+    # reload the model explicitly to get the same starting point each time
+    model = OpenStudio::Model::Model.load(osm_file).get
+
+    uncertainty_parameters.apply(model, param_types, param_names, param_values[k])
+
+    # add reporting meters to model
+    add_reporting_meters_to_model(model, meters_table)
+
+    # add weather variable reporting to model and set its frequency
+    add_output_variable_to_model(model, 'Site Outdoor Air Drybulb Temperature', 'Monthly')
+    add_output_variable_to_model(model, 'Site Ground Reflected Solar Radiation Rate per Area', 'Monthly')
+
     # meters saved to sql file
-    model.save("#{models_folder}/Sample#{k - 1}.osm", true)
+    model_output_file = File.join(models_folder, "Sample#{k + 1}.osm")
+    model.save(model_output_file, true)
 
-    # new edit start from here Yuna add for thermostat algorithm
-    out_file_path_name_thermostat = "#{output_folder}/UQ_#{building_name}_thermostat.csv"
-    model_output_file = "#{models_folder}/Sample#{k - 1}.osm"
-    uncertainty_parameters.thermostat_adjust(model, uq_table, out_file_path_name_thermostat, model_output_file, parameter_types, parameter_value)
+    # create thermostat output tables and apply uncertainty to thermostats
+    thermostat_output_file = File.join(output_folder, "UQ_#{building_name}_thermostat.csv")
+    uncertainty_parameters.thermostat_adjust(model, uq_table, thermostat_output_file,
+                                             model_output_file, param_types, param_values[k])
 
-    puts "Sample#{k - 1} is saved to the folder of Models" if verbose
+    puts "Sample#{k + 1} is saved to the folder of Models" if verbose
   end
 
   # run all the OSM simulation files
   runner = RunOSM.new
-  runner.run_osm(models_folder, epw_path, simulations_folder, num_LHS_runs, verbose)
+  runner.run_osm(models_folder, epw_file, simulations_folder,
+                 num_lhs_runs, verbose)
 end
 
 # Read Simulation Results
-OutPut.Read("#{path}/UA_Simulations", "#{path}/UA_Output", settingsfile, verbose)
+OutPut.Read("#{path}/UA_Simulations", "#{path}/UA_Output", settings_file, verbose)
 
 # delete intermediate files
 unless skip_cleanup
-  File.delete("#{output_folder}/Monthly_Weather.csv") if File.exist?("#{output_folder}/Monthly_Weather.csv")
-  FileUtils.remove_dir(models_folder) if Dir.exist?(models_folder)
+  file_list = ['Monthly_Weather.csv']
+
+  delete_files(output_folder, file_list, verbose)
+  delete_folder(models_folder, verbose)
 end
 
 puts 'UA.rb Completed Successfully!' if verbose

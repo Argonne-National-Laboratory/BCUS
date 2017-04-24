@@ -6,21 +6,21 @@
 # are permitted provided that the following conditions are met:
 
 # 1. Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.  Software changes, modifications, or 
+# of conditions and the following disclaimer.  Software changes, modifications, or
 # derivative works, should be noted with comments and the author and organization’s name.
 
 # 2. Redistributions in binary form must reproduce the above copyright notice, this list
-# of conditions and the following disclaimer in the documentation and/or other materials 
+# of conditions and the following disclaimer in the documentation and/or other materials
 # provided with the distribution.
 
 # 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names
-# of its contributors may be used to endorse or promote products derived from this software 
+# of its contributors may be used to endorse or promote products derived from this software
 # without specific prior written permission.
 
-# 4. The software and the end-user documentation included with the redistribution, if any, 
+# 4. The software and the end-user documentation included with the redistribution, if any,
 # must include the following acknowledgment:
 
-# "This product includes software produced by UChicago Argonne, LLC under Contract 
+# "This product includes software produced by UChicago Argonne, LLC under Contract
 # No. DE-AC02-06CH11357 with the Department of Energy.”
 
 # ******************************************************************************************************
@@ -28,9 +28,9 @@
 
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, 
-# LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY 
-# OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, 
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE,
+# LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY
+# OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS,
 # PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 # ***************************************************************************************************
@@ -40,7 +40,7 @@
 # renamed with .R extension for better compatibility on unix/linux 27-Mar-2017 RTM
 
 # 1. Introduction
-# This is the function to 
+# This is the function to
 #            1. Store information on size of original design matrix
 #            2. Create and store distance array
 
@@ -87,7 +87,7 @@ gendist <- function (x, inds)
   # Create distance array with alpha = 2
   #alpha = 2;
   dist$d = (x[inds$j,] - x[inds$i,]) ^ 2;  # d.d=(data(indj,:)-data(indi,:)).^alpha;
- 
+
   return (dist);
 }
 

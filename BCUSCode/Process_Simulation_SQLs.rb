@@ -8,7 +8,7 @@
 # 1. Redistributions of source code must retain the above copyright notice,
 #    this list of conditions and the following disclaimer.  Software changes,
 #    modifications, or derivative works, should be noted with comments and the
-#    author and organization’s name.
+#    author and organization's name.
 #
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions and the following disclaimer in the documentation
@@ -22,7 +22,7 @@
 #    redistribution, if any, must include the following acknowledgment:
 #
 #    "This product includes software produced by UChicago Argonne, LLC under
-#     Contract No. DE-AC02-06CH11357 with the Department of Energy.”
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 #
 # *****************************************************************************
 # DISCLAIMER
@@ -53,6 +53,8 @@ require 'fileutils'
 require 'rubyXL'
 require 'csv'
 
+require_relative 'bcus_utils'
+
 #
 def sql_table_lookup(inString, sqlFile)
   case inString
@@ -79,7 +81,7 @@ def sql_table_lookup(inString, sqlFile)
   when /Electricity Fans/
     table_out = sqlFile.electricityFans.get unless sqlFile.electricityFans.empty?
   when /Electricity Pumps/
-    dtable_out = sqlFile.electricityPumps.get unless sqlFile.electricityPumps.empty?
+    table_out = sqlFile.electricityPumps.get unless sqlFile.electricityPumps.empty?
   when /Electricity Heat Rejection/
     table_out = sqlFile.electricityHeatRejection.get unless sqlFile.electricityHeatRejection.empty?
   when /Natural Gas Total End Uses/
@@ -106,45 +108,50 @@ def sql_table_lookup(inString, sqlFile)
 end
 
 module OutPut
-  # def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile, verbose=false)
+  # def OutPut.Read(num_of_runs, project_path, out_prefix, settingsfile,
+  # verbose=false)
   def self.Read(simulations_folder, output_folder, settingsfile, verbose = false)
     # simulations_folder = "#{project_path}/UA_Simulations"
     # output_folder = "#{project_path}/UA_Output"
     # create a workbook to read in the simulation output settings file
-    workbook = RubyXL::Parser.parse(settingsfile)
 
-    output_table = []
-    # find all the total energy tables requested in the simulation output settings file
+   # workbook = RubyXL::Parser.parse(settingsfile)
 
-    workbook['TotalEnergy'].each do |row|
-      output_table_row = []
-      row.cells.each do |cell|
-        output_table_row.push(cell.value)
-      end
-      output_table.push(output_table_row)
-    end
+   #  output_table = []
+   #  # find all the total energy tables requested in the simulation output settings file
 
-    # get the header string from output_table and remove the leading "[" and trailing "]"
+   #  workbook['TotalEnergy'].each do |row|
+   #    output_table_row = []
+   #    row.cells.each do |cell|
+   #      output_table_row.push(cell.value)
+   #    end
+   #    output_table.push(output_table_row)
+   #  end
+
+    output_table = read_workbook(settingsfile, 'TotalEnergy')
+    meters_table = read_workbook(settingsfile, 'Meters')
+
+    # get the header string from output_table and remove the leading "[" ]
+    # and trailing "]"
     header = Array.new(output_table.length - 1)
     (1..(output_table.length - 1)).each do |output_num|
       header[output_num - 1] = output_table[output_num].to_s[2..-3]
     end
 
-    osmFiles = Dir.glob("#{simulations_folder}/*.osm")
-    num_of_runs = osmFiles.length
+    osm_files = Dir.glob("#{simulations_folder}/*.osm")
+    num_of_runs = osm_files.length
 
     sqlFiles = []
-    osmFiles.each do |f|
+    osm_files.each do |f|
       sqlFiles << "#{f.chomp('.osm')}/ModelToIDF/EnergyPlus-0/eplusout.sql"
     end
-
-    data_table = Array.new(num_of_runs) { Array.new(output_table.length - 1) }
 
     if verbose
       puts "List of SQL files to process in #{simulations_folder}"
       puts sqlFiles
     end
 
+    data_table = Array.new(num_of_runs) { Array.new(output_table.length - 1) }
     sqlFiles.each_with_index do |f, index|
       sqlFile = OpenStudio::SqlFile.new(f)
       (1..(output_table.length - 1)).each do |output_num|
@@ -164,21 +171,25 @@ module OutPut
 
     puts "Simulation results saved to #{output_folder}/Simulation_Results_Building_Total_Energy.csv" if verbose
 
-    # look for all the requested meters using the same workbook as above
-    meters_table = []
-    workbook['Meters'].each do |row|
-      meters_table_row = []
-      row.cells.each do |cell|
-        meters_table_row.push(cell.value)
-      end
-      meters_table.push(meters_table_row)
-    end
+    # workbook = RubyXL::Parser.parse(settingsfile)
+    # # look for all the requested meters using the same workbook as above
+    # meters_table = []
+    # workbook['Meters'].each do |row|
+    #   meters_table_row = []
+    #   row.cells.each do |cell|
+    #     meters_table_row.push(cell.value)
+    #   end
+    #   meters_table.push(meters_table_row)
+    # end
+
+    #meters_table = read_workbook(settingsfile, 'Meters')
 
     # loop through all the found meters and extract their data from the SQL file
     (1..(meters_table.length - 1)).each do |meter_index|
       var_value = []
 
-      # find meters that selected timestep and replace 'Timestep' with 'Zone Timestep' for lookup in SQL
+      # find meters that selected timestep and replace 'Timestep' with 'Zone
+      # Timestep' for lookup in SQL
       if meters_table[meter_index][1] == 'Timestep'
         meters_table[meter_index][1] = 'Zone Timestep'
       end
@@ -186,7 +197,8 @@ module OutPut
       sqlFiles.each do |f|
         sqlFile = OpenStudio::SqlFile.new(f)
         # first look up the EnvironmentPeriorIndex that corresponds to RUN PERIOD 1
-        # we need this to make sure we only select data for actual weather period run and not the sizing runs
+        # we need this to ensure we select data for actual weather period
+        # run and not the sizing runs
         query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods
                             WHERE EnvironmentName = 'RUN PERIOD 1'"
         if sqlFile.execAndReturnFirstDouble(query_var_index).empty?
@@ -238,7 +250,8 @@ module OutPut
     weather_var = []
     sqlFile = OpenStudio::SqlFile.new(sqlFiles[0])
 
-    query_var_index = "SELECT ReportVariableDataDictionaryIndex FROM ReportVariableDataDictionary
+    query_var_index = "SELECT ReportVariableDataDictionaryIndex
+           FROM ReportVariableDataDictionary
            WHERE VariableName = 'Site Outdoor Air Drybulb Temperature' AND
            ReportingFrequency = 'Monthly'"
 
@@ -252,7 +265,8 @@ module OutPut
     end
 
     # Query Horizontal Solar Irradiation
-    query_var_index = "SELECT ReportVariableDataDictionaryIndex FROM ReportVariableDataDictionary
+    query_var_index = "SELECT ReportVariableDataDictionaryIndex
+          FROM ReportVariableDataDictionary
            WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area' AND
            ReportingFrequency = 'Monthly'"
 
