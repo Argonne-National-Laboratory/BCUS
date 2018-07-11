@@ -1,7 +1,7 @@
 
 OS:Version,
-  {29f131d6-f237-4765-a8cc-9309b5528a00}, !- Handle
-  1.14.0;                                 !- Version Identifier
+  {232e090b-931b-4097-9c84-123fcb45caab}, !- Handle
+  2.5.0;                                  !- Version Identifier
 
 OS:Rendering:Color,
   {6378dbec-eb36-48ce-bad0-f6c4e6eb1a52}, !- Handle
@@ -2577,7 +2577,7 @@ OS:AirLoopHVAC,
   Packaged Rooftop Air Conditioner,       !- Name
   ,                                       !- Controller List Name
   {3e40c438-d766-45ff-9905-e19e24527f9b}, !- Availability Schedule
-  ,                                       !- Availability Manager
+  {5c817f1f-0bf4-4d6c-9344-2c12e8cfd925}, !- Availability Manager List Name
   AutoSize,                               !- Design Supply Air Flow Rate {m3/s}
   ,                                       !- Branch List Name
   ,                                       !- Connector List Name
@@ -2586,7 +2586,17 @@ OS:AirLoopHVAC,
   {84256764-0fd1-4721-aaea-ae60f67a8f1a}, !- Demand Side Inlet Node A
   {25cb6cb1-bb25-43f0-91f7-c0fbd2b0e081}, !- Supply Side Outlet Node A
   ,                                       !- Demand Side Inlet Node B
-  ;                                       !- Supply Side Outlet Node B
+  ,                                       !- Supply Side Outlet Node B
+  ,                                       !- Return Air Bypass Flow Temperature Setpoint Schedule Name
+  ,                                       !- Demand Mixer Name
+  ,                                       !- Demand Splitter A Name
+  ,                                       !- Demand Splitter B Name
+  ;                                       !- Supply Splitter Name
+
+OS:AvailabilityManagerAssignmentList,
+  {5c817f1f-0bf4-4d6c-9344-2c12e8cfd925}, !- Handle
+  Packaged Rooftop Air Conditioner AvailabilityManagerAssignmentList, !- Name
+  ;                                       !- Availability Manager Name 1
 
 OS:Node,
   {1de7a514-e9a7-44b7-81fb-8ec69d2f4336}, !- Handle
@@ -3379,20 +3389,6 @@ OS:StandardsInformation:Material,
   {c711e45b-e654-4ff5-b33d-0b4466322c54}, !- Handle
   {018db986-9620-4364-ac5a-d4c2ca477428}; !- Material Name
 
-OS:WeatherFile,
-  {14ee6ce4-3113-4a35-85a0-e5ea4489012e}, !- Handle
-  Chicago Ohare Intl Ap,                  !- City
-  IL,                                     !- State Province Region
-  USA,                                    !- Country
-  TMY3,                                   !- Data Source
-  725300,                                 !- WMO Number
-  41.98,                                  !- Latitude {deg}
-  -87.92,                                 !- Longitude {deg}
-  -6,                                     !- Time Zone {hr}
-  201,                                    !- Elevation {m}
-  file:files/test.epw,                    !- Url
-  C254B53F;                               !- Checksum
-
 OS:ScheduleTypeLimits,
   {785568fa-3c2a-4e0c-bf3d-1c9a820f89cc}, !- Handle
   Dimensionless,                          !- Name
@@ -3572,4 +3568,50 @@ OS:SizingPeriod:DesignDay,
   ,                                       !- Diffuse Solar Day Schedule Name
   0.455,                                  !- ASHRAE Taub {dimensionless}
   2.05;                                   !- ASHRAE Taud {dimensionless}
+
+OS:StandardsInformation:Material,
+  {4a98ba50-e538-45d8-910b-f1b07083804b}, !- Handle
+  {6d2a15f3-2fb2-4f37-9864-5a9107aa41e6}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {17112e26-61d8-48c8-9531-6420c80cc3d0}, !- Handle
+  {f8a0ab55-1c45-4e68-bc6f-2f172ce667a5}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {c7f69602-2b14-4af5-b086-66addff407b3}, !- Handle
+  {8724d411-3648-4b88-b17b-b16c8de4674c}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {a8aef423-826b-4fb5-99a6-69ffb6f80e68}, !- Handle
+  {2f6e6054-5839-44f2-862b-aa6900d5d496}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {7ab25c3b-d466-4cad-8242-6894c6fd76f5}, !- Handle
+  {0fd711e7-5d6e-4d1f-90b3-780246167150}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {13860c82-bdd0-48f8-aba9-c78b2e6b7820}, !- Handle
+  {2060ecd4-5969-4632-9752-8bbd45403ef7}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {55b4e336-b2d2-4976-bf5e-badbadab4f5a}, !- Handle
+  {7d72534f-86e7-4369-832e-76cc62c5db27}; !- Material Name
+
+OS:StandardsInformation:Material,
+  {15bf6be4-dd71-4f19-80a1-337974901fd4}, !- Handle
+  {e9f27b68-2515-42a9-a5fe-56e45c9f0202}; !- Material Name
+
+OS:WeatherFile,
+  {c94bfc82-3071-4071-b3c5-18a1697242eb}, !- Handle
+  Chicago Ohare Intl Ap,                  !- City
+  IL,                                     !- State Province Region
+  USA,                                    !- Country
+  TMY3,                                   !- Data Source
+  725300,                                 !- WMO Number
+  41.98,                                  !- Latitude {deg}
+  -87.92,                                 !- Longitude {deg}
+  -6,                                     !- Time Zone {hr}
+  201,                                    !- Elevation {m}
+  file:test.epw,                          !- Url
+  C254B53F;                               !- Checksum
 

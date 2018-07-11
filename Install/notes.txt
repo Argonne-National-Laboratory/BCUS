@@ -1,0 +1,6 @@
+7-11-2018: RTM
+
+
+Changed install_R_packages.bat to make and install R packages to a local R library.  This avoids permissions problems
+Note that Ruby 2.4 does not work at all with OpenStudio 2.5.0.  Get a problem finding the right ruby libraries when running testinstall.bat
+Ruby 2.2 does work but there are some problems with running testinstall.bat related to the script.  This is not a setup problem, but problems with the script and changes to openstudio from 1.x to 2.x  

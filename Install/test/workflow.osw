@@ -1,0 +1,7 @@
+{
+   "created_at" : "20180711T204557Z",
+   "seed_file" : "../test.osm",
+   "steps" : [],
+   "updated_at" : "20180711T204610Z",
+   "weather_file" : "test.epw"
+}
