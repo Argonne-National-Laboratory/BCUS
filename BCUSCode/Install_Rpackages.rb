@@ -52,10 +52,10 @@
 
 require_relative 'rinruby'
 R.eval <<-RCODE
-  install.packages("sensitivity")
-  install.packages("ggplot2")
-  install.packages("triangle")
-  install.packages("gridExtra")
-  install.packages("lhs")
-  install.packages("car")
+  install.packages("sensitivity",lib = "../Rlib")
+  install.packages("ggplot2",lib = "../Rlib")
+  install.packages("triangle",lib = "../Rlib")
+  install.packages("gridExtra",lib = "../Rlib")
+  install.packages("lhs",lib = "../Rlib")
+  install.packages("car",lib = "../Rlib")
 RCODE

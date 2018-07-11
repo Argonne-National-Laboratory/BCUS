@@ -18,6 +18,9 @@
 **/Calibrated_Model/
 **/Calibration_Output/
 
+# Local R library
+**/Rlib/
+
 # BCUS Output Files
 **/cal_sim_runs.txt
 **/cal_utility_data.txt
