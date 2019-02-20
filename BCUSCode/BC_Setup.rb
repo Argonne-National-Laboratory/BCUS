@@ -44,7 +44,7 @@ This is the main code used for setting up files for running Bayesian calibration
 #
 
 
-require_relative 'Run_All_OSMs_verbose'
+require_relative 'Run_All_OSMs'
 require_relative 'Uncertain_Parameters'
 require_relative 'LHS_Gen'
 require_relative 'Read_Simulation_Results_SQL'

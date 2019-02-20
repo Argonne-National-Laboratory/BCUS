@@ -1,5 +1,4 @@
 =begin of comments
-
 ######################################################################
 #  Copyright (c) 2008-2014, Alliance for Sustainable Energy.  
 #  All rights reserved.
@@ -18,6 +17,8 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ######################################################################
+
+#NOTE:  Added verbose input option.  If verbose = true, we print the puts, if not, we don't 12-Sep-2015 Ralph Muehlesisen
 =end
 
 require 'fileutils'
@@ -27,7 +28,7 @@ require 'openstudio/energyplus/find_energyplus'
 
 
 class RunOSM
-  def run_osm(model_dir, weather_dir, output_dir, sim_num)
+  def run_osm(model_dir, weather_dir, output_dir, sim_num, verbose = false)
 
 osmDir = OpenStudio::Path.new(model_dir)
 
@@ -40,7 +41,7 @@ nSim = OpenStudio::OptionalInt.new(sim_num.to_i)
 
 OpenStudio::create_directory(outputDir)
 runManagerDBPath = outputDir / OpenStudio::Path.new("RunManager.db")
-puts "Creating RunManager database at " + runManagerDBPath.to_s + "."
+puts "Creating RunManager database at " + runManagerDBPath.to_s + "." if verbose
 OpenStudio::remove(runManagerDBPath) if (OpenStudio::exists(runManagerDBPath))
 runManager = OpenStudio::Runmanager::RunManager.new(runManagerDBPath,true)
 
@@ -58,11 +59,11 @@ filenames.each { |filename|
 
   # copy osm file
   relativeFilePath = OpenStudio::relativePath(OpenStudio::Path.new(filename),osmDir)
-  puts "Queuing simulation job for " + relativeFilePath.to_s + "."
+  puts "Queuing simulation job for " + relativeFilePath.to_s + "." if verbose
   
   originalOsmPath = osmDir / relativeFilePath
   outputOsmPath = outputDir / relativeFilePath 
-  puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s + "'."
+  puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s + "'." if verbose
   OpenStudio::makeParentFolder(outputOsmPath,OpenStudio::Path.new,true)
   OpenStudio::copy_file(originalOsmPath,outputOsmPath)
 
@@ -73,7 +74,7 @@ filenames.each { |filename|
   
   # create and queue job
   jobDirectory = outputOsmPath.parent_path() / OpenStudio::Path.new(outputOsmPath.stem()) / OpenStudio::Path.new("/")
-  puts "Job directory will be '" + jobDirectory.to_s + "'."
+  puts "Job directory will be '" + jobDirectory.to_s + "'." if verbose
   job = workflow.create(jobDirectory)
   runManager.enqueue(job, true)
   n = n + 1
@@ -88,9 +89,9 @@ filenames.each { |filename|
 runManager.getJobs.each { |job|
 
   if not job.errors.succeeded
-    puts "The job in '" + job.outdir.to_s + "' did not finish successfully."
+    puts "The job in '" + job.outdir.to_s + "' did not finish successfully." 
   elsif not job.errors.warnings.empty?
-    puts "The job in '" + job.outdir.to_s + "' has warnings."
+    puts "The job in '" + job.outdir.to_s + "' has warnings." 
   end
 
   job.errors.errors.each { |err|

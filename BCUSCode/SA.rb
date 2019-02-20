@@ -45,7 +45,7 @@ References:
 
 # use require_relative to include ruby functions developed in the project
 # Run_All_OSMs.rb is developed by OpenStudio team at NREL
-require_relative 'Run_All_OSMs_verbose'
+require_relative 'Run_All_OSMs'
 require_relative 'Uncertain_Parameters'
 require_relative 'Read_Simulation_Results_SQL'
 require_relative 'Morris'
