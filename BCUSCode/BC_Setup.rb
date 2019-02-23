@@ -202,7 +202,7 @@ epw_path = File.absolute_path(epw_name)
 outfile_path = File.absolute_path(outfile_name)
 
 # Extract out just the base filename from the OSM file as the building name
-building_name = File.basename(osm_name, '.osm')
+# building_name = File.basename(osm_name, '.osm')
 
 Dir.mkdir "#{path}/PreRuns_Output" unless Dir.exist?("#{path}/PreRuns_Output")
 
@@ -247,7 +247,7 @@ lhs.lhs_samples_generator(
   "#{input_path}/#{priors_name}", num_of_runs, preruns_path, randseed, verbose
 )
 
-samples = CSV.read("#{path}/PreRuns_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{path}/PreRuns_Output/LHD_Sample.csv", headers: true)
 parameter_names = []
 parameter_types = []
 
@@ -258,7 +258,7 @@ end
 
 uncertainty_parameters = UncertainParameters.new
 
-priors_table = "#{path}/#{priors_name}"
+# priors_table = "#{path}/#{priors_name}"
 
 (2..samples[0].length - 1).each do |k|
   model = OpenStudio::Model::Model.load(osm_path).get
@@ -359,7 +359,7 @@ monthly_temp = weather_table[0]
 monthly_solar = weather_table[1]
 
 cal_parameter_samples_table = CSV.read(
-  "#{path}/PreRuns_Output/LHS_Samples.csv", headers: false
+  "#{path}/PreRuns_Output/LHD_Sample.csv", headers: false
 )
 cal_parameter_samples_table.delete_at(0)
 cal_parameter_samples_table = cal_parameter_samples_table.transpose
@@ -368,12 +368,16 @@ cal_parameter_samples_table.delete_at(0)
 
 cal_parameter_samples = []
 cal_parameter_samples_table.each do |run|
-  (1..12).each { |_| cal_parameter_samples << run } # Monthly
+  12.times { cal_parameter_samples << run } # Monthly
 end
 
 cal_data_com = []
 y_sim.each_with_index do |y, index|
-  cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
+  cal_data_com << (
+    y + [monthly_temp[index]] +
+      [monthly_solar[index]] +
+      cal_parameter_samples[index]
+  )
 end
 
 write_to_file(cal_data_com, "#{path}/PreRuns_Output/cal_sim_runs.txt", verbose)

@@ -37,103 +37,137 @@
 
 # ******************************************************************************
 
-# Modified Date and By:
-# - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
-# - Sep 2015 Cleaned up and new parsing added by Ralph Muehleisen from Argonne
-#   National Laboratory
-# - Created on Feb27 2015 by Yuming Sun from Argonne National Laboratory
-
 # 1. Introduction
-# This is the main function of sensitivity analysis using Morris Method[1].
+# This is the main function of analysis.
 
 # 2. Call structure
-# 2.1 Call: Uncertain_Parameters.rb; run_all_osms.rb;
-#     Read_Simulation_Results_SQL.rb; and morris.rb
-# 2.2 Called by: The main function to execute from command line.
-
-# References:
-# [1] M. D. Morris, 1991, Factorial sampling plans for preliminary computational
-#     experiments, Technometrics, 33, 161-174.
 
 # Use require to include functions from Ruby Library
-require 'openstudio'
-require 'csv'
-require 'rubyXL'
-require 'optparse'
 require 'fileutils'
+require 'csv'
+require 'optparse'
+require 'rubyXL'
+require 'rinruby'
+require 'openstudio'
 
 # Use require_relative to include ruby functions developed in the project
-require_relative 'run_all_osms'
 require_relative 'Uncertain_Parameters'
-require_relative 'read_simulation_results_sql'
+require_relative 'LHD_gen'
 require_relative 'morris'
+require_relative 'run_all_osms'
+require_relative 'read_simulation_results_sql'
 
 # Define prompt to wait for user to enter y or Y to continue for interactive
 def wait_for_y
   check = 'n'
   while check != 'y' && check != 'Y'
     puts 'Please enter "Y" or "y" to continue, "n" or "N" or "CTRL-Z" to quit:'
-    # Read from keyboard, strip leading and trailing spaces and convert to lower
-    # case
-    # check = Readline.readline().squeeze(" ").strip.downcase
+    # Read from keyboard, strip leading and trailing spaces and convert to
+    # lowercase
     check = $stdin.gets.strip.downcase
     abort if check == 'n'
   end
 end
 
-# Parse commandline inputs from the user
-options = {:osmName => nil, :epwName => nil}
-parser = OptionParser.new do |opts|
-  opts.banner = 'Usage: SA.rb [options]'
+def write_to_file(results, filename, verbose = false)
+  File.open(filename, 'w+') do |f|
+    results.each do |results_row|
+      results_row.each do |r|
+        f.write(r)
+        f.write("\t")
+      end
+      f.write("\n")
+    end
+  end
+  puts "Run results have been written to #{filename}" if verbose
+end
 
+# Parse command line inputs from the user
+options = {:osmName => nil, :epwName => nil, :runType => nil}
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: run_analysis.rb [options]'
+
+  # osmName: OpenStudio Model Name in .osm
   opts.on('--osmName osmName', 'Name of .osm file to run') do |osm_name|
     options[:osmName] = osm_name
   end
 
+  # epwName: weather file used to run simulation in .epw
   opts.on('--epwName epwName', 'Name of .epw weather file to use') do |epw_name|
     options[:epwName] = epw_name
   end
 
+  # runType: Type of analysis
+  opts.on('--runType runType', 'Type of analysis') do |run_type|
+    options[:runType] = run_type
+  end
+
   options[:interactive] = false
   opts.on(
-    '-i', '--interactive', 'run with interactive prompts to check setup files'
+    '-i', '--interactive', 'Run with interactive prompts to check setup files.'
   ) do
     options[:interactive] = true
   end
 
   options[:noCleanup] = false
-  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files') do
+  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
     options[:noCleanup] = true
-  end
-
-  options[:uqRepo] = 'Parameter UQ Repository V1.0.xlsx'
-  opts.on(
-    '-u', '--uqRepo uqRepo',
-    'UQ Repository file (default "Parameter UQ Repositorty V1.0.xlsx")'
-  ) do |uq_repo|
-    options[:uqRepo] = uq_repo
   end
 
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
   opts.on(
-    '-o', '--outfile outFile',
-    'Simulation Output Setting File (default "Simulation_Output_Settings.xlsx")'
+    '-o', '--outFile outFile',
+    'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
   ) do |out_file|
     options[:outFile] = out_file
   end
 
+  options[:numLHD] = 500
+  opts.on(
+    '--numLHD numLHD',
+    'Number of sample points of Monte Carlo simulation' \
+    'with Latin Hypercube Design sampling, default 500'
+  ) do |num_lhd|
+    options[:numLHD] = num_lhd
+  end
+
   options[:morrisR] = 5
   opts.on(
-    '--morrisR morrisR', 'Number of paths, R, for morris method.  Default = 5'
+    '--morrisR morrisR', 'Number of repetitions for morris method, default 5'
   ) do |morris_r|
     options[:morrisR] = morris_r
   end
 
   options[:morrisL] = 20
   opts.on(
-    '--morrisL morrisL', 'Number of levels for morris method.  Default = 20'
+    '--morrisL morrisL',
+    'Number of levels for each parameter for morris method, default 20'
   ) do |morris_l|
     options[:morrisL] = morris_l
+  end
+
+  options[:uqRepo] = 'Parameter UQ Repository V1.0.xlsx'
+  opts.on(
+    '-u', '--uqRepo uqRepo',
+    'UQ repository file, default "Parameter UQ Repositorty V1.0.xlsx"'
+  ) do |uq_repo|
+    options[:uqRepo] = uq_repo
+  end
+
+  options[:priorsFile] = 'Parameter Priors.csv'
+  opts.on(
+    '--priors priorsFile',
+    'Prior uncertainty information file, default "Parameter Priors.csv"'
+  ) do |priors_file|
+    options[:priorsFile] = priors_file
+  end
+
+  options[:utilityData] = 'Utility Data.csv'
+  opts.on(
+    '--utilityData utilityData',
+    'Utility data file, default "Utility Data.csv"'
+  ) do |utility_data|
+    options[:utilityData] = utility_data
   end
 
   options[:numProcesses] = 0
@@ -146,9 +180,10 @@ parser = OptionParser.new do |opts|
 
   options[:randseed] = 0
   opts.on(
-    '--seed seednum', 'Integer random number seed, 0 = no seed, default = 0'
-  ) do |seed_num|
-    options[:randseed] = seed_num
+    '--seed seednum',
+    'Integer random number seed, 0 = no seed, default 0'
+  ) do |seednum|
+    options[:randseed] = seednum
   end
 
   options[:verbose] = false
@@ -195,37 +230,46 @@ else # Otherwise the --epwName option was used
   epw_name = options[:epwName]
 end
 
-verbose = options[:verbose]
-uqrepo_name = options[:uqRepo]
+# Assign analysis settings
+run_type = options[:runType]
 outfile_name = options[:outFile]
 run_interactive = options[:interactive]
+verbose = options[:verbose]
 skip_cleanup = options[:noCleanup]
-morris_r = Integer(options[:morrisR])
-morris_levels = Integer(options[:morrisL])
 num_processes = Integer(options[:numProcesses])
 randseed = Integer(options[:randseed])
 
+case run_type
+when 'UA'
+  puts 'Running uncertainty analysis' if verbose
+  uqrepo_name = options[:uqRepo]
+  num_lhd_runs = Integer(options[:numLHD])
+when 'SA'
+  puts 'Running sensitivity analysis' if verbose
+  uqrepo_name = options[:uqRepo]
+  morris_reps = Integer(options[:morrisR])
+  morris_levels = Integer(options[:morrisL])
+when 'BC_Setup'
+  num_lhd_runs = Integer(options[:numLHD])
+  priors_name = options[:priorsFile]
+else
+  puts 'Unrecognized analysis type'
+  abort
+end
+
 if run_interactive
-  puts 'Running Interactively'
+  puts 'Running interactively'
   wait_for_y
 end
 
-puts 'Not Cleaning Up Interim Files' if skip_cleanup
+puts 'Not cleaning up interim files' if skip_cleanup
 
-# Set the user output base path to be the current working directory
-path = Dir.pwd
-
-# Expand filenames to full paths
-osm_path = File.absolute_path(osm_name)
-epw_path = File.absolute_path(epw_name)
-uqrepo_path = File.absolute_path(uqrepo_name)
-outfile_path = File.absolute_path(outfile_name)
-
-# extract out just the base filename from the OSM file as the building name
+# Extract out just the base filename from the OSM file as the building name
 building_name = File.basename(osm_name, '.osm')
 
 # Check if .osm model exists and if so, load it
-if File.exist?(osm_path.to_s)
+osm_path = File.absolute_path(osm_name)
+if File.exist?(osm_path)
   model = OpenStudio::Model::Model.load(osm_path).get
   puts "Using OSM file #{osm_path}" if verbose
 else
@@ -233,33 +277,20 @@ else
   abort
 end
 
-# Check if .epw exists
-if File.exist?(epw_path.to_s)
+# Check if .epw exists and if so, load it
+epw_path = File.absolute_path(epw_name)
+if File.exist?(epw_path)
   puts "Using EPW file #{epw_path}" if verbose
 else
   puts "Weather model #{epw_path} not found!"
   abort
 end
 
-# Load UQ repository
-if File.exist?(uqrepo_path.to_s)
-  puts "Using UQ repository = #{uqrepo_path}" if verbose
-  workbook = RubyXL::Parser.parse(uqrepo_path.to_s)
-  uq_table = []
-  uq_table_row = []
-  workbook['UQ'].each do |row|
-    uq_table_row = []
-    row.cells.each { |cell| uq_table_row.push(cell.value) }
-    uq_table.push(uq_table_row)
-  end
-else
-  puts "#{uqrepo_path} was NOT found!"
-  abort
-end
-
-if File.exist?(outfile_path.to_s)
-  puts "Using Output Settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse(outfile_path.to_s)
+# Check if output file exist and if so, load it
+outfile_path = File.absolute_path(outfile_name)
+if File.exist?(outfile_path)
+  puts "Using output settings = #{outfile_path}" if verbose
+  workbook = RubyXL::Parser.parse(outfile_path)
   meters_table = []
   meters_table_row = []
   workbook['Meters'].each do |row|
@@ -272,54 +303,87 @@ else
   abort
 end
 
-if verbose
-  puts "Using morris R = #{morris_r}"
-  puts "Using morris levels = #{morris_levels}"
-  puts "Random Number Seed = #{randseed}" if randseed != 0
+# Check if UQ repository file exist and if so, load it
+unless run_type == 'BC_Setup'
+  uqrepo_path = File.absolute_path(uqrepo_name)
+  if File.exist?(uqrepo_path)
+    puts "Using UQ repository = #{uqrepo_path}" if verbose
+    workbook = RubyXL::Parser.parse(uqrepo_path)
+    uq_table = []
+    uq_table_row = []
+    workbook['UQ'].each do |row|
+      uq_table_row = []
+      row.cells.each { |cell| uq_table_row.push(cell.value) }
+      uq_table.push(uq_table_row)
+    end
+  else
+    puts "#{uqrepo_path} was NOT found!"
+    abort
+  end
+
+  # Remove the header rows
+  2.times { uq_table.delete_at(0) }
 end
 
-# Remove the header rows
-2.times { uq_table.delete_at(0) }
+if verbose
+  case run_type
+  when 'UA', 'BC_Setup'
+    puts "Using number of LHD samples  = #{num_lhd_runs}"
+  when 'SA'
+    puts "Using morris repetitions = #{morris_reps}"
+    puts "Using morris levels = #{morris_levels}"
+  end
+  puts "Using number of parallel processes  = #{num_processes}"
+  puts "Using random seed = #{randseed}"
+end
 
-Dir.mkdir("#{path}/SA_Output") unless Dir.exist?("#{path}/SA_Output")
+# Acquire the path of the working directory that is the user's project folder
+path = Dir.pwd
+model_dir = "#{path}/#{run_type}_Model"
+sim_dir = "#{path}/#{run_type}_Simulations"
+output_dir = "#{path}/#{run_type}_Output"
 
-puts 'Step 1: Generate uncertainty parameters distributions' if verbose
+Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
-# Define the output path of building specific uncertainty table
-uq_file_path = "#{path}/SA_Output/UQ_#{building_name}.csv"
+# Step 1: Generate uncertainty parameters distributions
+uq_file_path = "#{output_dir}/UQ_#{building_name}.csv"
 uncertainty_parameters = UncertainParameters.new
 uncertainty_parameters.find(model, uq_table, uq_file_path, verbose)
 
 if run_interactive
-  puts "Check the #{path}/SA_Output/UQ_#{building_name}.csv"
+  puts "Check the #{uq_file_path}"
   wait_for_y
 end
 
-morris = Morris.new
-file_path = "#{path}/SA_Output"
-morris.design_matrix_generator(
-  uq_file_path, morris_r, morris_levels, file_path, randseed
-)
+case run_type
+when 'UA'
+  # Generate LHS samples
+  lhs = LHSGenerator.new
+  lhs.lhs_samples_generator(
+    uq_file_path, num_lhd_runs, output_dir, randseed, verbose
+  )
+  sample_file_name = 'LHD_Sample.csv'
+when 'SA'
+  morris = Morris.new
+  morris.design_matrix_generator(
+    uq_file_path, morris_reps, morris_levels, output_dir, randseed
+  )
+  sample_file_name = 'Morris_CDF_Tran_Design.csv'
+end
 
-# Step 3: Run Simulations
-samples = CSV.read(
-  "#{path}/SA_Output/Morris_CDF_Tran_Design.csv", headers: true
-)
+samples = CSV.read("#{output_dir}/#{sample_file_name}", headers: true)
 parameter_names = []
 parameter_types = []
+
 samples.each do |sample|
   parameter_names << sample[1]
   parameter_types << sample[0]
 end
-num_of_runs = samples[0].length - 2
+num_runs = samples[0].length - 2
 
-puts 'Step 2: Design Matrix for Morris SA was generated.' if verbose
-puts "Step 3: Run #{num_of_runs} OSM simulations" if verbose
-
-# Wait_for_y if run_interactive
 if run_interactive
-  puts "Step 3: Run #{num_of_runs} OSM Simulation may take a long time."
-  wait_for_y if run_interactive
+  puts "Going to run #{num_runs} models.  This could take a while"
+  wait_for_y
 end
 
 (2..samples[0].length - 1).each do |k|
@@ -329,6 +393,7 @@ end
   uncertainty_parameters.apply(
     model, parameter_types, parameter_names, parameter_value
   )
+
   # Add reporting meters
   (1..(meters_table.length - 1)).each do |meter_index|
     meter = OpenStudio::Model::OutputMeter.new(model)
@@ -345,12 +410,12 @@ end
   variable.setReportingFrequency('Monthly')
 
   # Meters saved to sql file
-  model.save("#{path}/SA_Models/Sample#{k - 1}.osm", true)
+  model.save("#{model_dir}/Sample#{k - 1}.osm", true)
 
   # New edit start from here Yuna add for thermostat algorithm
   out_file_path_name_thermostat =
-    "#{path}/SA_Output/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{path}/SA_Models/Sample#{k - 1}.osm"
+    "#{output_dir}/UQ_#{building_name}_thermostat.csv"
+  model_output_path = "#{model_dir}/Sample#{k - 1}.osm"
   uncertainty_parameters.thermostat_adjust(
     model, uq_table, out_file_path_name_thermostat, model_output_path,
     parameter_types, parameter_value
@@ -359,42 +424,35 @@ end
   puts "Sample#{k - 1} is saved to the folder of Models" if verbose
 end
 
-# Use the run manager to run through all the files put in SA_Models, saving
-# stuff in SA_Simulations
+# Run all the OSM simulation files
 runner = RunOSM.new
-runner.run_osm(
-  "#{path}/SA_Models",
-  epw_path,
-  "#{path}/SA_Simulations",
-  num_processes,
-  verbose
-)
+runner.run_osm(model_dir, epw_path, sim_dir, num_processes, verbose)
 
-# Step 4: Read Simulation Results
-# Run morris method to compute and plot sensitivity results
-project_path = path.to_s
-OutPut.read(num_of_runs, project_path, 'SA')
-morris.compute_sensitivities(
-  "#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv",
-  uq_file_path, file_path
-)
+# Read simulation results
+OutPut.read(num_runs, path, run_type, verbose)
+if run_type == 'SA'
+  morris.compute_sensitivities(
+    "#{output_dir}/Simulation_Results_Building_Total_Energy.csv",
+    uq_file_path, output_dir
+  )
+end
 
+# Delete intermediate files
 unless skip_cleanup
-  # Delete intermediate files
-  FileUtils.remove_dir("#{path}/SA_Models") if Dir.exist?("#{path}/SA_Models")
+  FileUtils.remove_dir(model_dir) if Dir.exist?(model_dir)
   clean_names = [
-    'Morris_0_1_Design.csv',
-    'Morris_CDF_Tran_Design.csv',
     'Monthly_Weather.csv',
     'Meter_Electricity.csv',
-    'Meter_Gas.csv',
-    'Simulation_Results_Building_Total_Energy.csv'
+    'Meter_Gas.csv'
   ]
+  if run_type == 'SA'
+    clean_names.push('Morris_0_1_Design.csv')
+    clean_names.push('Morris_CDF_Tran_Design.csv')
+    clean_names.push('Simulation_Results_Building_Total_Energy.csv')
+  end
   clean_names.each do |file|
-    if File.exist?("#{path}/SA_Output/#{file}")
-      File.delete("#{path}/SA_Output/#{file}")
-    end
+    File.delete("#{output_dir}/#{file}") if File.exist?("#{output_dir}/#{file}")
   end
 end
 
-puts 'SA.rb Completed Successfully!'
+puts "#{run_type} completed successfully!"

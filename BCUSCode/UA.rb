@@ -267,7 +267,7 @@ if verbose
 end
 
 # Remove the header rows
-(1..2).each { |_| uq_table.delete_at(0) }
+2.times { uq_table.delete_at(0) }
 
 Dir.mkdir("#{path}/UA_Output") unless Dir.exist?("#{path}/UA_Output")
 
@@ -291,7 +291,7 @@ lhs.lhs_samples_generator(
   uq_file_path, num_lhs_runs, output_file_dir, randseed, verbose
 )
 
-samples = CSV.read("#{path}/UA_Output/LHS_Samples.csv", headers: true)
+samples = CSV.read("#{path}/UA_Output/LHD_Sample.csv", headers: true)
 parameter_names = []
 parameter_types = []
 samples.each do |sample|

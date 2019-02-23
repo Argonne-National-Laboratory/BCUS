@@ -159,8 +159,7 @@ class LHSGenerator
       n_runs, n_parameters, output_dir, randseed, verbose
     )
     row_index = 0
-    CSV.open("#{output_dir}/LHS_Samples.csv", 'wb')
-    CSV.open("#{output_dir}/LHS_Samples.csv", 'a+') do |csv|
+    CSV.open("#{output_dir}/LHD_Sample.csv", 'a+') do |csv|
       header = table[0].to_a[0, 2]
       (1..n_runs).each { |sample_index| header << "Run #{sample_index}" }
       csv << header
@@ -176,11 +175,14 @@ class LHSGenerator
           parameter['Max']
         ]
         q = lhs_random_table.row(row_index).to_a
-        csv << table[row_index + 1].to_a[0, 2] + cdf_inverse(q, prob_distribution)
+        csv << (
+          table[row_index + 1].to_a[0, 2] +
+            cdf_inverse(q, prob_distribution)
+        )
         row_index += 1
       end
     end
-    puts 'LHS_Samples.csv is generated and saved to the folder!' if verbose
+    puts 'LHD_Sample.csv is generated and saved to the folder!' if verbose
     puts "It includes #{n_runs} simulation runs" if verbose
   end
 end

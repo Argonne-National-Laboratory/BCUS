@@ -128,7 +128,7 @@ monthly_temp = weather_table[0]
 monthly_solar = weather_table[1]
 
 cal_parameter_samples_table = CSV.read(
-  "#{path}/PreRuns_Output/LHS_Samples.csv", headers: false
+  "#{path}/PreRuns_Output/LHD_Sample.csv", headers: false
 )
 cal_parameter_samples_table.delete_at(0)
 cal_parameter_samples_table = cal_parameter_samples_table.transpose
@@ -138,12 +138,16 @@ cal_parameter_samples_table.delete_at(0)
 cal_parameter_samples = []
 cal_parameter_samples_table.each do |run|
   # read in the 12 months of samples
-  (1..12).each { |_| cal_parameter_samples << run } # Monthly
+  12.times { cal_parameter_samples << run } # Monthly
 end
 
 cal_data_com = []
 y_sim.each_with_index do |y, index|
-  cal_data_com << y + [monthly_temp[index]] + [monthly_solar[index]] + cal_parameter_samples[index]
+  cal_data_com << (
+    y + [monthly_temp[index]] +
+      [monthly_solar[index]] +
+      cal_parameter_samples[index]
+  )
 end
 
 def write_to_file(results, filename)
