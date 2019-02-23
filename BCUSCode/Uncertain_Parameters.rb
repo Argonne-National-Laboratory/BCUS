@@ -39,8 +39,8 @@ Refer to 'Function Call Structure_UA.pptx'
 =end
 
 #===============================================================%
-#     author: Yuming Sun and Matt Riddle										    %
-#     date: Feb 27, 2015										                    %
+#     author: Yuming Sun and Matt Riddle                        %
+#     date: Feb 27, 2015                                        %
 #===============================================================%
 
 # Main code used for searching model for parameters to be perturbued for uncertainty and sensitivity analysis
@@ -59,35 +59,35 @@ require 'rubyXL'
 
 class UncertainParameters
 
-	def initialize
-		@envelop_uncertainty = EnvelopUncertainty.new
-		@operation_uncertainty = OperationUncertainty.new
-		@boiler_uncertainty = BoilerUncertainty.new
-		@fan_pump_uncertaintainty = FanPumpUncertainty.new
-		@design_spec_OA_uncertainty = DesignSpecificOutdoorAirUncertainty.new
-		@dx_Cooling_Coil_uncertainty = DXCoilUncertainty.new
-		@chillerEIR_uncertainty = ChillerUncertainty.new
-		@thermostat_uncertainty = ThermostatUncertainty.new
-	end
+  def initialize
+    @envelop_uncertainty = EnvelopUncertainty.new
+    @operation_uncertainty = OperationUncertainty.new
+    @boiler_uncertainty = BoilerUncertainty.new
+    @fan_pump_uncertaintainty = FanPumpUncertainty.new
+    @design_spec_OA_uncertainty = DesignSpecificOutdoorAirUncertainty.new
+    @dx_Cooling_Coil_uncertainty = DXCoilUncertainty.new
+    @chillerEIR_uncertainty = ChillerUncertainty.new
+    @thermostat_uncertainty = ThermostatUncertainty.new
+  end
 
   def find(model, uq_table, out_file_path_name, verbose = false) #write into the uq cvs the uncertainty distribution information
-		@envelop_uncertainty.material_find(model)
-		@operation_uncertainty.operation_parameters_find(model)
-		@boiler_uncertainty.boiler_find(model)
-		@fan_pump_uncertaintainty.fan_find(model)
-		@fan_pump_uncertaintainty.pump_find(model)
-		@design_spec_OA_uncertainty.design_spec_outdoor_air_find(model)
-		@dx_Cooling_Coil_uncertainty.dx_Coil_SingleSpeed_find(model)
-		@dx_Cooling_Coil_uncertainty.dx_Coil_TwoSpeed_find(model)
-		@chillerEIR_uncertainty.chiller_find(model)
-		# create a csv file that contains uncertain parameters
-		CSV.open("#{out_file_path_name}", 'wb') do |csv| # create file for writting
-			csv << ['Parameter Type', 'Object in the model', 'Parameter Base Value', 'Distribution', 'Mean or Mode', 'Std Dev', 'Min', 'Max']
-		end
+    @envelop_uncertainty.material_find(model)
+    @operation_uncertainty.operation_parameters_find(model)
+    @boiler_uncertainty.boiler_find(model)
+    @fan_pump_uncertaintainty.fan_find(model)
+    @fan_pump_uncertaintainty.pump_find(model)
+    @design_spec_OA_uncertainty.design_spec_outdoor_air_find(model)
+    @dx_Cooling_Coil_uncertainty.dx_Coil_SingleSpeed_find(model)
+    @dx_Cooling_Coil_uncertainty.dx_Coil_TwoSpeed_find(model)
+    @chillerEIR_uncertainty.chiller_find(model)
+    # create a csv file that contains uncertain parameters
+    CSV.open("#{out_file_path_name}", 'wb') do |csv| # create file for writting
+      csv << ['Parameter Type', 'Object in the model', 'Parameter Base Value', 'Distribution', 'Mean or Mode', 'Std Dev', 'Min', 'Max']
+    end
 
-		#write in the created csv file (take input from uncertainty)
-		CSV.open("#{out_file_path_name}", 'a+') do |csv|
-			uq_table.each do |uq_parameter|
+    #write in the created csv file (take input from uncertainty)
+    CSV.open("#{out_file_path_name}", 'a+') do |csv|
+      uq_table.each do |uq_parameter|
         unless uq_parameter[3] =='Off'
           case uq_parameter[1]
             when /StandardOpaqueMaterial/
@@ -374,65 +374,65 @@ class UncertainParameters
               abort("UQ parameter #{uq_parameter[1]} was not found")
           end
         end
-			end
-		end
-		puts "#{out_file_path_name} has been generated." if verbose
-	end
+      end
+    end
+    puts "#{out_file_path_name} has been generated." if verbose
+  end
 
-	def apply(model, parameter_types, parameter_names, parameter_value)
-		@envelop_uncertainty.material_set(model, parameter_types, parameter_names, parameter_value)
-		@envelop_uncertainty.infiltration_flow_per_ext_surface_method(model, parameter_types, parameter_names, parameter_value)
-		@operation_uncertainty.lights_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
-		@operation_uncertainty.plugload_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
-		@operation_uncertainty.people_area_per_person_method(model, parameter_types, parameter_names, parameter_value)
-		@boiler_uncertainty.boiler_efficiency_method(model, parameter_types, parameter_names, parameter_value)
-		@fan_pump_uncertaintainty.fan_method(model, parameter_types, parameter_names, parameter_value)
-		@fan_pump_uncertaintainty.pump_method(model, parameter_types, parameter_names, parameter_value)
-		@design_spec_OA_uncertainty.design_spec_outdoor_air_method(model, parameter_types, parameter_names, parameter_value)
-		@dx_Cooling_Coil_uncertainty.dx_Coil_SingleSpeed_method(model, parameter_types, parameter_names, parameter_value)
-		@dx_Cooling_Coil_uncertainty.dx_Coil_TwoSpeed_method(model, parameter_types, parameter_names, parameter_value)
-		@chillerEIR_uncertainty.chiller_method(model, parameter_types, parameter_names, parameter_value)
-	end
+  def apply(model, parameter_types, parameter_names, parameter_value)
+    @envelop_uncertainty.material_set(model, parameter_types, parameter_names, parameter_value)
+    @envelop_uncertainty.infiltration_flow_per_ext_surface_method(model, parameter_types, parameter_names, parameter_value)
+    @operation_uncertainty.lights_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
+    @operation_uncertainty.plugload_watts_per_area_method(model, parameter_types, parameter_names, parameter_value)
+    @operation_uncertainty.people_area_per_person_method(model, parameter_types, parameter_names, parameter_value)
+    @boiler_uncertainty.boiler_efficiency_method(model, parameter_types, parameter_names, parameter_value)
+    @fan_pump_uncertaintainty.fan_method(model, parameter_types, parameter_names, parameter_value)
+    @fan_pump_uncertaintainty.pump_method(model, parameter_types, parameter_names, parameter_value)
+    @design_spec_OA_uncertainty.design_spec_outdoor_air_method(model, parameter_types, parameter_names, parameter_value)
+    @dx_Cooling_Coil_uncertainty.dx_Coil_SingleSpeed_method(model, parameter_types, parameter_names, parameter_value)
+    @dx_Cooling_Coil_uncertainty.dx_Coil_TwoSpeed_method(model, parameter_types, parameter_names, parameter_value)
+    @chillerEIR_uncertainty.chiller_method(model, parameter_types, parameter_names, parameter_value)
+  end
 
-	def thermostat_adjust(model,uq_table,out_file_path_name,model_output_path,parameter_types,parameter_value)
-		# create a csv file that contains thermostat if the user turn it on
-		CSV.open("#{out_file_path_name}", 'wb') do |csv| # create file for writting
-			csv << ['Parameter Type', 'Object in the model', 'Parameter Base Value', 'Adjusted Value']
-		end
+  def thermostat_adjust(model,uq_table,out_file_path_name,model_output_path,parameter_types,parameter_value)
+    # create a csv file that contains thermostat if the user turn it on
+    CSV.open("#{out_file_path_name}", 'wb') do |csv| # create file for writting
+      csv << ['Parameter Type', 'Object in the model', 'Parameter Base Value', 'Adjusted Value']
+    end
 
-		CSV.open("#{out_file_path_name}", 'a+') do |csv|
-			uq_table.each do |uq_parameter|
-				unless uq_parameter[3] =='Off'
-					case uq_parameter[1]
-						when /ThermostatSettings/
-							case uq_parameter[2]
-								when /ThermostatSetpointCooling/
-									parameter_types.each_with_index do |type, index|
-										if type =~ /CoolingSetpoint/
-											adjust_value_cooling = parameter_value[index]
-											@thermostat_uncertainty.cooling_method(model, adjust_value_cooling, model_output_path)
-											@thermostat_uncertainty.clg_sch_set_values.each_with_index do |value, index1|
-												csv << ['CoolingSetpoint', @thermostat_uncertainty.clg_set_schs_name[index1], value,
-																parameter_value[index]]
-											end
-										end
-									end
-								when /ThermostatSetpointHeating/
-									parameter_types.each_with_index do |type, index|
-										if type =~ /HeatingSetpoint/
-											adjust_value_heating = parameter_value[index]
-											@thermostat_uncertainty.heating_method(model, adjust_value_heating, model_output_path)
-											@thermostat_uncertainty.htg_sch_set_values.each_with_index do |value, index1|
-												csv << ['HeatingSetpoint', @thermostat_uncertainty.htg_set_schs_name[index1], value,
-																parameter_value[index]]
-											end
-										end
-									end
-							end
-					end
-				end
-			end
-		end
+    CSV.open("#{out_file_path_name}", 'a+') do |csv|
+      uq_table.each do |uq_parameter|
+        unless uq_parameter[3] =='Off'
+          case uq_parameter[1]
+            when /ThermostatSettings/
+              case uq_parameter[2]
+                when /ThermostatSetpointCooling/
+                  parameter_types.each_with_index do |type, index|
+                    if type =~ /CoolingSetpoint/
+                      adjust_value_cooling = parameter_value[index]
+                      @thermostat_uncertainty.cooling_method(model, adjust_value_cooling, model_output_path)
+                      @thermostat_uncertainty.clg_sch_set_values.each_with_index do |value, index1|
+                        csv << ['CoolingSetpoint', @thermostat_uncertainty.clg_set_schs_name[index1], value,
+                                parameter_value[index]]
+                      end
+                    end
+                  end
+                when /ThermostatSetpointHeating/
+                  parameter_types.each_with_index do |type, index|
+                    if type =~ /HeatingSetpoint/
+                      adjust_value_heating = parameter_value[index]
+                      @thermostat_uncertainty.heating_method(model, adjust_value_heating, model_output_path)
+                      @thermostat_uncertainty.htg_sch_set_values.each_with_index do |value, index1|
+                        csv << ['HeatingSetpoint', @thermostat_uncertainty.htg_set_schs_name[index1], value,
+                                parameter_value[index]]
+                      end
+                    end
+                  end
+              end
+          end
+        end
+      end
+    end
 
-	end
+  end
 end

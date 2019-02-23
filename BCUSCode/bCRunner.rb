@@ -71,14 +71,18 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 # pvals: posterior realizations for parameters and hyperparameters
 #===============================================================%
 
-require_relative 'rinruby'
+require 'rinruby'
 
 module BCRunner
-  def BCRunner.runBC(code_path, params_filename, com_filename, field_filename, numOutputVars, numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose = false, randseed = 0)
-
+  def self.runBC(
+    code_path, params_filename, com_filename, field_filename, num_output_vars,
+    num_weather_vars, num_mcmc_steps, pvals_filename, posterior_dists_filename,
+    verbose = false, randseed = 0
+  )
 
     R.assign('randseed', randseed)
-    # R in ruby doesn't allow one to assign boolean values, so we need to kludge the passing
+    # R in ruby doesn't allow one to assign boolean values, so we need to
+    # kludge the passing
     if verbose
       R.assign('verbose', 1)
     else
@@ -90,12 +94,18 @@ module BCRunner
     R.assign('params_filename', params_filename)
     R.assign('com_filename', com_filename)
     R.assign('field_filename', field_filename)
-    R.assign('numOutputVars', numOutputVars)
-    R.assign('numWeatherVars', numWeatherVars)
-    R.assign('numMCMCSteps', numMCMCSteps)
+    R.assign('numOutputVars', num_output_vars)
+    R.assign('numWeatherVars', num_weather_vars)
+    R.assign('numMCMCSteps', num_mcmc_steps)
     R.assign('pvals_filename', pvals_filename)
     R.assign('posterior_dists_filename', posterior_dists_filename)
 
-    R.eval('runmcmc(params_filename, com_filename, field_filename, numOutputVars, numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose, randseed)')
+    R.eval(
+      'runmcmc(
+        params_filename, com_filename, field_filename, numOutputVars,
+        numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename,
+        verbose, randseed
+      )'
+    )
   end
 end

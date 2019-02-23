@@ -72,7 +72,7 @@ This is the subfunction called by UbCRunner.rb to
 #
 #     this function is not currently being used
 
-require_relative 'rinruby'
+require 'rinruby'
 
 module GraphGenerator
   def GraphGenerator.graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder)

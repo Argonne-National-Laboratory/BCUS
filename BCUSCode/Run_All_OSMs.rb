@@ -1,103 +1,84 @@
-=begin of comments
-######################################################################
-#  Copyright (c) 2008-2014, Alliance for Sustainable Energy.  
-#  All rights reserved.
-#  
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License, or (at your option) any later version.
-#  
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
-#  
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-######################################################################
+# Copyright © 2019 , UChicago Argonne, LLC
+# All Rights Reserved
+# OPEN SOURCE LICENSE
 
-#NOTE:  Added verbose input option.  If verbose = true, we print the puts, if not, we don't 12-Sep-2015 Ralph Muehlesisen
-=end
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.  Software changes,
+# modifications, or derivative works, should be noted with comments and the
+# author and organization's name.
+
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+# the names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
+
+# 4. The software and the end-user documentation included with the
+# redistribution, if any, must include the following acknowledgment:
+
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
+
+# ******************************************************************************
+# DISCLAIMER
+
+# THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY
+# FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA,
+# APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT
+# INFRINGE PRIVATELY OWNED RIGHTS.
+
+# ******************************************************************************
 
 require 'fileutils'
+require 'pathname'
 require 'csv'
+require 'parallel'
 require 'openstudio'
-require 'openstudio/energyplus/find_energyplus'
+# require 'openstudio/energyplus/find_energyplus'
 
-
+# Class for running osms
 class RunOSM
-  def run_osm(model_dir, weather_dir, output_dir, sim_num, verbose = false)
+  def run_osm(
+    model_dir, weather_dir, output_dir, n_processes = 0, verbose = false
+  )
 
-osmDir = OpenStudio::Path.new(model_dir)
+    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
+    FileUtils.mkdir_p(output_dir)
+    filepaths = Dir.glob(model_dir + '/*.osm')
 
-weatherFileDir = OpenStudio::system_complete(OpenStudio::Path.new(weather_dir))
+    Parallel.each(
+      filepaths, in_threads: n_processes, progress: 'Running osms'
+    ) do |filepath|
+      # copy osm file
+      filename = File.basename(filepath)
+      puts "Queuing simulation job for #{filename}." if verbose
+      original_osm_path = File.join(model_dir, filename)
+      output_osm_path = File.join(output_dir, filename)
+      puts "Copying '#{original_osm_path}' to '#{output_osm_path}'." if verbose
+      FileUtils.copy_file(original_osm_path, output_osm_path)
 
-outputDir = OpenStudio::Path.new(output_dir)
+      # create workflow
+      output_dir_inst = File.join(output_dir, File.basename(filename, '.*'))
+      FileUtils.mkdir(output_dir_inst)
+      osw_path = File.join(output_dir_inst, 'in.osw')
+      workflow = OpenStudio::WorkflowJSON.new
+      workflow.setSeedFile(output_osm_path)
+      workflow.setWeatherFile(weather_dir)
+      workflow.setOswDir(output_dir_inst)
+      workflow.saveAs(osw_path)
 
-nSim = OpenStudio::OptionalInt.new
-nSim = OpenStudio::OptionalInt.new(sim_num.to_i)
-
-OpenStudio::create_directory(outputDir)
-runManagerDBPath = outputDir / OpenStudio::Path.new("RunManager.db")
-puts "Creating RunManager database at " + runManagerDBPath.to_s + "." if verbose
-OpenStudio::remove(runManagerDBPath) if (OpenStudio::exists(runManagerDBPath))
-runManager = OpenStudio::Runmanager::RunManager.new(runManagerDBPath,true)
-
-# find energyplus
-
-co = OpenStudio::Runmanager::ConfigOptions.new
-co.fastFindEnergyPlus
-
-filenames = Dir.glob(osmDir.to_s + "/*.osm")
-
-
-n = 0
-filenames.each { |filename|
-  break if (not nSim.empty?) && (nSim.get <= n)
-
-  # copy osm file
-  relativeFilePath = OpenStudio::relativePath(OpenStudio::Path.new(filename),osmDir)
-  puts "Queuing simulation job for " + relativeFilePath.to_s + "." if verbose
-  
-  originalOsmPath = osmDir / relativeFilePath
-  outputOsmPath = outputDir / relativeFilePath 
-  puts "Copying '" + originalOsmPath.to_s + "' to '" + outputOsmPath.to_s + "'." if verbose
-  OpenStudio::makeParentFolder(outputOsmPath,OpenStudio::Path.new,true)
-  OpenStudio::copy_file(originalOsmPath,outputOsmPath)
-
-  # create workflow
-  workflow = OpenStudio::Runmanager::Workflow.new("modeltoidf->energyplus->openstudiopostprocess")
-  workflow.setInputFiles(outputOsmPath,weatherFileDir)
-  workflow.add(co.getTools)
-  
-  # create and queue job
-  jobDirectory = outputOsmPath.parent_path() / OpenStudio::Path.new(outputOsmPath.stem()) / OpenStudio::Path.new("/")
-  puts "Job directory will be '" + jobDirectory.to_s + "'." if verbose
-  job = workflow.create(jobDirectory)
-  runManager.enqueue(job, true)
-  n = n + 1
-}
-
-
-# wait for finished
-    runManager.showStatusDialog
-    runManager.waitForFinished
-
-
-runManager.getJobs.each { |job|
-
-  if not job.errors.succeeded
-    puts "The job in '" + job.outdir.to_s + "' did not finish successfully." 
-  elsif not job.errors.warnings.empty?
-    puts "The job in '" + job.outdir.to_s + "' has warnings." 
-  end
-
-  job.errors.errors.each { |err|
-    puts "ERROR: " + err
-  }
-}
+      cli_path = OpenStudio.getOpenStudioCLI
+      cmd = "\"#{cli_path}\" run -w \"#{osw_path}\""
+      system(cmd)
+    end
   end
 end
-

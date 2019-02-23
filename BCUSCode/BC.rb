@@ -120,8 +120,8 @@ require 'fileutils'
 
 # load in our own libraries
 require_relative 'graphGenerator'
-require_relative 'Calibrated_OS_Model'
-require_relative 'bCRunner'
+require_relative 'calibrated_os_model'
+require_relative 'BCRunner'
 
 
 # parse commandline inputs from the user
@@ -166,8 +166,8 @@ parser = OptionParser.new do |opts|
     options[:numBurnin] = numBurnin
   end
 
-  options[:priorsFile]='priors.csv'
-  opts.on('--priorsFile priorsFile', 'Filename of priors distributions (default = "priors.csv")') do |priorsFile|
+  options[:priorsFile]='Parameter Priors.csv'
+  opts.on('--priorsFile priorsFile', 'Filename of priors distributions (default = "Parameter Priors.csv")') do |priorsFile|
     options[:priorsFile] = priorsFile
   end
 
@@ -345,7 +345,7 @@ puts ('Generating Posterior Distribution Plots') if verbose
 #could pass in graph file names too
 GraphGenerator.graphPosteriors(priors_path, pvals_filename, numBurnin, graphs_output_folder)
 
-calibrated_model = Calibrated_OSM.new
+calibrated_model = CalibratedOSM.new
 meter_set_file = "#{path}/Simulation_Output_Settings.xlsx"
 calibrated_model_file = "#{path}/Calibrated_Model/Calibrated_#{building_model}"
 calibrated_osm_model_name = "Calibrated_#{building_name}"

@@ -31,3 +31,5 @@
 # Mac temporary files
 .DS_Store
 
+# VS code files
+.vscode
