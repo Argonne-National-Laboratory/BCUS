@@ -71,23 +71,6 @@ class CalibratedOSM
     posterior = CSV.read(posterior_file, headers: true, converters: :numeric)
     headers = posterior.headers()
 
-    def number?(object)
-      true if Float(object) rescue false
-    end
-
-    def average(one_d_array)
-      sum = 0.0
-      n = one_d_array.length
-      one_d_array.each do |val|
-        if number?(val)
-          sum += val
-        else
-          n -= 1
-        end
-      end
-      return sum / n
-    end
-
     posterior_average = [0] * headers.length
     headers.each_with_index do |header, index|
       posterior_average[index] = average(posterior[header])
@@ -143,4 +126,21 @@ class CalibratedOSM
     output_folder = run_manager_folder
     OutPut.read(sql_file_path, meter_set_file, output_folder)
   end
+end
+
+def number?(object)
+  true if Float(object) rescue false
+end
+
+def average(one_d_array)
+  sum = 0.0
+  n = one_d_array.length
+  one_d_array.each do |val|
+    if number?(val)
+      sum += val
+    else
+      n -= 1
+    end
+  end
+  return sum / n
 end
