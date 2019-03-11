@@ -353,10 +353,7 @@ module OutPut
       header =
         case meters_table[meter_index][1]
         when /Monthly/
-          [
-            'Jan', 'Feb', 'Mar', 'April', 'May', 'June',
-            'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
-          ]
+          %w[Jan Feb Mar April May June July Aug Sept Oct Nov Dec]
         when /Daily/
           ['Day 1', 'Day 2', 'Day 3', '...']
         when /Hourly/

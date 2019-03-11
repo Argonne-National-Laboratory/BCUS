@@ -371,10 +371,7 @@ module OutPut
       header =
         case meters_table[meter_index][1]
         when /Monthly/
-          [
-            'Jan', 'Feb', 'Mar', 'April', 'May', 'June',
-            'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
-          ]
+          %w[Jan Feb Mar April May June July Aug Sept Oct Nov Dec]
         when /Daily/
           ['Day 1', 'Day 2', 'Day 3', '...']
         when /Hourly/
@@ -430,15 +427,18 @@ module OutPut
 
     # Query Horizontal Solar Irradiation
     query_var_index =
-      "SELECT ReportVariableDataDictionaryIndex FROM ReportVariableDataDictionary
-       WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area'
+      "SELECT ReportVariableDataDictionaryIndex
+       FROM ReportVariableDataDictionary
+       WHERE VariableName =
+        'Site Ground Reflected Solar Radiation Rate per Area'
        AND ReportingFrequency = 'Monthly'"
 
     if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
       query_var_value = "SELECT VariableValue FROM ReportVariableData
            WHERE ReportVariableDataDictionaryIndex = #{var_index}"
-      ground_reflec_solar = sql_file.execAndReturnVectorOfDouble(query_var_value).get
+      ground_reflec_solar =
+        sql_file.execAndReturnVectorOfDouble(query_var_value).get
       horizontal_total_solar = ground_reflec_solar.collect { |n| n * 5 }
       weather_var << horizontal_total_solar
     else
