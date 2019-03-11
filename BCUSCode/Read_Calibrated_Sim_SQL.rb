@@ -316,11 +316,6 @@ module OutPut
       "#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'wb'
     ) do |csv|
       csv << header
-    end
-
-    CSV.open(
-      "#{output_folder}/Simulation_Results_Building_Total_Energy.csv", 'a+'
-    ) do |csv|
       table.each { |row| csv << row }
     end
 
@@ -369,14 +364,6 @@ module OutPut
         'wb'
       ) do |csv|
         csv << header
-      end
-
-      CSV.open(
-        "#{output_folder}/" \
-        "Meter_#{meters_table[meter_index][0].split(':')[0]}_" \
-        "#{meters_table[meter_index][0].split(':')[1]}.csv",
-        'a+'
-      ) do |csv|
         var_value.each { |row| csv << row }
       end
     end

@@ -322,12 +322,6 @@ module OutPut
       'Simulation_Results_Building_Total_Energy.csv', 'wb'
     ) do |csv|
       csv << header
-    end
-
-    CSV.open(
-      "#{project_path}/#{out_prefix}_Output/" \
-      'Simulation_Results_Building_Total_Energy.csv', 'a+'
-    ) do |csv|
       table.each { |row| csv << row }
       if verbose
         puts 'Simulation_Results_Building_Total_Energy.csv ' \
@@ -387,14 +381,6 @@ module OutPut
         'wb'
       ) do |csv|
         csv << header
-      end
-
-      CSV.open(
-        "#{project_path}/#{out_prefix}_Output/" \
-        "Meter_#{meters_table[meter_index][0].split(':')[0]}_" \
-        "#{meters_table[meter_index][0].split(':')[1]}.csv",
-        'a+'
-      ) do |csv|
         var_value.each { |row| csv << row }
         if verbose
           puts "Meter_#{meters_table[meter_index][0].split(':')[0]}_" \
@@ -451,11 +437,6 @@ module OutPut
       "#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'wb'
     ) do |csv|
       csv << ['Monthly DryBuld Temp [C]', 'Monthly Horizontal Solar [W/m^2]']
-    end
-
-    CSV.open(
-      "#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'a+'
-    ) do |csv|
       weather_out.each { |row| csv << row }
     end
   end

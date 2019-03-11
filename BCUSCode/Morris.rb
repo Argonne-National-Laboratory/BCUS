@@ -103,7 +103,7 @@ class Morris
 
     design_matrix = R.X
     row_index = 0
-    CSV.open("#{output_dir}/Morris_0_1_Design.csv", 'a+') do |csv|
+    CSV.open("#{output_dir}/Morris_0_1_Design.csv", 'wb') do |csv|
       while row_index <= design_matrix.row_count
         csv << design_matrix.row(row_index).to_a
         row_index += 1
@@ -112,7 +112,7 @@ class Morris
 
     # CDF transform
     row_index = 0
-    CSV.open("#{output_dir}/Morris_CDF_Tran_Design.csv", 'a+') do |csv|
+    CSV.open("#{output_dir}/Morris_CDF_Tran_Design.csv", 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..design_matrix.row_count).each do |sample_index|
         header << "Run #{sample_index}"

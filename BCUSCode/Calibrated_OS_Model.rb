@@ -128,18 +128,16 @@ class CalibratedOSM
   end
 end
 
-def number?(object)
-  true if Float(object) rescue false
-end
-
 def average(one_d_array)
   sum = 0.0
   n = one_d_array.length
   one_d_array.each do |val|
-    if number?(val)
-      sum += val
-    else
+    begin
+      Float(val)
+    rescue StandardError
       n -= 1
+    else
+      sum += val
     end
   end
   return sum / n

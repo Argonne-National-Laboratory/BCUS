@@ -79,9 +79,8 @@ class LHSGenerator
             EOF
     lhs_table = R.lhs.transpose
 
-    CSV.open("#{output_dir}/Random_LHS_Samples.csv", 'wb')
     row_index = 0
-    CSV.open("#{output_dir}/Random_LHS_Samples.csv", 'a+') do |csv|
+    CSV.open("#{output_dir}/Random_LHS_Samples.csv", 'wb') do |csv|
       while row_index <= lhs_table.row_count
         csv << lhs_table.row(row_index).to_a
         row_index += 1
@@ -159,7 +158,7 @@ class LHSGenerator
       n_runs, n_parameters, output_dir, randseed, verbose
     )
     row_index = 0
-    CSV.open("#{output_dir}/LHD_Sample.csv", 'a+') do |csv|
+    CSV.open("#{output_dir}/LHD_Sample.csv", 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..n_runs).each { |sample_index| header << "Run #{sample_index}" }
       csv << header
