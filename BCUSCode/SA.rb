@@ -372,8 +372,15 @@ runner.run_osm(
 
 # Step 4: Read Simulation Results
 # Run morris method to compute and plot sensitivity results
-project_path = path.to_s
-OutPut.read(num_of_runs, project_path, 'SA')
+result_paths = []
+(1..num_of_runs).each do |sample_num|
+  result_paths.push(
+    "#{path}/SA_Simulations/Sample#{sample_num}/run/eplusout.sql"
+  )
+end
+output_folder = "#{path}/SA_Output"
+OutPut.read(result_paths, outfile_path, output_folder, false, verbose)
+
 morris.compute_sensitivities(
   "#{path}/SA_Output/Simulation_Results_Building_Total_Energy.csv",
   uq_file_path, file_path
@@ -382,18 +389,15 @@ morris.compute_sensitivities(
 unless skip_cleanup
   # Delete intermediate files
   FileUtils.remove_dir("#{path}/SA_Models") if Dir.exist?("#{path}/SA_Models")
-  clean_names = [
+  [
+    'Meter_Electricity_Facility.csv',
+    'Meter_Gas_Facility.csv',
     'Morris_0_1_Design.csv',
     'Morris_CDF_Tran_Design.csv',
-    'Monthly_Weather.csv',
-    'Meter_Electricity.csv',
-    'Meter_Gas.csv',
     'Simulation_Results_Building_Total_Energy.csv'
-  ]
-  clean_names.each do |file|
-    if File.exist?("#{path}/SA_Output/#{file}")
-      File.delete("#{path}/SA_Output/#{file}")
-    end
+  ].each do |file|
+    clean_path = "#{path}/SA_Output/#{file}"
+    File.delete(clean_path) if File.exist?(clean_path)
   end
 end
 

@@ -307,17 +307,22 @@ runner.run_osm(
 )
 
 # Read Simulation Results
-project_path = path.to_s
-OutPut.read(num_of_runs, project_path, 'PreRuns')
+result_paths = []
+(1..num_of_runs).each do |sample_num|
+  result_paths.push(
+    "#{path}/PreRuns_Simulations/Sample#{sample_num}/run/eplusout.sql"
+  )
+end
+output_folder = "#{path}/PreRuns_Output"
+OutPut.read(result_paths, outfile_path, output_folder, true, verbose)
 
 # clean up the temp files if skip cleanup not set
 unless skip_cleanup
-  if File.exist?("#{path}/PreRuns_Output/Random_LHD_Samples.csv")
-    File.delete("#{path}/PreRuns_Output/Random_LHD_Samples.csv")
-  end
   if Dir.exist?("#{path}/PreRuns_Models")
     FileUtils.remove_dir("#{path}/PreRuns_Models")
   end
+  clean_path = "#{path}/PreRuns_Output/Random_LHD_Samples.csv"
+  File.delete(clean_path) if File.exist?(clean_path)
 end
 
 ## Prepare calibration input files

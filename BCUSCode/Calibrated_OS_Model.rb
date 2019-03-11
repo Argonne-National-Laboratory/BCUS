@@ -59,7 +59,7 @@
 require 'openstudio'
 require_relative 'run_all_osms'
 require_relative 'Uncertain_Parameters'
-require_relative 'read_calibrated_sim_sql'
+require_relative 'read_simulation_results_sql'
 
 # Class to generate and run calibrated model
 class CalibratedOSM
@@ -124,7 +124,7 @@ class CalibratedOSM
       "#{run_manager_folder}/Simulations/" \
       "#{calibrated_model_name}/run/eplusout.sql"
     output_folder = run_manager_folder
-    OutPut.read(sql_file_path, meter_set_file, output_folder)
+    OutPut.read([sql_file_path], meter_set_file, output_folder)
   end
 end
 

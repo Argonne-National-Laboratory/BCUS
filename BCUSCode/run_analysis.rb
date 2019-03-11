@@ -429,7 +429,14 @@ runner = RunOSM.new
 runner.run_osm(model_dir, epw_path, sim_dir, num_processes, verbose)
 
 # Read simulation results
-OutPut.read(num_runs, path, run_type, verbose)
+result_paths = []
+(1..num_runs).each do |sample_num|
+  result_paths.push(
+    "#{path}/#{run_type}_Simulations/Sample#{sample_num}/run/eplusout.sql"
+  )
+end
+OutPut.read(result_paths, outfile_path, output_dir, false, verbose)
+
 if run_type == 'SA'
   morris.compute_sensitivities(
     "#{output_dir}/Simulation_Results_Building_Total_Energy.csv",
@@ -440,18 +447,22 @@ end
 # Delete intermediate files
 unless skip_cleanup
   FileUtils.remove_dir(model_dir) if Dir.exist?(model_dir)
-  clean_names = [
-    'Monthly_Weather.csv',
-    'Meter_Electricity.csv',
-    'Meter_Gas.csv'
-  ]
-  if run_type == 'SA'
-    clean_names.push('Morris_0_1_Design.csv')
-    clean_names.push('Morris_CDF_Tran_Design.csv')
-    clean_names.push('Simulation_Results_Building_Total_Energy.csv')
-  end
-  clean_names.each do |file|
-    File.delete("#{output_dir}/#{file}") if File.exist?("#{output_dir}/#{file}")
+  to_be_cleaned =
+    case run_type
+    when 'UA', 'BC_Setup'
+      ['Random_LHD_Samples.csv']
+    when 'SA'
+      [
+        'Meter_Electricity_Facility.csv',
+        'Meter_Gas_Facility.csv',
+        'Morris_0_1_Design.csv',
+        'Morris_CDF_Tran_Design.csv',
+        'Simulation_Results_Building_Total_Energy.csv'
+      ]
+    end
+  to_be_cleaned.each do |file|
+    clean_path = "#{output_dir}/#{file}"
+    File.delete(clean_path) if File.exist?(clean_path)
   end
 end
 

@@ -352,14 +352,20 @@ runner.run_osm(
 )
 
 # Read simulation results
-project_path = path.to_s
-OutPut.read(num_lhs_runs, project_path, 'UA', verbose)
+result_paths = []
+(1..num_lhs_runs).each do |sample_num|
+  result_paths.push(
+    "#{path}/UA_Simulations/Sample#{sample_num}/run/eplusout.sql"
+  )
+end
+output_folder = "#{path}/UA_Output"
+OutPut.read(result_paths, outfile_path, output_folder, false, verbose)
 
 # Delete intermediate files
 unless skip_cleanup
-  file_path = "#{path}/UA_Output/Monthly_Weather.csv"
-  File.delete(file_path) if File.exist?(file_path)
   FileUtils.remove_dir("#{path}/UA_Models") if Dir.exist?("#{path}/UA_Models")
+  clean_path = "#{path}/UA_Output/Random_LHD_Samples.csv"
+  File.delete(clean_path) if File.exist?(clean_path)
 end
 
 puts 'UA.rb Completed Successfully!'

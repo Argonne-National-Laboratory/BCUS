@@ -50,14 +50,14 @@ require 'csv'
 
 # Module for output postproess
 module OutPut
-  def self.read(num_of_runs, project_path, out_prefix, verbose = false)
+  def self.read(
+    sql_file_paths, meter_set_file, output_folder,
+    weather = false, verbose = false
+  )
     # Find the path of sql
-    workbook =
-      RubyXL::Parser.parse("#{project_path}/Simulation_Output_Settings.xlsx")
-    # output_table = workbook['TotalEnergy'].extract_data  outdated by June 28th
+    workbook = RubyXL::Parser.parse(meter_set_file)
 
     output_table = []
-    output_table_row = []
     workbook['TotalEnergy'].each do |row|
       output_table_row = []
       row.cells.each { |cell| output_table_row.push(cell.value) }
@@ -86,10 +86,8 @@ module OutPut
     district_cooling_total_end_uses = []
     district_heating_total_end_uses = []
 
-    (1..num_of_runs).each do |sample_num|
-      sql_file_path =
-        "#{project_path}/#{out_prefix}_Simulations/" \
-        "Sample#{sample_num}/run/eplusout.sql"
+    sql_file_paths.each do |sql_file_path|
+      # sql_file_path = "#{sim_folder}/Sample#{sample_num}/run/eplusout.sql"
       sql_file = OpenStudio::SqlFile.new(sql_file_path)
       (1..(output_table.length - 1)).each do |output_num|
         case output_table[output_num].to_s
@@ -317,22 +315,14 @@ module OutPut
 
     # Save to final_output to csv files
     table = final_output.transpose
-    CSV.open(
-      "#{project_path}/#{out_prefix}_Output/" \
-      'Simulation_Results_Building_Total_Energy.csv', 'wb'
-    ) do |csv|
+    file_name = 'Simulation_Results_Building_Total_Energy.csv'
+    CSV.open("#{output_folder}/#{file_name}", 'wb') do |csv|
       csv << header
       table.each { |row| csv << row }
-      if verbose
-        puts 'Simulation_Results_Building_Total_Energy.csv ' \
-             'is saved to the folder'
-      end
+      puts "#{file_name} is saved to the folder" if verbose
     end
 
-    workbook = RubyXL::Parser.parse(
-      "#{project_path}/Simulation_Output_Settings.xlsx"
-    )
-    # meters_table = workbook['Meters'].extract_data  outdated by June 28th
+    workbook = RubyXL::Parser.parse(meter_set_file)
     meters_table = []
     meters_table_row = []
     workbook['Meters'].each do |row|
@@ -343,10 +333,7 @@ module OutPut
 
     (1..(meters_table.length - 1)).each do |meter_index|
       var_value = []
-      (1..num_of_runs).each do |sample_num|
-        sql_file_path =
-          "#{project_path}/#{out_prefix}_Simulations/" \
-          "Sample#{sample_num}/run/eplusout.sql"
+      sql_file_paths.each do |sql_file_path|
         sql_file = OpenStudio::SqlFile.new(sql_file_path)
         query_var_index =
           "SELECT ReportMeterDataDictionaryIndex FROM ReportMeterDataDictionary
@@ -374,68 +361,59 @@ module OutPut
           ['TimeStep 1', 'TimeStep 2', 'TimeStep 3', '...']
         end
 
-      CSV.open(
-        "#{project_path}/#{out_prefix}_Output/" \
-        "Meter_#{meters_table[meter_index][0].split(':')[0]}_" \
-        "#{meters_table[meter_index][0].split(':')[1]}.csv",
-        'wb'
-      ) do |csv|
+      meter_names = meters_table[meter_index][0].split(':')
+      meter_file = "Meter_#{meter_names[0]}_#{meter_names[1]}.csv"
+      CSV.open("#{output_folder}/#{meter_file}", 'wb') do |csv|
         csv << header
         var_value.each { |row| csv << row }
-        if verbose
-          puts "Meter_#{meters_table[meter_index][0].split(':')[0]}_" \
-              "#{meters_table[meter_index][0].split(':')[1]}.csv " \
-              'is saved to the Output folder'
-        end
+        puts "#{meter_file} is saved to the Output folder" if verbose
       end
     end
 
+    return unless weather
     weather_var = []
 
-    sql_file_path =
-      "#{project_path}/#{out_prefix}_Simulations/Sample1/run/eplusout.sql"
-    sql_file = OpenStudio::SqlFile.new(sql_file_path)
+    sql_file = OpenStudio::SqlFile.new(sql_file_paths[0])
 
+    # Query dry bulb temperature
     query_var_index =
       "SELECT ReportVariableDataDictionaryIndex
-       FROM ReportVariableDataDictionary
-       WHERE VariableName = 'Site Outdoor Air Drybulb Temperature'
-       AND ReportingFrequency = 'Monthly'"
+      FROM ReportVariableDataDictionary
+      WHERE VariableName = 'Site Outdoor Air Drybulb Temperature'
+      AND ReportingFrequency = 'Monthly'"
 
     if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
-      query_var_value = "SELECT VariableValue FROM ReportVariableData
-           WHERE ReportVariableDataDictionaryIndex = #{var_index}"
+      query_var_value =
+        "SELECT VariableValue FROM ReportVariableData
+        WHERE ReportVariableDataDictionaryIndex = #{var_index}"
       weather_var << sql_file.execAndReturnVectorOfDouble(query_var_value).get
     else
       weather_var << []
     end
 
-    # Query Horizontal Solar Irradiation
+    # Query horizontal solar irradiation
     query_var_index =
       "SELECT ReportVariableDataDictionaryIndex
-       FROM ReportVariableDataDictionary
-       WHERE VariableName =
-        'Site Ground Reflected Solar Radiation Rate per Area'
-       AND ReportingFrequency = 'Monthly'"
+      FROM ReportVariableDataDictionary
+      WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area'
+      AND ReportingFrequency = 'Monthly'"
 
     if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
-      query_var_value = "SELECT VariableValue FROM ReportVariableData
-           WHERE ReportVariableDataDictionaryIndex = #{var_index}"
+      query_var_value =
+        "SELECT VariableValue FROM ReportVariableData
+        WHERE ReportVariableDataDictionaryIndex = #{var_index}"
       ground_reflec_solar =
         sql_file.execAndReturnVectorOfDouble(query_var_value).get
-      horizontal_total_solar = ground_reflec_solar.collect { |n| n * 5 }
-      weather_var << horizontal_total_solar
+      weather_var << ground_reflec_solar.collect { |n| n * 5 }
     else
       weather_var << []
     end
 
-    weather_out = weather_var.transpose * num_of_runs
+    weather_out = weather_var.transpose * sql_file_paths.length
 
-    CSV.open(
-      "#{project_path}/#{out_prefix}_Output/Monthly_Weather.csv", 'wb'
-    ) do |csv|
+    CSV.open("#{output_folder}/Monthly_Weather.csv", 'wb') do |csv|
       csv << ['Monthly DryBuld Temp [C]', 'Monthly Horizontal Solar [W/m^2]']
       weather_out.each { |row| csv << row }
     end
