@@ -243,7 +243,7 @@ lhs = LHSGenerator.new
 input_path = path.to_s
 preruns_path = "#{path}/PreRuns_Output"
 
-lhs.lhs_samples_generator(
+lhs.lhd_samples_generator(
   "#{input_path}/#{priors_name}", num_of_runs, preruns_path, randseed, verbose
 )
 
@@ -312,8 +312,8 @@ OutPut.read(num_of_runs, project_path, 'PreRuns')
 
 # clean up the temp files if skip cleanup not set
 unless skip_cleanup
-  if File.exist?("#{path}/PreRuns_Output/Random_LHS_Samples.csv")
-    File.delete("#{path}/PreRuns_Output/Random_LHS_Samples.csv")
+  if File.exist?("#{path}/PreRuns_Output/Random_LHD_Samples.csv")
+    File.delete("#{path}/PreRuns_Output/Random_LHD_Samples.csv")
   end
   if Dir.exist?("#{path}/PreRuns_Models")
     FileUtils.remove_dir("#{path}/PreRuns_Models")

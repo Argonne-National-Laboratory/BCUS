@@ -80,14 +80,14 @@ class LHSGenerator
     lhs_table = R.lhs.transpose
 
     row_index = 0
-    CSV.open("#{output_dir}/Random_LHS_Samples.csv", 'wb') do |csv|
+    CSV.open("#{output_dir}/Random_LHD_Samples.csv", 'wb') do |csv|
       while row_index <= lhs_table.row_count
         csv << lhs_table.row(row_index).to_a
         row_index += 1
       end
     end
     if verbose
-      puts "Random_LHS_Samples.csv with the size of #{row_index - 1} rows" \
+      puts "Random_LHD_Samples.csv with the size of #{row_index - 1} rows" \
            "and #{lhs_table.column_count} columns is generated"
     end
     return lhs_table
@@ -149,7 +149,7 @@ class LHSGenerator
     return R.samples
   end
 
-  def lhs_samples_generator(
+  def lhd_samples_generator(
     uqtable_file_path, n_runs, output_dir, randseed = 0, verbose = false
   )
     table = CSV.read(uqtable_file_path.to_s)

@@ -359,7 +359,7 @@ case run_type
 when 'UA'
   # Generate LHS samples
   lhs = LHSGenerator.new
-  lhs.lhs_samples_generator(
+  lhs.lhd_samples_generator(
     uq_file_path, num_lhd_runs, output_dir, randseed, verbose
   )
   sample_file_name = 'LHD_Sample.csv'

@@ -287,7 +287,7 @@ output_file_dir = "#{path}/UA_Output"
 
 # Generate LHS samples
 lhs = LHSGenerator.new
-lhs.lhs_samples_generator(
+lhs.lhd_samples_generator(
   uq_file_path, num_lhs_runs, output_file_dir, randseed, verbose
 )
 
