@@ -45,7 +45,7 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 # Main code used for setting up files for running Bayesian calibration
 
 require 'openstudio'
-require_relative 'Run_All_OSMs'
+require_relative 'Run_All_OSMs_verbose'
 require_relative 'Uncertain_Parameters'
 require_relative 'Read_Calibrated_Sim_SQL'
 
