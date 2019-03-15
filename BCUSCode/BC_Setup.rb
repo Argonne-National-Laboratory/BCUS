@@ -227,7 +227,21 @@ end
 
 uncertainty_parameters = UncertainParameters.new
 
-priors_table = "#{path}/#{priors_name}"
+uq_table = CSV.read("#{path}/#{priors_name}")
+uq_table.delete_at(0)
+uq_table_thermostat = []
+uq_table.each do |uq_parameter|
+  case uq_parameter[0]
+  when /HeatingSetpoint/
+    table_row = %w[ZoneControl ThermostatSettings ThermostatSetpointHeating On]
+    table_row.push(*uq_parameter[3..-1])
+    uq_table_thermostat.push(table_row)
+  when /CoolingSetpoint/
+    table_row = %w[ZoneControl ThermostatSettings ThermostatSetpointCooling On]
+    table_row.push(*uq_parameter[3..-1])
+    uq_table_thermostat.push(table_row)
+  end
+end
 
 for k in 2..samples[0].length-1
   parameter_value = []
@@ -250,9 +264,9 @@ for k in 2..samples[0].length-1
   model.save("#{path}/PreRuns_Models/Sample#{k-1}.osm", true)
 
   # new edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat = "#{path}/PreRuns_Models/UQ_#{building_name}_thermostat.csv"
+  out_file_path_name_thermostat = "#{path}/PreRuns_Output/UQ_#{building_name}_thermostat.csv"
   model_output_path = "#{path}/PreRuns_Models/Sample#{k-1}.osm"
-  # uncertainty_parameters.thermostat_adjust(model, priors_table, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
+  uncertainty_parameters.thermostat_adjust(model, uq_table_thermostat, out_file_path_name_thermostat, model_output_path, parameter_types, parameter_value)
 
 
   puts "Sample#{k-1} is saved to the folder of Models" if verbose
