@@ -99,7 +99,9 @@ class Morris
       )
     EOF
     R.eval('X <- design$X')
-    R.eval('save (design, file="' + output_dir.to_s + '/Morris_design")')
+    R.eval <<-EOF
+      save (design, file="#{output_dir}/Morris_design")
+    EOF
 
     design_matrix = R.X
     row_index = 0
