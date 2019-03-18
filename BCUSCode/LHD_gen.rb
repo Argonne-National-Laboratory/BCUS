@@ -112,14 +112,14 @@ class LHSGenerator
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
       R.eval <<-EOF
-          samples<- qunif(q,min,max)
-          EOF
+              samples<- qunif(q,min,max)
+              EOF
     when /Uniform Relative/
       R.assign('min', prob_distribution[4] * prob_distribution[0])
       R.assign('max', prob_distribution[5] * prob_distribution[0])
       R.eval <<-EOF
-          samples<- qunif(q,min,max)
-          EOF
+              samples<- qunif(q,min,max)
+              EOF
     when /Triangle Absolute/
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
