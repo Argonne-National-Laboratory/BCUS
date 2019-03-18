@@ -86,11 +86,9 @@ class OperationUncertainty < OpenStudio::Model::Model
           if space_type.people.size == 1
             space_type.people.each do |people|
               unless people.spaceFloorAreaPerPerson.empty?
-                if people.peoplePerFloorArea.get > 0
-                  @people_floor_area_per_person << people.spaceFloorAreaPerPerson.get
-                else
-                  @people_floor_area_per_person << nil
-                end
+                @people_floor_area_per_person << 1 / people.peoplePerFloorArea.get
+              else
+                @people_floor_area_per_person << people.spaceFloorAreaPerPerson.get
               end
             end
           end
