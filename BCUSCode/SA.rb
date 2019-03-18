@@ -390,6 +390,7 @@ unless skip_cleanup
   # Delete intermediate files
   FileUtils.remove_dir("#{path}/SA_Models") if Dir.exist?("#{path}/SA_Models")
   [
+    'Morris_design',
     'Meter_Electricity_Facility.csv',
     'Meter_Gas_Facility.csv',
     'Morris_0_1_Design.csv',
