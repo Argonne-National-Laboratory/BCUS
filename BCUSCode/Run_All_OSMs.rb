@@ -63,7 +63,6 @@ class RunOSM
       puts "Queuing simulation job for #{filename}." if verbose
       original_osm_path = File.join(model_dir, filename)
       output_osm_path = File.join(output_dir, filename)
-      puts "Copying '#{original_osm_path}' to '#{output_osm_path}'." if verbose
       FileUtils.copy_file(original_osm_path, output_osm_path)
 
       # create workflow
