@@ -47,25 +47,21 @@ require 'openstudio'
 
 # Class for running osms
 class RunOSM
-  def run_osm(
-    model_dir, weather_dir, output_dir, n_processes = 0, verbose = false
-  )
-
+  def run_osm(model_dir, weather_dir, output_dir, n_runs = 1, n_processes = 0)
     FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
     FileUtils.mkdir_p(output_dir)
     filepaths = Dir.glob(model_dir + '/*.osm')
 
     Parallel.each(
-      filepaths, in_threads: n_processes, progress: 'Running osms'
+      filepaths, in_threads: n_processes, progress: "Running #{n_runs} osms"
     ) do |filepath|
-      # copy osm file
+      # Copy osm file
       filename = File.basename(filepath)
-      puts "Queuing simulation job for #{filename}." if verbose
       original_osm_path = File.join(model_dir, filename)
       output_osm_path = File.join(output_dir, filename)
       FileUtils.copy_file(original_osm_path, output_osm_path)
 
-      # create workflow
+      # Create workflow
       output_dir_inst = File.join(output_dir, File.basename(filename, '.*'))
       FileUtils.mkdir(output_dir_inst)
       osw_path = File.join(output_dir_inst, 'in.osw')

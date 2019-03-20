@@ -172,7 +172,7 @@ if options[:osmName].nil?
     temp = ARGV.grep(/.osm/)
     osm_name = temp[0]
   else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option' \
+    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option ' \
          'or giving a filename ending with .osm on the command line'
     abort
   end
@@ -187,7 +187,7 @@ if options[:epwName].nil?
     temp = ARGV.grep(/.epw/)
     epw_name = temp[0]
   else
-    puts 'An .epw weather file must be indicated by the --epwNAME option' \
+    puts 'An .epw weather file must be indicated by the --epwNAME option ' \
          'or giving a filename ending with .epw on the command line'
     abort
   end
@@ -363,11 +363,8 @@ end
 # stuff in SA_Simulations
 runner = RunOSM.new
 runner.run_osm(
-  "#{path}/SA_Models",
-  epw_path,
-  "#{path}/SA_Simulations",
-  num_processes,
-  verbose
+  "#{path}/SA_Models", epw_path, "#{path}/SA_Simulations",
+  num_of_runs, num_processes
 )
 
 # Step 4: Read Simulation Results

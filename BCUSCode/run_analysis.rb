@@ -102,18 +102,6 @@ parser = OptionParser.new do |opts|
     options[:runType] = run_type
   end
 
-  options[:interactive] = false
-  opts.on(
-    '-i', '--interactive', 'Run with interactive prompts to check setup files.'
-  ) do
-    options[:interactive] = true
-  end
-
-  options[:noCleanup] = false
-  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
-    options[:noCleanup] = true
-  end
-
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
   opts.on(
     '-o', '--outFile outFile',
@@ -125,7 +113,7 @@ parser = OptionParser.new do |opts|
   options[:numLHD] = 500
   opts.on(
     '--numLHD numLHD',
-    'Number of sample points of Monte Carlo simulation' \
+    'Number of sample points of Monte Carlo simulation ' \
     'with Latin Hypercube Design sampling, default 500'
   ) do |num_lhd|
     options[:numLHD] = num_lhd
@@ -186,6 +174,18 @@ parser = OptionParser.new do |opts|
     options[:randseed] = seednum
   end
 
+  options[:interactive] = false
+  opts.on(
+    '-i', '--interactive', 'Run with interactive prompts to check setup files.'
+  ) do
+    options[:interactive] = true
+  end
+
+  options[:noCleanup] = false
+  opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
+    options[:noCleanup] = true
+  end
+
   options[:verbose] = false
   opts.on(
     '-v', '--verbose', 'Run in verbose mode with more output info printed'
@@ -207,7 +207,7 @@ if options[:osmName].nil?
     temp = ARGV.grep(/.osm/)
     osm_name = temp[0]
   else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option' \
+    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option ' \
          'or giving a filename ending with .osm on the command line'
     abort
   end
@@ -222,7 +222,7 @@ if options[:epwName].nil?
     temp = ARGV.grep(/.epw/)
     epw_name = temp[0]
   else
-    puts 'An .epw weather file must be indicated by the --epwNAME option' \
+    puts 'An .epw weather file must be indicated by the --epwNAME option ' \
          'or giving a filename ending with .epw on the command line'
     abort
   end
@@ -233,11 +233,11 @@ end
 # Assign analysis settings
 run_type = options[:runType]
 outfile_name = options[:outFile]
-run_interactive = options[:interactive]
-verbose = options[:verbose]
-skip_cleanup = options[:noCleanup]
 num_processes = Integer(options[:numProcesses])
 randseed = Integer(options[:randseed])
+run_interactive = options[:interactive]
+skip_cleanup = options[:noCleanup]
+verbose = options[:verbose]
 
 case run_type
 when 'UA'
@@ -270,21 +270,13 @@ if verbose
   end
   puts "Using number of parallel processes  = #{num_processes}"
   puts "Using random seed = #{randseed}"
+  puts 'Not cleaning up interim files' if skip_cleanup
 end
 
 if run_interactive
   puts 'Running interactively'
   wait_for_y
 end
-
-puts 'Not cleaning up interim files' if skip_cleanup
-
-# Acquire the path of the working directory that is the user's project folder
-path = Dir.pwd
-model_dir = "#{path}/#{run_type}_Model"
-sim_dir = "#{path}/#{run_type}_Simulations"
-output_dir = "#{path}/#{run_type}_Output"
-Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
 # Extract out just the base filename from the OSM file as the building name
 building_name = File.basename(osm_name, '.osm')
@@ -326,9 +318,15 @@ else
 end
 
 ## Main process
+# Acquire the path of the working directory that is the user's project folder
+path = Dir.pwd
+model_dir = "#{path}/#{run_type}_Model"
+sim_dir = "#{path}/#{run_type}_Simulations"
+output_dir = "#{path}/#{run_type}_Output"
+Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
+
 # Step 1: Generate uncertainty distributions
-puts
-puts 'Step 1: Generating distribution of uncertainty parameters' if verbose
+puts "\nStep 1: Generating distribution of uncertainty parameters" if verbose
 uncertainty_parameters = UncertainParameters.new
 if run_type == 'PreRuns'
   # Load prior distribution file
@@ -385,8 +383,7 @@ if run_interactive && run_type != 'PreRuns'
 end
 
 # Step 2: Generate design matrix for analysis
-puts
-puts 'Step 2: Generating design Matrix and sample for analysis' if verbose
+puts "\nStep 2: Generating design Matrix and sample for analysis" if verbose
 case run_type
 when 'UA'
   # Generate LHD sample
@@ -462,19 +459,17 @@ end
 
 # Step 3: Run all OSM simulation files
 num_runs = samples[0].length - 2
-puts
-puts "Step 3: Running #{num_runs} OSM simulations" if verbose
+puts "\nStep 3: Running #{num_runs} OSM simulations" if verbose
 if run_interactive
   puts "Going to run #{num_runs} models. This could take a while"
   wait_for_y
 end
 
 runner = RunOSM.new
-runner.run_osm(model_dir, epw_path, sim_dir, num_processes, verbose)
+runner.run_osm(model_dir, epw_path, sim_dir, num_runs, num_processes)
 
 # Step 4: Read Simulation Results
-puts
-puts 'Step 4: Post-processing and analyzing simulation results' if verbose
+puts "\nStep 4: Post-processing and analyzing simulation results" if verbose
 result_paths = []
 (1..num_runs).each do |sample_num|
   result_paths.push(
@@ -600,5 +595,4 @@ if run_type == 'PreRuns'
   )
 end
 
-puts
-puts "#{run_type} completed successfully!"
+puts "\n#{run_type} completed successfully!"

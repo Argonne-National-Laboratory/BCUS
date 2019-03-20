@@ -65,8 +65,7 @@ require_relative 'read_simulation_results_sql'
 class CalibratedOSM
   def gen_and_sim(
     osm_model_file, weather_file, prior_file, posterior_file,
-    meter_set_file, calibrated_model_file, calibrated_model_name,
-    run_manager_folder
+    meter_set_file, calibrated_model_file, calibrated_model_name, run_folder
   )
     posterior = CSV.read(posterior_file, headers: true, converters: :numeric)
     headers = posterior.headers()
@@ -91,9 +90,7 @@ class CalibratedOSM
     meters_table_row = []
     workbook['Meters'].each do |row|
       meters_table_row = []
-      row.cells.each do |cell|
-        meters_table_row.push(cell.value)
-      end
+      row.cells.each { |cell| meters_table_row.push(cell.value) }
       meters_table.push(meters_table_row)
     end
 
@@ -116,14 +113,13 @@ class CalibratedOSM
 
     runner = RunOSM.new
     runner.run_osm(
-      run_manager_folder, weather_file, "#{run_manager_folder}/Simulations"
+      run_folder, weather_file, "#{run_folder}/Simulations"
     )
 
     # Read Simulation Results
     sql_file_path =
-      "#{run_manager_folder}/Simulations/" \
-      "#{calibrated_model_name}/run/eplusout.sql"
-    output_folder = run_manager_folder
+      "#{run_folder}/Simulations/#{calibrated_model_name}/run/eplusout.sql"
+    output_folder = run_folder
     OutPut.read([sql_file_path], meter_set_file, output_folder)
   end
 end
