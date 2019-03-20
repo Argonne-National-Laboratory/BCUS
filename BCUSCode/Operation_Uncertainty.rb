@@ -69,43 +69,40 @@ class OperationUncertainty < OpenStudio::Model::Model
     space_types.each do |space_type|
       next if space_type.spaces.empty?
       unless space_type.lights.empty?
-        @lights_space_type << space_type.name
         if space_type.lights.size == 1
           space_type.lights.each do |light|
-            @lights_watts_per_floor_area <<
-              if light.powerPerFloorArea.empty?
-                nil
-              else
-                light.powerPerFloorArea.get
-              end
+            next if light.powerPerFloorArea.empty?
+            @lights_space_type << space_type.name
+            @lights_watts_per_floor_area << light.powerPerFloorArea.get
           end
         end
       end
 
       unless space_type.electricEquipment.empty?
-        @plugload_space_type << space_type.name
         if space_type.electricEquipment.size == 1
           space_type.electricEquipment.each do |electric_equipment|
+            next if electric_equipment.powerPerFloorArea.empty?
+            @plugload_space_type << space_type.name
             @plugload_watts_per_floor_area <<
-              if electric_equipment.powerPerFloorArea.empty?
-                nil
-              else
-                electric_equipment.powerPerFloorArea.get
-              end
+              electric_equipment.powerPerFloorArea.get
           end
         end
       end
 
       unless space_type.people.empty?
-        @people_space_type << space_type.name
         if space_type.people.size == 1
           space_type.people.each do |people|
-            @people_floor_area_per_person <<
-              if people.spaceFloorAreaPerPerson.empty?
-                1 / people.peoplePerFloorArea.get
-              else
+            if !people.spaceFloorAreaPerPerson.empty?
+              @people_space_type << space_type.name
+              @people_floor_area_per_person <<
                 people.spaceFloorAreaPerPerson.get
-              end
+            elsif !people.peoplePerFloorArea.empty?
+              @people_space_type << space_type.name
+              @people_floor_area_per_person <<
+                1 / people.peoplePerFloorArea.get
+            else
+              next
+            end
           end
         end
       end
