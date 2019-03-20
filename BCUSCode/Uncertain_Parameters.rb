@@ -122,11 +122,6 @@ class UncertainParameters
                     csv << ['Visible Absorptance', @envelop_uncertainty.std_material_name[index], visibleAbsorptance,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
-                when /VisibleAbsorptance/
-                  @envelop_uncertainty.std_material_visibleAbsorptance.each_with_index do |visibleAbsorptance, index|
-                    csv << ['Visible Absorptance', @envelop_uncertainty.std_material_name[index], visibleAbsorptance,
-                            uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
-                  end
                 else
                   puts "UQ parameter StandardOpaqueMaterial #{uq_parameter[2]}  was not found"
                   abort("UQ parameter StandardOpaqueMaterial #{uq_parameter[2]} was not found")
