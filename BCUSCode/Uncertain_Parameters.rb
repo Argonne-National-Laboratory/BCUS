@@ -235,16 +235,16 @@ class UncertainParameters
             when /HotWaterBoiler/
               case uq_parameter[2]
                 when /Efficiency/
-                  @boiler_uncertainty.boiler_thermal_efficiency.each_with_index do |efficiency, index|
-                    csv << ['HotWaterBoilerEfficiency', @boiler_uncertainty.boiler_name[index], efficiency,
+                  @boiler_uncertainty.hotwaterboiler_thermal_efficiency.each_with_index do |efficiency, index|
+                    csv << ['HotWaterBoilerEfficiency', @boiler_uncertainty.hotwaterboiler_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
               end
             when /SteamBoiler/
               case uq_parameter[2]
                 when /Efficiency/
-                  @boiler_uncertainty.boiler_thermal_efficiency.each_with_index do |efficiency, index|
-                    csv << ['SteamBoilerEfficiency', @boiler_uncertainty.boiler_name[index], efficiency,
+                  @boiler_uncertainty.steamboiler_thermal_efficiency.each_with_index do |efficiency, index|
+                    csv << ['SteamBoilerEfficiency', @boiler_uncertainty.steamboiler_name[index], efficiency,
                             uq_parameter[4], uq_parameter[5], uq_parameter[6], uq_parameter[7], uq_parameter[8]]
                   end
               end
