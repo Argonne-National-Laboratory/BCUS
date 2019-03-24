@@ -433,7 +433,7 @@ end
 # Perform Bayesian calibration
 code_path = ENV['BCUSCODE']
 puts "Using code path = #{code_path}\n\r" if verbose
-BCRunner.runBC(
+BCRunner.run_bc(
   code_path, priors_path, cal_data_com_path, cal_data_field_path,
   num_out_vars, num_w_vars, num_mcmc,
   pvals_filename, posts_path, verbose, randseed
