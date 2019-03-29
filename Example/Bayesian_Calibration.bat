@@ -7,11 +7,3 @@ export BCUS="C:\Yuna\github\BCUS"
 export RUBYPATH="$BCUS\Example"
 ruby -S BC_Setup.rb --osmName ExampleBuilding.osm --epwName Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numLHS 10 --priors Prior.csv --utilityData Utility.csv
 ruby -S BC.rb ExampleBuilding.osm Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numMCMC 200 --numBurnin 3  --noRunCal --priorsFile Prior.csv 
-
-
-
-
-
-
-
-
