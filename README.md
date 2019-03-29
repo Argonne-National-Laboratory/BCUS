@@ -11,7 +11,7 @@ The software has been developed in Windows 7 and has been tested on OS-X El Capi
 
 * OpenStudio (>=1.11) with Ruby 2.0 bindings and EnergyPlus
 * Ruby 2.0
-* Ruby Gems: rubyXL
+* Ruby Gems: rubyXL (require nokogiri 1.9.1 or older for Ruby 2.0)
 * R (>=3.1.0)
 * R packages: sensitivity, ggplot2, lhs, car, triangle, gridextra 
 
@@ -33,6 +33,7 @@ a root directory such as C:\OpenStudio_1.1.12*
 	For OSX and Linux users it is recommended that you use the ruby version manager (rvm) 
 
 * Intall the ruby gem rubyXL with the command:   
+	`gem install nokogiri -v 1.9.1`  
 	`gem install rubyXL`
 		
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents  
