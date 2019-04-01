@@ -34,7 +34,7 @@ a root directory such as C:\OpenStudio_1.1.12*
 
 * Intall the ruby gems `rubyXL` and `rinruby` with the command:   
 	`gem install nokogiri -v 1.6.8`  
-	`gem install rubyXL`
+	`gem install rubyXL`  
 	`gem install rinruby`
 		
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents  
