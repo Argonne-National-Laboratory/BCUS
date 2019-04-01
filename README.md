@@ -3,7 +3,7 @@ BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set
 
 Tutorials explaining installation and use of BCUS are found within the tutorials directory
 
-The software has been developed in Windows 7 and has been tested on OS-X El Capitan
+The software has been developed in Windows 10
 
 ## Installation
 
