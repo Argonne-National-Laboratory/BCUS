@@ -46,7 +46,7 @@ This is the main code used for generating random variables using LHS
 # Added seed and verbose to call
 
 
-require_relative 'rinruby'
+require 'rinruby'
 require 'csv'
 
 class LHSGenerator

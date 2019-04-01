@@ -37,7 +37,7 @@ This is the script to install R packages required by BCUS. Using this should ens
 # using this should ensure that rinruby can find the packages because they are installed by it
 # 10-Aug-2015 Ralph Muehleisen
 
-require_relative 'rinruby'
+require 'rinruby'
 R.eval <<EOF
 install.packages("sensitivity")
 install.packages("ggplot2")

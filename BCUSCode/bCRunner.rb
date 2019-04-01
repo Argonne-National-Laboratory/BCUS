@@ -71,7 +71,7 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 # pvals: posterior realizations for parameters and hyperparameters
 #===============================================================%
 
-require_relative 'rinruby'
+require 'rinruby'
 
 module BCRunner
   def BCRunner.runBC(code_path, params_filename, com_filename, field_filename, numOutputVars, numWeatherVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose = false, randseed = 0)

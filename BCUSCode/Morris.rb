@@ -43,7 +43,7 @@ This is the main code used for running morris method
 # Main code used for running morris method
 # Updated code to pass morris_R, morris_levels, and randseed from calling routine 12-Sep-2015 RTM
 
-require_relative 'rinruby'
+require 'rinruby'
 require 'csv'
 
 class Morris
