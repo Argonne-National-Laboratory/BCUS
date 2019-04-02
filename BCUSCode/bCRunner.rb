@@ -85,13 +85,19 @@
 
 require 'rinruby'
 
+# rubocop:disable Lint/UselessAssignment
+R.echo(enabled = false)
+# rubocop:enable Lint/UselessAssignment
+
 # Module to perform Bayesian calibration in R
 module BCRunner
+  # rubocop:disable Metrics/ParameterLists
   def self.run_bc(
     code_path, params_filename, com_filename, field_filename, num_output_vars,
     num_weather_vars, num_mcmc_steps, pvals_filename, posterior_dists_filename,
     verbose = false, randseed = 0
   )
+    # rubocop:enable Metrics/ParameterLists
 
     # R in ruby doesn't allow one to assign boolean values, so we need to
     # kludge the passing

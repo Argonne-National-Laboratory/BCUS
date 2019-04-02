@@ -74,6 +74,10 @@ This is the subfunction called by UbCRunner.rb to
 
 require 'rinruby'
 
+# rubocop:disable Lint/UselessAssignment
+R.echo(enabled = false)
+# rubocop:enable Lint/UselessAssignment
+
 module GraphGenerator
   def GraphGenerator.graphPosteriors(params_filename, pvals_filename, burnin, graphs_output_folder)
 

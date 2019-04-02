@@ -57,7 +57,6 @@ require 'optparse'
 require 'fileutils'
 require 'csv'
 require 'rubyXL'
-require 'rinruby'
 
 require_relative 'run_all_osms'
 require_relative 'Uncertain_Parameters'

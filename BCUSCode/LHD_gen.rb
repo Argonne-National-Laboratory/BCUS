@@ -59,6 +59,10 @@
 require 'rinruby'
 require 'csv'
 
+# rubocop:disable Lint/UselessAssignment
+R.echo(enabled = false)
+# rubocop:enable Lint/UselessAssignment
+
 # Class to generate Latin Hypercube design sample
 class LHSGenerator
   def random_num_generate(

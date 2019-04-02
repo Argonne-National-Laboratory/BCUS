@@ -57,6 +57,10 @@
 require 'rinruby'
 require 'csv'
 
+# rubocop:disable Lint/UselessAssignment
+R.echo(enabled = false)
+# rubocop:enable Lint/UselessAssignment
+
 # Class for performing SA with Morris method
 class Morris
   # Compute the sensitivities for the given model via the Morris method

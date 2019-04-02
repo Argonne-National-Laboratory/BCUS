@@ -47,7 +47,6 @@ require 'fileutils'
 require 'csv'
 require 'optparse'
 require 'rubyXL'
-require 'rinruby'
 require 'openstudio'
 
 # Use require_relative to include ruby functions developed in the project
