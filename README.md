@@ -9,7 +9,7 @@ The software has been developed in Windows 10
 
 #### BCUS has the following dependencies
 
-* OpenStudio (>=1.11) with Ruby 2.0 bindings and EnergyPlus
+* OpenStudio (<=1.14.0) with Ruby 2.0 bindings and EnergyPlus
 * Ruby 2.0
 * Ruby Gems: rubyXL (require nokogiri 1.6.8 or older for Ruby 2.0), rinruby
 * R (>=3.1.0)
@@ -21,7 +21,7 @@ The software has been developed in Windows 10
 Download and install the latest OpenStudio from https://www.openstudio.net/downloads
 
 *To make it easier to reference/access the OpenStudio Path, some users like to install OpenStudio in 
-a root directory such as C:\OpenStudio_1.1.12*
+a root directory such as C:\OpenStudio_1.14.0*
 
 
 
@@ -40,7 +40,7 @@ a root directory such as C:\OpenStudio_1.1.12*
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents  
 `require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
 
-	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\OpenStudio_1.2.0"
+	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\OpenStudio_1.14.0"
 
 
 #### R Install
