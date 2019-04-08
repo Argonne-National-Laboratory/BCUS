@@ -41,7 +41,7 @@ Refer to 'Function Call Structure_Bayesian Calibration.pptx'
 
 # Main code used for setting up files for running Bayesian calibration
 
-require_relative 'rinruby'
+require 'rinruby'
 require 'csv'
 require 'rubyXL'
 require 'optparse'

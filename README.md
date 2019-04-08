@@ -3,15 +3,15 @@ BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set
 
 Tutorials explaining installation and use of BCUS are found within the tutorials directory
 
-The software has been developed in Windows 7 and has been tested on OS-X El Capitan
+The software has been developed in Windows 10 and tested on OS X 10.14
 
 ## Installation
 
 #### BCUS has the following dependencies
 
-* OpenStudio (>=1.11) with Ruby 2.0 bindings and EnergyPlus
+* OpenStudio (<=1.14.0) with Ruby 2.0 bindings and EnergyPlus
 * Ruby 2.0
-* Ruby Gems: rubyXL
+* Ruby Gems: rubyXL (require nokogiri 1.6.8 or older for Ruby 2.0), rinruby
 * R (>=3.1.0)
 * R packages: sensitivity, ggplot2, lhs, car, triangle, gridextra 
 
@@ -21,7 +21,7 @@ The software has been developed in Windows 7 and has been tested on OS-X El Capi
 Download and install the latest OpenStudio from https://www.openstudio.net/downloads
 
 *To make it easier to reference/access the OpenStudio Path, some users like to install OpenStudio in 
-a root directory such as C:\OpenStudio_1.1.12*
+a root directory such as C:\OpenStudio_1.14.0*
 
 
 
@@ -32,13 +32,15 @@ a root directory such as C:\OpenStudio_1.1.12*
 
 	For OSX and Linux users it is recommended that you use the ruby version manager (rvm) 
 
-* Intall the ruby gem rubyXL with the command:   
-	`gem install rubyXL`
+* Intall the ruby gems `rubyXL` and `rinruby` with the command:   
+	`gem install nokogiri -v 1.6.8`  
+	`gem install rubyXL`  
+	`gem install rinruby`
 		
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents  
 `require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
 
-	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\OpenStudio_1.2.0"
+	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\OpenStudio_1.14.0"
 
 
 #### R Install
@@ -63,7 +65,7 @@ __Note: It is recommended that even if you have those R packages listed above in
     *NOTE: In windows, to permanently set the environmental variables you also need to use the setx command*
 
 * Install R packages  
-Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra using the ruby script install_Rpackages.rb.  This script calls the RinRuby included in BCUS to install the R packages in a manner that they are accessible by `rinruby` as needed by BCUS.  To do that, open a command window and type the following command
+Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra using the ruby script install_Rpackages.rb.  This script calls `rinruby` to install the R packages in a manner that they are accessible by `rinruby` as needed by BCUS.  To do that, open a command window and type the following command
 
     `ruby -S install_Rpackages.rb`  (the -S tells ruby to search %RUBYPATH%)
 

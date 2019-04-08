@@ -43,7 +43,7 @@ This is the main code used for running morris method
 # Main code used for running morris method
 # Updated code to pass morris_R, morris_levels, and randseed from calling routine 12-Sep-2015 RTM
 
-require_relative 'rinruby'
+require 'rinruby'
 require 'csv'
 
 class Morris
@@ -173,7 +173,7 @@ table_name<-read.csv(file_name,header = TRUE,fill = TRUE, strip.white = TRUE,str
 a=table_name[1]
 b=t(a)
 library("sensitivity")
-load("#{file_path}/Morris_design")
+load("Morris_design")
 Table <- read.csv(y_file,header=TRUE)
 Y <- data.matrix(Table)
 pdf(sprintf("%s/Sensitivity_Plots.pdf",file_path))
