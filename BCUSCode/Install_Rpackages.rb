@@ -45,17 +45,14 @@
 # This is the script to install R packages required by BCUS. Using this should
 # ensure that rinruby can find the packages because they are installed by it
 
-# script to install R packages required by BCUS
-# using this should ensure that rinruby can find the packages because they are
-# installed by it
 # 10-Aug-2015 Ralph Muehleisen
 
 require 'rinruby'
-R.eval <<-EOF
-        install.packages("sensitivity")
-        install.packages("ggplot2")
-        install.packages("triangle")
-        install.packages("gridExtra")
-        install.packages("lhs")
-        install.packages("car")
-        EOF
+R.eval <<-RCODE
+  install.packages("sensitivity",lib = "../Rlib")
+  install.packages("ggplot2",lib = "../Rlib")
+  install.packages("triangle",lib = "../Rlib")
+  install.packages("gridExtra",lib = "../Rlib")
+  install.packages("lhs",lib = "../Rlib")
+  install.packages("car",lib = "../Rlib")
+RCODE
