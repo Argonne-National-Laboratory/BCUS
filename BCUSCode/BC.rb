@@ -222,10 +222,10 @@ parser = OptionParser.new do |opts|
     options[:numBurnin] = num_burnin
   end
 
-  options[:priorsFile] = 'Parameter Priors.csv'
+  options[:priorsFile] = 'Parameter_Priors.csv'
   opts.on(
     '--priors priorsFile',
-    'Prior uncertainty information file, default "Parameter Priors.csv"'
+    'Prior uncertainty information file, default "Parameter_Priors.csv"'
   ) do |priors_file|
     options[:priorsFile] = priors_file
   end

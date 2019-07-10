@@ -107,7 +107,7 @@ parser = OptionParser.new do |opts|
     options[:noCleanup] = true
   end
 
-  options[:uqRepo] = 'Parameter UQ Repository V1.0.xlsx'
+  options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
   opts.on(
     '-u', '--uqRepo uqRepo',
     'UQ Repository file (default "Parameter UQ Repositorty V1.0.xlsx")'

@@ -134,7 +134,7 @@ parser = OptionParser.new do |opts|
     options[:morrisL] = morris_l
   end
 
-  options[:uqRepo] = 'Parameter UQ Repository V1.0.xlsx'
+  options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
   opts.on(
     '-u', '--uqRepo uqRepo',
     'UQ repository file, default "Parameter UQ Repositorty V1.0.xlsx"'
@@ -142,18 +142,18 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uq_repo
   end
 
-  options[:priorsFile] = 'Parameter Priors.csv'
+  options[:priorsFile] = 'Parameter_Priors.csv'
   opts.on(
     '--priors priorsFile',
-    'Prior uncertainty information file, default "Parameter Priors.csv"'
+    'Prior uncertainty information file, default "Parameter_Priors.csv"'
   ) do |priors_file|
     options[:priorsFile] = priors_file
   end
 
-  options[:utilityData] = 'Utility Data.csv'
+  options[:utilityData] = 'Utility_Data.csv'
   opts.on(
     '--utilityData utilityData',
-    'Utility data file, default "Utility Data.csv"'
+    'Utility data file, default "Utility_Data.csv"'
   ) do |utility_data|
     options[:utilityData] = utility_data
   end
