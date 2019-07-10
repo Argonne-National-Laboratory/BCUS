@@ -93,7 +93,7 @@ class Morris
 
     R.eval('library("sensitivity")')
     R.eval('if (randseed!=0){set.seed(randseed)} else {set.seed(NULL)}')
-    R.eval <<-EOF
+    R.eval <<-RCODE
       design <- morris(
         NULL, #{n_parameters}, #{morris_r}, binf=0.05, bsup=0.95, scale=FALSE,
         design = list(
@@ -101,11 +101,11 @@ class Morris
           grid.jump = #{morris_levels**2 / 2 / (morris_levels - 1)}
         )
       )
-    EOF
+    RCODE
     R.eval('X <- design$X')
-    R.eval <<-EOF
+    R.eval <<-RCODE
       save (design, file="#{output_dir}/Morris_design")
-    EOF
+    RCODE
 
     design_matrix = R.X
     row_index = 0
@@ -196,7 +196,7 @@ class Morris
     R.assign('y_file', response_file)
     R.assign('x_file', design_file)
     R.assign('out_dir', out_dir)
-    R.eval <<-EOF
+    R.eval <<-RCODE
       table_name <- read.csv(
         x_file, header = TRUE, fill = TRUE, strip.white = TRUE,
         stringsAsFactors=TRUE
@@ -218,6 +218,6 @@ class Morris
       plot(design, main = names(Table)[i])
       }
       dev.off()
-    EOF
+    RCODE
   end
 end

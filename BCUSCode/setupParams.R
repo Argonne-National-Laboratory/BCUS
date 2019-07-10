@@ -1,39 +1,42 @@
-#                    Copyright © 2016 , UChicago Argonne, LLC
-#                              All Rights Reserved
-#                               OPEN SOURCE LICENSE
+# Copyright © 2019 , UChicago Argonne, LLC
+# All Rights Reserved
+# OPEN SOURCE LICENSE
 
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 
-# 1. Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.  Software changes, modifications, or 
-# derivative works, should be noted with comments and the author and organization’s name.
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.  Software changes,
+#    modifications, or derivative works, should be noted with comments and the
+#    author and organization's name.
 
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list
-# of conditions and the following disclaimer in the documentation and/or other materials 
-# provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
 
-# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names
-# of its contributors may be used to endorse or promote products derived from this software 
-# without specific prior written permission.
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+#    the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
 
-# 4. The software and the end-user documentation included with the redistribution, if any, 
-# must include the following acknowledgment:
+# 4. The software and the end-user documentation included with the
+#    redistribution, if any, must include the following acknowledgment:
 
-# "This product includes software produced by UChicago Argonne, LLC under Contract 
-# No. DE-AC02-06CH11357 with the Department of Energy.”
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 
-# ******************************************************************************************************
-#                                             DISCLAIMER
+# ******************************************************************************
+# DISCLAIMER
 
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, 
-# LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY 
-# OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, 
-# PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
-# ***************************************************************************************************
+# ******************************************************************************
 
 # Modified Date and By:
 # - Created on Feb 27, 2015 by Matt Riddle from Argonne National Laboratory
@@ -53,8 +56,8 @@
 
 
 #===============================================================%
-#     author: Matt Riddle										%
-#     date: Feb 27, 2015										%
+#     author: Matt Riddle                                       %
+#     date: Feb 27, 2015										                    %
 #===============================================================%
 
 # setupParams: sets up the params data structure used in GASPmcmc
@@ -123,7 +126,15 @@
 #   values, covariance matrix, and stepwidths for MCMC
 
 
-setupParams <- function(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps){
+setupParams <- function(theta_info, com_filename, field_filename,
+                        numYVars, numXVars, numMCMCSteps, verbose) {
+  # library("gridExtra")
+  if (verbose == 1) {
+    message(sprintf("com_filename = %s", com_filename))
+    message(sprintf("field_filename = %s", field_filename))
+  	message(sprintf("numYvars = %s", numYVars))
+  	message(sprintf("numbXvars = %s", numXVars))
+  }
   
   DATACOMP <- read.csv(com_filename, header=FALSE, sep="\t")
   DATACOMP <- as.matrix(DATACOMP)
@@ -139,78 +150,86 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # xf: Design points corresponding to field trials
-  xf <- DATAFIELD[,xInds,drop=FALSE]
+  xf <- DATAFIELD[, xInds, drop=FALSE]
   
   # ADDITION FOR THE USE OF PERIODICITY, DATA SHOULD BE REPARAMETRIZED OF TIME 
   
   # (xc,tc): Design points corresponding to computer trials
   # tc is calibration parameters
-  xc <- DATACOMP[,xInds,drop=FALSE]
-  tc <- DATACOMP[,thetaInds,drop=FALSE]
+  xc <- DATACOMP[, xInds, drop=FALSE]
+  tc <- DATACOMP[, thetaInds, drop=FALSE]
   
   # yf: Response from field experiments
   # yc: Response from computer simulations
-  yf <- DATAFIELD[,yInds,drop=FALSE]
-  yc <- DATACOMP[,yInds,drop=FALSE]
+  yf <- DATAFIELD[, yInds, drop=FALSE]
+  yc <- DATACOMP[, yInds, drop=FALSE]
   
   
   # Obtain dimensions of inputs
   numy <- dim(yf)[2]
-  n <- dim(xf)[1];
-  p <- dim(xf)[2];
-  m <- dim(xc)[1];
-  p <- dim(xc)[2];
-  m <- dim(tc)[1];
-  q <- dim(tc)[2];
-  pq <- p + q;
-  nm <- n + m;
+  n <- dim(xf)[1]
+  p <- dim(xf)[2]
+  m <- dim(xc)[1]
+  p <- dim(xc)[2]
+  m <- dim(tc)[1]
+  q <- dim(tc)[2]
+  pq <- p + q
+  nm <- n + m
   # Standardize full response using mean and std of yc
   y <- rbind(yf, yc)
   ym <- apply(yc, 2, mean)  
   ysd <- apply(yc, 2, sd) 
   
-  ymmat <- matrix(rep(ym, each = nrow(y)), nrow(y),numy)
-  ysdmat <- matrix(rep(ysd, each = nrow(y)), nrow(y),numy)
+  ymmat <- matrix(rep(ym, each = nrow(y)), nrow(y), numy)
+  ysdmat <- matrix(rep(ysd, each = nrow(y)), nrow(y), numy)
 
-  y <- (y-ymmat)/ysdmat
-  #checks:
-  #apply(y[(n+1):nm,], 2, mean) #should be 0s
-  #apply(y[(n+1):nm,], 2, sd)   #should be 1s
+  y <- (y-ymmat) / ysdmat
+  # checks:
+  # apply(y[(n+1):nm,], 2, mean) #should be 0s
+  # apply(y[(n+1):nm,], 2, sd)   #should be 1s
   
   # Put design points xf and xc on [0,1]:
   # Stack together fields design points and computer design 
   # points for standardization
-  xx <- rbind(xf,xc)
+  xx <- rbind(xf, xc)
   xmin = apply(xx, 2, min)
   xmax = apply(xx, 2, max)
-  for (k in 1:p){
-    xf[,k] <- (xf[,k] - xmin[k])/(xmax[k] - xmin[k])
-    xc[,k] <- (xc[,k] - xmin[k])/(xmax[k] - xmin[k])
+  for (k in 1:p) {
+    xf[, k] <- (xf[, k] - xmin[k]) / (xmax[k] - xmin[k])
+    xc[, k] <- (xc[, k] - xmin[k]) / (xmax[k] - xmin[k])
   }
   # Put calibration inputs tc on [0,1]
   # Also transform prior distribution parameters to be on
   # same scale
   
-  #min and max are now values passed in instead of
-  #actual min and max from data 
-  #(original matlab code was: tmin = min(tc); tmax = max(tc);)
-  for(k in 1:q){
+  # min and max are now values passed in instead of actual min and max
+  # from data 
+  # (original matlab code was: tmin = min(tc) tmax = max(tc))
+  for(k in 1:q) {
     tmin <- theta_info[[k]]$min
     tmax <- theta_info[[k]]$max
-    tc[,k] <- (tc[,k] - tmin)/(tmax - tmin)
-    if (theta_info[[k]]$prior$type == "triangular"){
-      theta_info[[k]]$prior$min <- (theta_info[[k]]$prior$min - tmin)/(tmax - tmin)
-      theta_info[[k]]$prior$max <- (theta_info[[k]]$prior$max - tmin)/(tmax - tmin)
-      theta_info[[k]]$prior$mode <- (theta_info[[k]]$prior$mode - tmin)/(tmax - tmin)
-    } else if (theta_info[[k]]$prior$type == "uniform"){
-      theta_info[[k]]$prior$min <- (theta_info[[k]]$prior$min - tmin)/(tmax - tmin)
-      theta_info[[k]]$prior$max <- (theta_info[[k]]$prior$max - tmin)/(tmax - tmin)
-    } else if (theta_info[[k]]$prior$type == "normal"){
-      theta_info[[k]]$prior$mean <- (theta_info[[k]]$prior$mean - tmin)/(tmax - tmin)
-      theta_info[[k]]$prior$stDev <- (theta_info[[k]]$prior$stDev)/(tmax - tmin)      
-    } else if (theta_info[[k]]$prior$type == "lognormal"){
-      theta_info[[k]]$prior$mu <-theta_info[[k]]$prior$mu - log(tmax)  #need to check that this is right
-    } else{
+    tc[,k] <- (tc[,k] - tmin) / (tmax - tmin)
+    if (theta_info[[k]]$prior$type == "triangular") {
+      theta_info[[k]]$prior$min <-
+        (theta_info[[k]]$prior$min - tmin) / (tmax - tmin)
+      theta_info[[k]]$prior$max <-
+        (theta_info[[k]]$prior$max - tmin) / (tmax - tmin)
+      theta_info[[k]]$prior$mode <-
+        (theta_info[[k]]$prior$mode - tmin) / (tmax - tmin)
+    } else if (theta_info[[k]]$prior$type == "uniform") {
+      theta_info[[k]]$prior$min <-
+        (theta_info[[k]]$prior$min - tmin) / (tmax - tmin)
+      theta_info[[k]]$prior$max <-
+        (theta_info[[k]]$prior$max - tmin) / (tmax - tmin)
+    } else if (theta_info[[k]]$prior$type == "normal") {
+      theta_info[[k]]$prior$mean <-
+        (theta_info[[k]]$prior$mean - tmin) / (tmax - tmin)
+      theta_info[[k]]$prior$stDev <-
+        (theta_info[[k]]$prior$stDev) / (tmax - tmin)      
+    } else if (theta_info[[k]]$prior$type == "lognormal") {
+      # need to check that this is right
+      theta_info[[k]]$prior$mu <- theta_info[[k]]$prior$mu - log(tmax)
+    } else {
       cat('distribution type', theta_info[[k]]$prior$type, 'not found')
     }
   }
@@ -224,7 +243,7 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   # SPECIFY INITIAL PARAMETER VALUES HERE !!!!#
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#
   params <- list()
-  params$theta <- matrix(0.5,1,q)
+  params$theta <- matrix(0.5, 1, q)
   
   params$beta_eta <- list()
   params$lambda_eta <- list()
@@ -234,9 +253,9 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   params$lambda_en <- list()
 
   for (i in 1:numy){
-    params$beta_eta[[i]] <- matrix(0.5,pq,1)
+    params$beta_eta[[i]] <- matrix(0.5, pq, 1)
     params$lambda_eta[[i]] <- 1
-    params$beta_b[[i]] <- matrix(0.2,p,1)
+    params$beta_b[[i]] <- matrix(0.2, p, 1)
     params$lambda_b[[i]] <- 10
     params$lambda_e[[i]] <- 1
     params$lambda_en[[i]] <- 300
@@ -245,7 +264,7 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXX#
   # SPECIFY STEP WIDTHS HERE !!!#
   #XXXXXXXXXXXXXXXXXXXXXXXXXXXXX#
-  params$theta_w <- matrix(0.15,q,1)
+  params$theta_w <- matrix(0.15, q, 1)
 
   params$rho_eta_w <- list()
   params$lambda_eta_w <- list()
@@ -255,9 +274,9 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   params$lambda_en_w <- list()
 
   for (i in 1:numy){
-    params$rho_eta_w[[i]] <- matrix(0.15,pq,1) # rho_eta = exp(-beta_eta/4)
+    params$rho_eta_w[[i]] <- matrix(0.15, pq, 1) # rho_eta = exp(-beta_eta/4)
     params$lambda_eta_w[[i]] <- 1
-    params$rho_b_w[[i]] <- matrix(0.15,p,1) # rho_b = exp(-beta_b/4)
+    params$rho_b_w[[i]] <- matrix(0.15, p, 1) # rho_b = exp(-beta_b/4)
     params$lambda_b_w[[i]] <- 5
     params$lambda_e_w[[i]] <- 1
     params$lambda_en_w[[i]] <- 100
@@ -297,15 +316,17 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   params$theta_info <- theta_info
   params$nparms <- q + numy*(pq + p + 4) # number of parameters
   
-  #x has n rows, z has n+m rows (top n are opserved, bottom m are computer)
-  #so covariance matrix for x is nxn and for z is (n+m)x(n+m)
-  #covariance matrix for z can be broken into top left (nxn), top right (nxm)
+  # x has n rows, z has n+m rows (top n are opserved, bottom m are computer)
+  # so covariance matrix for x is nxn and for z is (n+m)x(n+m)
+  # covariance matrix for z can be broken into top left (nxn), top right (nxm)
   # bottom left (mxn) and bottom right (mxm)
-  # the top left and bottom right can be broken into diagonal, off-diagonal upper triangular 
-  # and off-diagonal lower triangular
-  # it is useful to separate it out, because only parts of it need to be recalculated each period
+  # the top left and bottom right can be broken into diagonal, off-diagonal
+  # upper triangular and off-diagonal lower triangular
+  # it is useful to separate it out, because only parts of it need
+  # to be recalculated each period
   
-  #generate indices for x and for off diagonal upper triangular part of the top left and 
+  # generate indices for x and for off diagonal upper triangular part
+  # of the top left and 
   # bottom right and all indices of the top right of z
   # these indices include a row (inds$i) and a column (inds$j) index
   topInds <- 1:params$n
@@ -316,15 +337,16 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
   params$zbrInds <- genODUTInds(bottomInds)
   
   # generate vector versions of the row and column indices generated above
-  # also generate equivalent lower triangular indices by reversing row and column
+  # also generate equivalent lower triangular indices
+  # by reversing row and column
   
-  params$distx_odut <- params$xInds$i + nrow(params$x)*(params$xInds$j-1);  
-  zODUTtlIndsVect <- params$ztlInds$i + nrow(params$z)*(params$ztlInds$j-1);  
-  zODUTtrIndsVect <- params$ztrInds$i + nrow(params$z)*(params$ztrInds$j-1);  
-  zODUTbrIndsVect <- params$zbrInds$i + nrow(params$z)*(params$zbrInds$j-1);  
-  zODLTtlIndsVect <- params$ztlInds$j + nrow(params$z)*(params$ztlInds$i-1);  
-  zODLTblIndsVect <- params$ztrInds$j + nrow(params$z)*(params$ztrInds$i-1);  
-  zODLTbrIndsVect <- params$zbrInds$j + nrow(params$z)*(params$zbrInds$i-1);  
+  params$distx_odut <- params$xInds$i + nrow(params$x) * (params$xInds$j-1)  
+  zODUTtlIndsVect <- params$ztlInds$i + nrow(params$z) * (params$ztlInds$j-1)  
+  zODUTtrIndsVect <- params$ztrInds$i + nrow(params$z) * (params$ztrInds$j-1)  
+  zODUTbrIndsVect <- params$zbrInds$i + nrow(params$z) * (params$zbrInds$j-1)  
+  zODLTtlIndsVect <- params$ztlInds$j + nrow(params$z) * (params$ztlInds$i-1)  
+  zODLTblIndsVect <- params$ztrInds$j + nrow(params$z) * (params$ztrInds$i-1)  
+  zODLTbrIndsVect <- params$zbrInds$j + nrow(params$z) * (params$zbrInds$i-1)  
   #combine indices for different parts of z
   params$distz_odutUT <- c(zODUTtlIndsVect, zODUTtrIndsVect, zODUTbrIndsVect)
   params$distz_odutLT <- c(zODLTtlIndsVect, zODLTblIndsVect, zODLTbrIndsVect)
@@ -334,9 +356,12 @@ setupParams <- function(theta_info, com_filename, field_filename, numYVars, numX
 
   #these calculations are done in gaspmcmc, and shouldn't need to be done here
   #they're only used for their num rows in the ztrInds calc below
-  distztl <- gendist(params$z, params$ztlInds) # distance structure for top left part of z
-  distztr <- gendist(params$z, params$ztrInds) # distance structure for top right part of z
-  distzbr <- gendist(params$z, params$zbrInds) # distance structure for bottom left part of z
+  # distance structure for top left part of z
+  distztl <- gendist(params$z, params$ztlInds)
+  # distance structure for top right part of z
+  distztr <- gendist(params$z, params$ztrInds)
+  # distance structure for bottom left part of z
+  distzbr <- gendist(params$z, params$zbrInds)
 
   #indices of the top right portion of covariance matrix in distz vector
   params$distztrInds <- (nrow(distztl$d)+1):(nrow(distztl$d)+nrow(distztr$d))

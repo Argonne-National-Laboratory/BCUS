@@ -1,45 +1,49 @@
-#                    Copyright © 2016 , UChicago Argonne, LLC
-#                              All Rights Reserved
-#                               OPEN SOURCE LICENSE
+# Copyright © 2019 , UChicago Argonne, LLC
+# All Rights Reserved
+# OPEN SOURCE LICENSE
 
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 
-# 1. Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.  Software changes, modifications, or 
-# derivative works, should be noted with comments and the author and organization’s name.
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.  Software changes,
+#    modifications, or derivative works, should be noted with comments and the
+#    author and organization's name.
 
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list
-# of conditions and the following disclaimer in the documentation and/or other materials 
-# provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
 
-# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names
-# of its contributors may be used to endorse or promote products derived from this software 
-# without specific prior written permission.
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+#    the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
 
-# 4. The software and the end-user documentation included with the redistribution, if any, 
-# must include the following acknowledgment:
+# 4. The software and the end-user documentation included with the
+#    redistribution, if any, must include the following acknowledgment:
 
-# "This product includes software produced by UChicago Argonne, LLC under Contract 
-# No. DE-AC02-06CH11357 with the Department of Energy.”
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 
-# ******************************************************************************************************
-#                                             DISCLAIMER
+# ******************************************************************************
+# DISCLAIMER
 
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, 
-# LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY 
-# OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, 
-# PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
-# ***************************************************************************************************
+# ******************************************************************************
 
 # Modified Date and By:
 # - Created on Feb 27, 2015 by Matt Riddle from Argonne National Laboratory
 
 # 1. Introduction
-# This is the function to generate cholesky factorization of model specific covariance matrix sigma_y
+# This is the function to generate cholesky factorization of model specific
+# covariance matrix sigma_y
 
 # 2. Call structure
 # Refer to 'Function Call Structure_Bayesian Calibration.pptx'
@@ -47,8 +51,8 @@
 
 
 #===============================================================%
-#     author: Matt Riddle										%
-#     date: Feb 27, 2015										%
+#     author: Matt Riddle                                       %
+#     date: Feb 27, 2015										                    %
 #===============================================================%
   
 # GASPCHCOV Function to generate cholesky factorization of model 
@@ -64,7 +68,7 @@
 #==============================================================%
 #                        REQUIRED INPUTS                       %
 #==============================================================%
-# distz.d: distance array corresponding to z = [(xf,theta);(xc,tc)]
+# distz.d: distance array corresponding to z = [(xf,theta)(xc,tc)]
 # adjparams structure containing
 #   beta_eta: dependence strength parameters for eta
 #   lambda_eta: precision parameter for eta
@@ -108,44 +112,47 @@
 
 #===============================================================%
 
-gaspchcov <- function(distz, hyperparams, params, sigma_eta_tri){
+gaspchcov <- function(distz, hyperparams, params, sigma_eta_tri) {
 
-    beta_eta = hyperparams$beta_eta;
-    lambda_eta = hyperparams$lambda_eta;
-    lambda_en = hyperparams$lambda_en;
-    beta_b = hyperparams$beta_b;
-    lambda_b = hyperparams$lambda_b;
-    lambda_e = hyperparams$lambda_e;
-    m = params$m;
-    n = params$n;
-    nm = params$nm;
-    distx = params$distx;
-    distz_odut = params$distz_odutUT;
-    distz_odlt = params$distz_odutLT;
-    distx_odut = params$distx_odut;
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Evaluate (n+m) x (n+m) covariance matrix sigma_eta
-    # triangular covariance matrix has already been calculated as vector - just need to put it
-    # in matrix form
-    sigma_eta = gaspcovFromTri(distz$n, distz_odut, distz_odlt, lambda_eta, sigma_eta_tri);
-    # Evaluate (m x m) covariance matrix sigma_en, in vector form to save calculation time
-    #sigma_en = diag(1/lambda_en, m);
-    sigma_enVec = rep(1/lambda_en, times = m)
-    # Evalute (n x n) covariance matrix sigma_b
-    sigma_b = gaspcov(distx, distx_odut, beta_b, lambda_b);
+  beta_eta = hyperparams$beta_eta
+  lambda_eta = hyperparams$lambda_eta
+  lambda_en = hyperparams$lambda_en
+  beta_b = hyperparams$beta_b
+  lambda_b = hyperparams$lambda_b
+  lambda_e = hyperparams$lambda_e
+  m = params$m
+  n = params$n
+  nm = params$nm
+  distx = params$distx
+  distz_odut = params$distz_odutUT
+  distz_odlt = params$distz_odutLT
+  distx_odut = params$distx_odut
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Evaluate (n+m) x (n+m) covariance matrix sigma_eta
+  # triangular covariance matrix has already been calculated as vector - just
+  # need to put it
+  # in matrix form
+  sigma_eta = gaspcovFromTri(distz$n, distz_odut, distz_odlt,
+                              lambda_eta, sigma_eta_tri)
+  # Evaluate (m x m) covariance matrix sigma_en, in vector form to save
+  # calculation time
+  # sigma_en = diag(1/lambda_en, m)
+  sigma_enVec = rep(1/lambda_en, times=m)
+  # Evalute (n x n) covariance matrix sigma_b
+  sigma_b = gaspcov(distx, distx_odut, beta_b, lambda_b)
 
-    # Evaluate (n x n) covariance matrix sigma_e
-    sigma_e = diag(1/lambda_e, n);
+  # Evaluate (n x n) covariance matrix sigma_e
+  sigma_e = diag(1/lambda_e, n)
 
-    # Evaluate (n+m) x (n+m) covariance matrix sigma_y
-    sigma_y = sigma_eta;
-    sigma_y[1:n,1:n] = sigma_y[1:n,1:n] + sigma_b + sigma_e;
-    #add sigma_en to bottom right diagonal
-    diagIndsBR <- (n+1):nm + nm*(((n+1):nm)-1)
-    sigma_y[diagIndsBR] = sigma_y[diagIndsBR] + sigma_enVec
+  # Evaluate (n+m) x (n+m) covariance matrix sigma_y
+  sigma_y = sigma_eta
+  sigma_y[1:n, 1:n] = sigma_y[1:n, 1:n] + sigma_b + sigma_e
+  # add sigma_en to bottom right diagonal
+  diagIndsBR <- (n+1):nm + nm*(((n+1):nm)-1)
+  sigma_y[diagIndsBR] = sigma_y[diagIndsBR] + sigma_enVec
 
-    # Return Cholesky factorization of covariance matrix sigma_y
-    sigmayCh <- chol(sigma_y);
+  # Return Cholesky factorization of covariance matrix sigma_y
+  sigmayCh <- chol(sigma_y)
 
-    return(sigmayCh)
+  return(sigmayCh)
 }

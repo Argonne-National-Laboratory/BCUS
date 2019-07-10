@@ -73,15 +73,15 @@ class LHSGenerator
     R.assign('numParams', n_parameters)
     R.assign('randseed', randseed) # set the random seed.
 
-    R.eval <<-EOF
-            library("lhs")
-            if (randseed!=0){
-                set.seed(randseed)
-            } else {
-                set.seed(NULL)
-            }
-            lhs <- randomLHS (numRuns,numParams)
-            EOF
+    R.eval <<-RCODE
+      library("lhs")
+      if (randseed!=0){
+          set.seed(randseed)
+      } else {
+          set.seed(NULL)
+      }
+      lhs <- randomLHS (numRuns,numParams)
+    RCODE
     lhs_table = R.lhs.transpose
 
     row_index = 0
@@ -104,49 +104,49 @@ class LHSGenerator
     when /Normal Absolute/
       R.assign('mean', prob_distribution[2])
       R.assign('std', prob_distribution[3])
-      R.eval <<-EOF
-              samples<- qnorm(q,mean,std)
-              EOF
+      R.eval <<-RCODE
+        samples<- qnorm(q,mean,std)
+      RCODE
     when /Normal Relative/
       R.assign('mean', prob_distribution[2] * prob_distribution[0])
       R.assign('std', prob_distribution[3] * prob_distribution[0])
-      R.eval <<-EOF
-              samples<- qnorm(q,mean,std)
-              EOF
+      R.eval <<-RCODE
+        samples<- qnorm(q,mean,std)
+      RCODE
     when /Uniform Absolute/
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
-      R.eval <<-EOF
-              samples<- qunif(q,min,max)
-              EOF
+      R.eval <<-RCODE
+        samples<- qunif(q,min,max)
+      RCODE
     when /Uniform Relative/
       R.assign('min', prob_distribution[4] * prob_distribution[0])
       R.assign('max', prob_distribution[5] * prob_distribution[0])
-      R.eval <<-EOF
-              samples<- qunif(q,min,max)
-              EOF
+      R.eval <<-RCODE
+        samples<- qunif(q,min,max)
+      RCODE
     when /Triangle Absolute/
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
       R.assign('mode', prob_distribution[2])
-      R.eval <<-EOF
-              library("triangle")
-              samples<- qtriangle(q,min,max,mode)
-              EOF
+      R.eval <<-RCODE
+        library("triangle")
+        samples<- qtriangle(q,min,max,mode)
+      RCODE
     when /Triangle Relative/
       R.assign('min', prob_distribution[4] * prob_distribution[0])
       R.assign('max', prob_distribution[5] * prob_distribution[0])
       R.assign('mode', prob_distribution[2] * prob_distribution[0])
-      R.eval <<-EOF
-              library("triangle")
-              samples<- qtriangle(q,min,max,mode)
-              EOF
+      R.eval <<-RCODE
+        library("triangle")
+        samples<- qtriangle(q,min,max,mode)
+      RCODE
     when /LogNormal Absolute/
       R.assign('log_mean', prob_distribution[2])
       R.assign('log_std', prob_distribution[3])
-      R.eval <<-EOF
-              samples<- qlnorm(q,log_mean,log_std)
-              EOF
+      R.eval <<-RCODE
+        samples<- qlnorm(q,log_mean,log_std)
+      RCODE
     else
       R.samples = []
 
