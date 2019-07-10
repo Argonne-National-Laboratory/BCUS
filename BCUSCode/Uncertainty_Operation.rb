@@ -20,8 +20,9 @@
 
 # 4. The software and the end-user documentation included with the
 #    redistribution, if any, must include the following acknowledgment:
-#       "This product includes software produced by UChicago Argonne, LLC under
-#       Contract No. DE-AC02-06CH11357 with the Department of Energy."
+
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 
 # ******************************************************************************
 # DISCLAIMER
@@ -30,10 +31,10 @@
 
 # NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
 # ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
-# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY
-# FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA,
-# APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT
-# INFRINGE PRIVATELY OWNED RIGHTS.
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 # ******************************************************************************
 
@@ -41,8 +42,8 @@
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
 
 # 1. Introduction
-# This is the subfunction called by Uncertain_Parameters to set uncertainty for
-# operational parameters
+# This is the subfunction called by Uncertain_Parameters to set uncertainty
+# for operational parameters
 
 # Class for operational uncertainty
 class OperationUncertainty < OpenStudio::Model::Model
@@ -114,6 +115,7 @@ class OperationUncertainty < OpenStudio::Model::Model
   )
     parameter_types.each_with_index do |type, index|
       next unless type =~ /Lights_WattsPerSpaceFloorArea/
+      # Space type is required entry to define a thermal space
       space_types = model.getSpaceTypes
       space_types.each do |space_type|
         next unless space_type.name.to_s =~ /#{parameter_names[index]}/
@@ -131,6 +133,7 @@ class OperationUncertainty < OpenStudio::Model::Model
   )
     parameter_types.each_with_index do |type, index|
       next unless type =~ /PlugLoad_WattsPerSpaceFloorArea/
+      # Space type is required entry to define a thermal space
       space_types = model.getSpaceTypes
       space_types.each do |space_type|
         next unless space_type.name.to_s =~ /#{parameter_names[index]}/
@@ -149,6 +152,7 @@ class OperationUncertainty < OpenStudio::Model::Model
   )
     parameter_types.each_with_index do |type, index|
       next unless type =~ /People_SpaceFloorAreaPerPerson/
+      # Space type is required entry to define a thermal space
       space_types = model.getSpaceTypes
       space_types.each do |space_type|
         next unless space_type.name.to_s =~ /#{parameter_names[index]}/
