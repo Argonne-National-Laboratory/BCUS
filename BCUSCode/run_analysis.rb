@@ -52,8 +52,7 @@ require 'openstudio'
 
 # Use require_relative to include ruby functions developed in the project
 require_relative 'Uncertain_Parameters'
-require_relative 'LHD_gen'
-require_relative 'morris'
+require_relative 'design_matrix'
 require_relative 'run_all_osms'
 require_relative 'read_simulation_results_sql'
 
@@ -482,9 +481,10 @@ OutPut.read(
 
 # SA post-process
 if run_type == 'SA'
+  max_chars = 60
   morris.compute_sensitivities(
     "#{output_dir}/Simulation_Results_Building_Total_Energy.csv",
-    uq_file_path, output_dir
+    uq_file_path, output_dir, max_chars, verbose
   )
 end
 
