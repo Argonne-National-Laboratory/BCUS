@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -48,6 +48,7 @@
 # 10-Aug-2015 Ralph Muehleisen
 
 require 'rinruby'
+
 R.eval <<-RCODE
   install.packages("sensitivity",lib = "../Rlib")
   install.packages("ggplot2",lib = "../Rlib")

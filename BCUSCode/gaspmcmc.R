@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
