@@ -30,7 +30,7 @@ Modified Date and By:
 - Created on March 2015 by Yuming Sun from Argonne National Laboratory
 
 1. Introduction
-This is the subfunction called by Uncertain_Parameters to generate envelop uncertainty distribution.
+This is the subfunction called by uncertain_parameters to generate envelop uncertainty distribution.
 
 =end
 

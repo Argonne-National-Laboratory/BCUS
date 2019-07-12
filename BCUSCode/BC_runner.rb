@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -59,7 +59,6 @@
 #   1. Convert Ruby parameters into R parameters
 #   2. Call Bayesian Calibration code in R
 
-# CALLED BY: BCRunner.rb
 # CALLS: runmcmc.R
 
 #==============================================================#

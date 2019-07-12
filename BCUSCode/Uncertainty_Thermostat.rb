@@ -30,7 +30,7 @@ Modified Date and By:
 
 
 1. Introduction
-This is the subfunction called by Uncertain_Parameters to set uncertainty for thermostat
+This is the subfunction called by uncertain_parameters to set uncertainty for thermostat
 Thermostat dual setpoint uncertainty works for SI unit only
 
 2. Call structure

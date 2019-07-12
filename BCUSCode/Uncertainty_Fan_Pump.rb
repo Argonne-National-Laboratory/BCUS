@@ -28,7 +28,7 @@ Modified Date and By:
 - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
 
 1. Introduction
-This is the subfunction called by Uncertain_Parameters to generate fan and pump uncertainty distribution.
+This is the subfunction called by uncertain_parameters to generate fan and pump uncertainty distribution.
 This method applies the uncertainty analysis to all the fans and pumps in the loop. It cannot detect single fan on certain loop
 
 =end

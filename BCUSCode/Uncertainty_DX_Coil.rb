@@ -32,7 +32,7 @@ Modified Date and By:
 
 
 1. Introduction
-This is the subfunction called by Uncertain_Parameters to generate DX coil uncertainty distribution.
+This is the subfunction called by uncertain_parameters to generate DX coil uncertainty distribution.
 
 =end
 

@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -42,7 +42,7 @@
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
 
 # 1. Introduction
-# This is the subfunction called by Uncertain_Parameters to set uncertainty
+# This is the subfunction called by uncertain_parameters to set uncertainty
 # for operational parameters
 
 # Class for operational uncertainty
