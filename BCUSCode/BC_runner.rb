@@ -52,7 +52,7 @@
 #     date: Feb 27, 2015                                        %
 #===============================================================%
 
-# run_bc: Function to call Bayesian Calibration code in R
+# run_BC: Function to call Bayesian Calibration code in R
 #
 
 # Use this function to:
@@ -92,10 +92,10 @@ R.echo(enabled = false)
 # Module to perform Bayesian calibration in R
 module BCRunner
   # rubocop:disable Metrics/ParameterLists
-  def self.run_bc(
-    code_path, params_filename, com_filename, field_filename, num_output_vars,
-    num_weather_vars, num_mcmc_steps, pvals_filename, posterior_dists_filename,
-    verbose = false, randseed = 0
+  def self.run_BC(
+    code_path, params_filename, com_filename, field_filename,
+    num_output_vars, num_weather_vars, num_mcmc_steps,
+    pvals_filename, posterior_dists_filename, randseed = 0, verbose = false 
   )
     # rubocop:enable Metrics/ParameterLists
 

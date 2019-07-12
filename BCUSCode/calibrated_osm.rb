@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -43,85 +43,62 @@
 # - Created on Feb 27, 2015 by Yuming Sun and Matt Riddle from Argonne National
 #   Laboratory
 
-# 1. Introduction
-# This is the main code used for setting up files for running Bayesian
-# calibration.
-
-# 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
-
 #===============================================================%
 #     author: Yuming Sun and Matt Riddle                        %
 #     date: Feb 27, 2015                                        %
 #===============================================================%
 
-# Main code used for setting up files for running Bayesian calibration
-
+require 'fileutils'
 require 'openstudio'
-require_relative 'run_all_osms'
-require_relative 'Uncertain_Parameters'
-require_relative 'read_simulation_results_sql'
+
+require_relative 'run_osm'
+require_relative 'uncertain_parameters'
+require_relative 'process_simulation_sqls'
 
 # Class to generate and run calibrated model
 class CalibratedOSM
   def gen_and_sim(
-    osm_model_file, weather_file, prior_file, posterior_file,
-    meter_set_file, calibrated_model_file, calibrated_model_name, run_folder
+    osm_file, weather_file, prior_file, post_file,
+    meter_set_file, cal_model_file, output_folder, verbose
   )
-    posterior = CSV.read(posterior_file, headers: true, converters: :numeric)
-    headers = posterior.headers()
 
-    posterior_average = [0] * headers.length
+    model = OpenStudio::Model::Model.load(osm_file).get
+
+    params = CSV.read(prior_file, headers: true)
+    param_names = params['Object in the model']
+    param_types = params['Parameter Type']
+
+    post = CSV.read(post_file, headers: true, converters: :numeric)
+    headers = post.headers()
+    post_average = [0] * headers.length
     headers.each_with_index do |header, index|
-      posterior_average[index] = average(posterior[header])
+      post_average[index] = average(post[header])
     end
-
-    model = OpenStudio::Model::Model.load(osm_model_file).get
-    parameters = CSV.read(prior_file, headers: true)
-    parameter_names = parameters['Object in the model']
-    parameter_types = parameters['Parameter Type']
 
     uncertainty_parameters = UncertainParameters.new
-    parameter_value = posterior_average
-    uncertainty_parameters.apply(
-      model, parameter_types, parameter_names, parameter_value
+    param_value = post_average
+    uncertainty_parameters.apply(model, param_types, param_names, param_value)
+
+    # Add reporting meters
+    meters_table = read_meters_table(meter_set_file, verbose)
+    add_reporting_meters_to_model(model, meters_table)
+
+    # Add weather variable reporting to model and set its frequency
+    add_output_variable_to_model(
+      model, 'Site Outdoor Air Drybulb Temperature', 'Monthly'
     )
-    workbook = RubyXL::Parser.parse(meter_set_file)
-    meters_table = []
-    meters_table_row = []
-    workbook['Meters'].each do |row|
-      meters_table_row = []
-      row.cells.each { |cell| meters_table_row.push(cell.value) }
-      meters_table.push(meters_table_row)
-    end
-
-    (1..(meters_table.length - 1)).each do |meter_index|
-      meter = OpenStudio::Model::OutputMeter.new(model)
-      meter.setName(meters_table[meter_index][0].to_s)
-      meter.setReportingFrequency(meters_table[meter_index][1].to_s)
-    end
-
-    variable = OpenStudio::Model::OutputVariable.new(
-      'Site Outdoor Air Drybulb Temperature', model
+    add_output_variable_to_model(
+      model, 'Site Ground Reflected Solar Radiation Rate per Area', 'Monthly'
     )
-    variable.setReportingFrequency('Monthly')
-    variable = OpenStudio::Model::OutputVariable.new(
-      'Site Ground Reflected Solar Radiation Rate per Area', model
-    )
-    variable.setReportingFrequency('Monthly')
 
-    model.save(calibrated_model_file, true)
+    model.save(cal_model_file, true)
 
+    sim_dir = File.join(output_folder, 'Cal_Simulations')
     runner = RunOSM.new
-    runner.run_osm(
-      run_folder, weather_file, "#{run_folder}/Simulations"
-    )
+    runner.run_osm(output_folder, weather_file, sim_dir)
 
     # Read Simulation Results
-    sql_file_path =
-      "#{run_folder}/Simulations/#{calibrated_model_name}/run/eplusout.sql"
-    output_folder = run_folder
-    OutPut.read([sql_file_path], meter_set_file, output_folder)
+    OutPut.read(sim_dir, meter_set_file, output_folder)
   end
 end
 

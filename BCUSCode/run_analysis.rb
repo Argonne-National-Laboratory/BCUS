@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -51,35 +51,12 @@ require 'rubyXL'
 require 'openstudio'
 
 # Use require_relative to include ruby functions developed in the project
-require_relative 'Uncertain_Parameters'
-require_relative 'design_matrix'
-require_relative 'run_all_osms'
-require_relative 'read_simulation_results_sql'
-
-# Define prompt to wait for user to enter y or Y to continue for interactive
-def wait_for_y
-  check = 'n'
-  while check != 'y' && check != 'Y'
-    puts 'Please enter "Y" or "y" to continue, "n" or "N" or "CTRL-Z" to quit:'
-    # Read from keyboard, strip leading and trailing spaces and convert to
-    # lowercase
-    check = $stdin.gets.strip.downcase
-    abort if check == 'n'
-  end
-end
-
-def write_to_file(results, filename, verbose = false)
-  File.open(filename, 'w+') do |f|
-    results.each do |results_row|
-      results_row.each do |r|
-        f.write(r)
-        f.write("\t")
-      end
-      f.write("\n")
-    end
-  end
-  puts "Run results have been written to #{filename}" if verbose
-end
+require_relative 'bcus_utils'
+require_relative 'uncertain_parameters'
+require_relative 'LHD'
+require_relative 'Morris'
+require_relative 'run_osm'
+require_relative 'process_simulation_sqls'
 
 # Parse command line inputs from the user
 options = {:osmName => nil, :epwName => nil, :runType => nil}
@@ -87,12 +64,12 @@ parser = OptionParser.new do |opts|
   opts.banner = 'Usage: run_analysis.rb [options]'
 
   # osmName: OpenStudio Model Name in .osm
-  opts.on('--osmName osmName', 'Name of .osm file to run') do |osm_name|
+  opts.on('-o', '--osmName', 'osmName') do |osm_name|
     options[:osmName] = osm_name
   end
 
   # epwName: weather file used to run simulation in .epw
-  opts.on('--epwName epwName', 'Name of .epw weather file to use') do |epw_name|
+  opts.on('-e', '--epw epwName', 'epwName') do |epw_name|
     options[:epwName] = epw_name
   end
 
@@ -103,7 +80,7 @@ parser = OptionParser.new do |opts|
 
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
   opts.on(
-    '-o', '--outFile outFile',
+    '--outFile outFile',
     'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
   ) do |out_file|
     options[:outFile] = out_file
@@ -136,7 +113,7 @@ parser = OptionParser.new do |opts|
   options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
   opts.on(
     '-u', '--uqRepo uqRepo',
-    'UQ repository file, default "Parameter UQ Repositorty V1.0.xlsx"'
+    'UQ repository file, default "Parameter_UQ_Repositorty_V1.0.xlsx"'
   ) do |uq_repo|
     options[:uqRepo] = uq_repo
   end
@@ -180,6 +157,11 @@ parser = OptionParser.new do |opts|
     options[:interactive] = true
   end
 
+  options[:noEP] = false
+  opts.on('--noEP', 'Do not run EnergyPlus') do
+    options[:noEP] = true
+  end
+
   options[:noCleanup] = false
   opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
     options[:noCleanup] = true
@@ -197,188 +179,112 @@ parser = OptionParser.new do |opts|
     exit
   end
 end
+
 parser.parse!
 
 # If the user didn't give the --osmName option, parse the rest of the input
 # arguments for a *.osm
-if options[:osmName].nil?
-  if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep(/.osm/)
-    osm_name = temp[0]
-  else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option ' \
-         'or giving a filename ending with .osm on the command line'
-    abort
-  end
-else # Otherwise the --osmName option was used
-  osm_name = options[:osmName]
-end
+error_msg = 'An OpenStudio OSM file must be indicated by the --osm option ' \
+  'or giving a filename ending with .osm on the command line'
+osm_path = File.absolute_path(parse_argv(options[:osmName], '.osm', error_msg))
 
 # If the user didn't give the --epwName option, parse the rest of the input
 # arguments for a *.epw
-if options[:epwName].nil?
-  if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep(/.epw/)
-    epw_name = temp[0]
-  else
-    puts 'An .epw weather file must be indicated by the --epwNAME option ' \
-         'or giving a filename ending with .epw on the command line'
-    abort
-  end
-else # Otherwise the --epwName option was used
-  epw_name = options[:epwName]
-end
+error_msg = 'An .epw weather file must be indicated by the --epw option ' \
+  'or giving a filename ending with .epw on the command line'
+epw_path = File.absolute_path(parse_argv(options[:epwName], '.epw', error_msg))
 
 # Assign analysis settings
 run_type = options[:runType]
-outfile_name = options[:outFile]
+outspec_path = File.absolute_path(options[:outFile])
+
 num_processes = Integer(options[:numProcesses])
 randseed = Integer(options[:randseed])
 run_interactive = options[:interactive]
+no_ep = options[:noEP]
 skip_cleanup = options[:noCleanup]
 verbose = options[:verbose]
 
+# If we are choosing noEP we also want to skip cleanup even if
+# it hasn't been selected
+skip_cleanup = true if no_ep
+
 case run_type
 when 'UA'
-  uqrepo_name = options[:uqRepo]
+  uqrepo_path = File.absolute_path(options[:uqRepo])
   num_lhd_runs = Integer(options[:numLHD])
+  if verbose
+    puts 'Running uncertainty analysis'
+    puts "Using number of LHD samples  = #{num_lhd_runs}"
+  end
 when 'SA'
-  uqrepo_name = options[:uqRepo]
+  uqrepo_path = File.absolute_path(options[:uqRepo])
   morris_reps = Integer(options[:morrisR])
   morris_levels = Integer(options[:morrisL])
+  if verbose
+    puts 'Running sensitivity analysis'
+    puts "Using morris repetitions = #{morris_reps}"
+    puts "Using morris levels = #{morris_levels}"
+  end
 when 'PreRuns'
+  prior_path = File.absolute_path(options[:priorsFile])
+  utility_path = File.absolute_path(options[:utilityData])
   num_lhd_runs = Integer(options[:numLHD])
-  priors_name = options[:priorsFile]
+  if verbose
+    puts 'Preparing sample of computer models for Bayesian calibration'
+    puts "Using number of LHD samples  = #{num_lhd_runs}"
+  end
 else
   puts 'Unrecognized analysis type'
   abort
 end
 
 if verbose
-  case run_type
-  when 'UA'
-    puts 'Running uncertainty analysis'
-    puts "Using number of LHD samples  = #{num_lhd_runs}"
-  when 'SA'
-    puts 'Running sensitivity analysis'
-    puts "Using morris repetitions = #{morris_reps}"
-    puts "Using morris levels = #{morris_levels}"
-  when 'PreRuns'
-    puts 'Preparing sample of computer models for Bayesian calibration'
-    puts "Using number of LHD samples  = #{num_lhd_runs}"
-  end
   puts "Using number of parallel processes  = #{num_processes}"
   puts "Using random seed = #{randseed}"
   puts 'Not cleaning up interim files' if skip_cleanup
 end
 
-if run_interactive
-  puts 'Running interactively'
-  wait_for_y
-end
+wait_for_y('Running Interactively') if run_interactive
 
 # Extract out just the base filename from the OSM file as the building name
-building_name = File.basename(osm_name, '.osm')
+building_name = File.basename(osm_path, '.osm')
 
 # Check if .osm model exists and if so, load it
-osm_path = File.absolute_path(osm_name)
-if File.exist?(osm_path)
-  model = OpenStudio::Model::Model.load(osm_path).get
-  puts "Using OSM file #{osm_path}" if verbose
-else
-  puts "OpenStudio file #{osm_path} not found!"
-  abort
-end
+model = read_osm_file(osm_path, verbose)
 
-# Check if .epw exists and if so, load it
-epw_path = File.absolute_path(epw_name)
-if File.exist?(epw_path)
-  puts "Using EPW file #{epw_path}" if verbose
-else
-  puts "Weather model #{epw_path} not found!"
-  abort
-end
+# Check if or .epw file exists and if so, load it
+check_epw_file(epw_path, verbose)
 
 # Check if output file exist and if so, load it
-outfile_path = File.absolute_path(outfile_name)
-if File.exist?(outfile_path)
-  puts "Using output settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse(outfile_path)
-  meters_table = []
-  meters_table_row = []
-  workbook['Meters'].each do |row|
-    meters_table_row = []
-    row.cells.each { |cell| meters_table_row.push(cell.value) }
-    meters_table.push(meters_table_row)
-  end
-else
-  puts "#{outfile_path} was NOT found!"
-  abort
-end
+meters_table = read_meters_table(outspec_path, verbose)
 
 ## Main process
 # Acquire the path of the working directory that is the user's project folder
 path = Dir.pwd
-model_dir = "#{path}/#{run_type}_Model"
-sim_dir = "#{path}/#{run_type}_Simulations"
-output_dir = "#{path}/#{run_type}_Output"
+model_dir = File.join(path, "#{run_type}_Model")
+sim_dir = File.join(path, "#{run_type}_Simulations")
+output_dir = File.join(path, "#{run_type}_Output")
 Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
 # Step 1: Generate uncertainty distributions
 puts "\nStep 1: Generating distribution of uncertainty parameters" if verbose
 uncertainty_parameters = UncertainParameters.new
-if run_type == 'PreRuns'
-  # Load prior distribution file
-  prior_file_path = "#{path}/#{priors_name}"
-  prior_path = File.absolute_path(prior_file_path)
-  if File.exist?(prior_path)
-    puts "Using prior distribution file = #{prior_path}" if verbose
-    uq_table_full = CSV.read(prior_file_path).delete_at(0)
-    uq_table = []
-    uq_table_full.each do |uq_parameter|
-      case uq_parameter[0]
-      when /HeatingSetpoint/
-        table_row =
-          %w[ZoneControl ThermostatSettings ThermostatSetpointHeating On]
-        table_row.push(*uq_parameter[3..-1])
-        uq_table.push(table_row)
-      when /CoolingSetpoint/
-        table_row =
-          %w[ZoneControl ThermostatSettings ThermostatSetpointCooling On]
-        table_row.push(*uq_parameter[3..-1])
-        uq_table.push(table_row)
-      end
-    end
-  end
-
-else
+if run_type != 'PreRuns'
   # Load UQ repository file
-  uq_file_path = "#{output_dir}/UQ_#{building_name}.csv"
-  uqrepo_path = File.absolute_path(uqrepo_name)
-  if File.exist?(uqrepo_path)
-    puts "Using UQ repository = #{uqrepo_path}" if verbose
-    workbook = RubyXL::Parser.parse(uqrepo_path)
-    uq_table = []
-    uq_table_row = []
-    workbook['UQ'].each do |row|
-      uq_table_row = []
-      row.cells.each { |cell| uq_table_row.push(cell.value) }
-      uq_table.push(uq_table_row)
-    end
-  else
-    puts "#{uqrepo_path} was NOT found!"
-    abort
-  end
+  uq_path = File.join(output_dir, "UQ_#{building_name}.csv")
+  uq_table = read_uq_table(uqrepo_path, verbose)
   # Remove the header rows
   2.times { uq_table.delete_at(0) }
   # Identify uncertainty parameters in the model
-  uncertainty_parameters.find(model, uq_table, uq_file_path, verbose)
-end
+  uncertainty_parameters.find(model, uq_table, uq_path, verbose)
+  # Check uncertainty information
+  wait_for_y("Check the #{uq_path}") if run_interactive
 
-# Check uncertainty information
-if run_interactive && run_type != 'PreRuns'
-  puts "Check the #{uq_file_path}"
-  wait_for_y
+else
+  # Load prior distribution file
+  uq_table = read_prior_table(prior_path, verbose)
+
 end
 
 # Step 2: Generate design matrix for analysis
@@ -386,105 +292,97 @@ puts "\nStep 2: Generating design Matrix and sample for analysis" if verbose
 case run_type
 when 'UA'
   # Generate LHD sample
-  lhs = LHSGenerator.new
-  lhs.lhd_samples_generator(
-    uq_file_path, num_lhd_runs, output_dir, randseed, verbose
+  lhd = LHD.new
+  lhd.lhd_samples_generator(
+    uq_path, num_lhd_runs, output_dir, randseed, verbose
   )
-  sample_file_name = 'LHD_Sample.csv'
+  sample_filename = 'LHD_Sample.csv'
 when 'SA'
   # Generate Morris design sample
-  morris = Morris.new
-  morris.design_matrix_generator(
-    uq_file_path, morris_reps, morris_levels, output_dir, randseed
+  mor = Morris.new
+  mor.morris_samples_generator(
+    uq_path, morris_reps, morris_levels, output_dir, randseed, verbose
   )
-  sample_file_name = 'Morris_CDF_Tran_Design.csv'
+  sample_filename = 'Morris_CDF_Tran_Design.csv'
 when 'PreRuns'
   # Generate LHD sample
-  lhs = LHSGenerator.new
-  lhs.lhd_samples_generator(
-    prior_file_path, num_lhd_runs, output_dir, randseed, verbose
+  lhd = LHD.new
+  lhd.lhd_samples_generator(
+    prior_path, num_lhd_runs, output_dir, randseed, verbose
   )
-  sample_file_name = 'LHD_Sample.csv'
+  sample_filename = 'LHD_Sample.csv'
 end
 
 # Generate sample of parameters
-samples = CSV.read("#{output_dir}/#{sample_file_name}", headers: true)
-parameter_names = []
-parameter_types = []
+samples = CSV.read(File.join(output_dir, sample_filename), headers: false)
+samples.delete_at(0)
+num_of_runs = samples[0].length - 2
 
-samples.each do |sample|
-  parameter_names << sample[1]
-  parameter_types << sample[0]
-end
+param_names, param_types, param_values = get_param_names_types_values(samples)
 
-# Generate sample of OSMs
-(2..samples[0].length - 1).each do |k|
-  model = OpenStudio::Model::Model.load(osm_path).get
-  parameter_value = []
-  samples.each { |sample| parameter_value << sample[k].to_f }
-  uncertainty_parameters.apply(
-    model, parameter_types, parameter_names, parameter_value
-  )
-
-  # Add reporting meters
-  (1..(meters_table.length - 1)).each do |meter_index|
-    meter = OpenStudio::Model::OutputMeter.new(model)
-    meter.setName(meters_table[meter_index][0].to_s)
-    meter.setReportingFrequency(meters_table[meter_index][1].to_s)
+if no_ep
+  if verbose
+    puts
+    puts '--noEP option selected, skipping creation of OpenStudio files ' \
+      'and running of EnergyPlus'
+    puts
   end
-  variable = OpenStudio::Model::OutputVariable.new(
-    'Site Outdoor Air Drybulb Temperature', model
-  )
-  variable.setReportingFrequency('Monthly')
-  variable = OpenStudio::Model::OutputVariable.new(
-    'Site Ground Reflected Solar Radiation Rate per Area', model
-  )
-  variable.setReportingFrequency('Monthly')
+else
+  puts "Going to run #{num_of_runs} models. This could take a while" if verbose
 
-  # Meters saved to sql file
-  model.save("#{model_dir}/Sample#{k - 1}.osm", true)
+  # Generate sample of OSMs
+  (0..(param_values.length - 1)).each do |k|
+    # Reload the model explicitly to get the same starting point each time
+    model = OpenStudio::Model::Model.load(osm_path).get
+    uncertainty_parameters.apply(
+      model, param_types, param_names, param_values[k]
+    )
 
-  # New edit start from here Yuna add for thermostat algorithm
-  out_file_path_name_thermostat =
-    "#{output_dir}/UQ_#{building_name}_thermostat.csv"
-  model_output_path = "#{model_dir}/Sample#{k - 1}.osm"
-  uncertainty_parameters.thermostat_adjust(
-    model, uq_table, out_file_path_name_thermostat, model_output_path,
-    parameter_types, parameter_value
-  )
+    # Add reporting meters
+    add_reporting_meters_to_model(model, meters_table)
 
-  puts "Sample#{k - 1} is saved to the folder of Models" if verbose
+    # Add weather variable reporting to model and set its frequency
+    add_output_variable_to_model(
+      model, 'Site Outdoor Air Drybulb Temperature', 'Monthly'
+    )
+    add_output_variable_to_model(
+      model, 'Site Ground Reflected Solar Radiation Rate per Area', 'Monthly'
+    )
+
+    # Model saved to osm file
+    model.save(File.join(model_dir, "Sample#{k + 1}.osm"), true)
+
+    # Add for thermostat algorithm
+    uq_path_thermostat = File.join(
+      output_dir, "UQ_#{building_name}_thermostat.csv"
+    )
+    model_output_path = File.join(model_dir, "Sample#{k + 1}.osm")
+    uncertainty_parameters.thermostat_adjust(
+      model, uq_table, uq_path_thermostat, model_output_path,
+      param_types, param_values
+    )
+
+    puts "Sample#{k + 1} is saved to the folder of Models" if verbose
+  end
+
+  # Step 3: Run all OSM simulation files
+  puts "\nStep 3: Running #{num_of_runs} OSM simulations" if verbose
+  wait_for_y if run_interactive
+
+  runner = RunOSM.new
+  runner.run_osm(model_dir, epw_path, sim_dir, num_of_runs, num_processes)
 end
-
-# Step 3: Run all OSM simulation files
-num_runs = samples[0].length - 2
-puts "\nStep 3: Running #{num_runs} OSM simulations" if verbose
-if run_interactive
-  puts "Going to run #{num_runs} models. This could take a while"
-  wait_for_y
-end
-
-runner = RunOSM.new
-runner.run_osm(model_dir, epw_path, sim_dir, num_runs, num_processes)
 
 # Step 4: Read Simulation Results
 puts "\nStep 4: Post-processing and analyzing simulation results" if verbose
-result_paths = []
-(1..num_runs).each do |sample_num|
-  result_paths.push(
-    "#{path}/#{run_type}_Simulations/Sample#{sample_num}/run/eplusout.sql"
-  )
-end
-OutPut.read(
-  result_paths, outfile_path, output_dir, run_type == 'PreRuns', verbose
-)
+OutPut.read(sim_dir, outspec_path, output_dir, run_type == 'PreRuns', verbose)
 
 # SA post-process
 if run_type == 'SA'
   max_chars = 60
-  morris.compute_sensitivities(
-    "#{output_dir}/Simulation_Results_Building_Total_Energy.csv",
-    uq_file_path, output_dir, max_chars, verbose
+  mor.compute_sensitivities(
+    File.join(output_dir, 'Simulation_Results_Building_Total_Energy.csv'),
+    uq_path, output_dir, max_chars, verbose
   )
 end
 
@@ -505,94 +403,37 @@ unless skip_cleanup
       ]
     end
   to_be_cleaned.each do |file|
-    clean_path = "#{output_dir}/#{file}"
+    clean_path = File.join(output_dir, file)
     File.delete(clean_path) if File.exist?(clean_path)
   end
 end
 
 ## Prepare calibration input files
 # y_sim, monthly drybuld and solar horizontal, calibration parameter samples....
+
 if run_type == 'PreRuns'
-  y_sim = []
-  if File.exist?("#{output_dir}/Meter_Electricity_Facility.csv")
-    y_elec_table = CSV.read(
-      "#{output_dir}/Meter_Electricity_Facility.csv", headers: false
-    )
-    y_elec_table.delete_at(0)
-    y_elec_table.each do |run|
-      run.each do |data|
-        y_sim << data.to_f
-      end
-    end
-  end
 
-  if File.exist?("#{output_dir}/Meter_Gas_Facility.csv")
-    y_gas_table = CSV.read(
-      "#{output_dir}/Meter_Gas_Facility.csv", headers: false
-    )
-    y_gas_table.delete_at(0)
-    row = 0
-    y_gas_table.each do |run|
-      run.each do |data|
-        y_sim[row] = [y_sim[row], data.to_f]
-        row += 1
-      end
-    end
-  end
+  y_elec_path = File.join(output_dir, 'Meter_Electricity_Facility.csv')
+  y_gas_path = File.join(output_dir, 'Meter_Gas_Facility.csv')
+  cal_sim_path = File.join(output_dir, 'cal_sim_runs.txt')
+  cal_field_path = File.join(output_dir, 'cal_utility_data.txt')
+  monthly_weather_path = File.join(output_dir, 'Monthly_Weather.csv')
 
-  weather_table = CSV.read("#{output_dir}/Monthly_Weather.csv", headers: false)
-  weather_table.delete_at(0)
-  weather_table = weather_table.transpose
-  monthly_temp = weather_table[0]
-  monthly_solar = weather_table[1]
+  monthly_temp, monthly_solar = read_monthly_weather_file(monthly_weather_path)
 
-  cal_parameter_samples_table = CSV.read(
-    "#{output_dir}/LHD_Sample.csv", headers: false
+  y_sim = get_y_sim(y_elec_path, y_gas_path)
+  y_length = get_table_length(y_elec_path)
+
+  cal_data_com = get_cal_data_com(
+    y_sim, y_length, samples, monthly_temp, monthly_solar
   )
-  cal_parameter_samples_table.delete_at(0)
-  cal_parameter_samples_table = cal_parameter_samples_table.transpose
-  cal_parameter_samples_table.delete_at(0)
-  cal_parameter_samples_table.delete_at(0)
+  write_to_file(cal_data_com, cal_sim_path, verbose)
 
-  cal_parameter_samples = []
-  cal_parameter_samples_table.each do |run|
-    12.times { cal_parameter_samples << run } # Monthly
-  end
-
-  cal_data_com = []
-  y_sim.each_with_index do |y, index|
-    cal_data_com << (
-      y + [monthly_temp[index]] +
-        [monthly_solar[index]] +
-        cal_parameter_samples[index]
-    )
-  end
-
-  write_to_file(cal_data_com, "#{output_dir}/cal_sim_runs.txt", verbose)
-  FileUtils.cp("#{output_dir}/cal_sim_runs.txt", "#{path}/cal_sim_runs.txt")
-
-  utility_file = options[:utilityData]
-
-  # Read in the utility meter data
-  y_meter = CSV.read("#{path}/#{utility_file}", headers: false)
-  y_meter.delete_at(0)
-  y_meter = y_meter.transpose
-  y_meter.delete_at(0)
-  y_meter = y_meter.transpose
-  puts "#{y_meter.length} months of data read from #{utility_file}" if verbose
-
-  # Generate the cal_data_field as a table with columns of y_meter, monthly
-  # drybulb, monthly solar horizontal
-  cal_data_field = []
-  y_meter.each_with_index do |y, index|
-    cal_data_field << y + [monthly_temp[index]] + [monthly_solar[index]]
-  end
-
-  puts "cal_data_field length = #{cal_data_field.length}" if verbose
-  write_to_file(cal_data_field, "#{output_dir}/cal_utility_data.txt")
-  FileUtils.cp(
-    "#{output_dir}/cal_utility_data.txt", "#{path}/cal_utility_data.txt"
+  cal_data_field = get_cal_data_field(
+    utility_path, monthly_temp, monthly_solar, verbose
   )
+  write_to_file(cal_data_field, cal_field_path, verbose)
+
 end
 
 puts "\n#{run_type} completed successfully!"

@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -58,7 +58,7 @@
 # distributions and graphing results
 #
 
-# CALLS: bCRunner.rb, graphGenerator.rb
+# CALLS: BC_runner.rb, graph_generator.rb
 
 #==============================================================#
 #                        REQUIRED INPUTS                       #
@@ -133,26 +133,13 @@ require 'optparse'
 require 'openstudio'
 
 # Load in our own libraries
-require_relative 'graphGenerator'
-require_relative 'BCRunner'
-require_relative 'run_all_osms'
-require_relative 'Uncertain_Parameters'
-require_relative 'read_simulation_results_sql'
-
-def average(one_d_array)
-  sum = 0.0
-  n = one_d_array.length
-  one_d_array.each do |val|
-    begin
-      Float(val)
-    rescue StandardError
-      n -= 1
-    else
-      sum += val
-    end
-  end
-  return sum / n
-end
+require_relative 'uncertain_parameters'
+require_relative 'BC_runner'
+require_relative 'run_osm'
+require_relative 'process_simulation_sqls'
+require_relative 'graph_generator'
+require_relative 'calibrated_osm'
+require_relative 'bcus_utils'
 
 # Parse commandline inputs from the user
 options = {:osmName => nil, :epwName => nil}
@@ -160,12 +147,12 @@ parser = OptionParser.new do |opts|
   opts.banner = 'Usage: Bayesian_Calibration.rb [options]'
 
   # osmName: OpenStudio Model Name in .osm
-  opts.on('--osmName osmName', 'Name of .osm file to run') do |osm_name|
+  opts.on('-o', '--osmName',  'osmName') do |osm_name|
     options[:osmName] = osm_name
   end
 
   # epwName: weather file used to run simulation in .epw
-  opts.on('--epwName epwName', 'Name of .epw weather file to use') do |epw_name|
+  opts.on('-e', '--epwName', 'epwName') do |epw_name|
     options[:epwName] = epw_name
   end
 
@@ -230,10 +217,10 @@ parser = OptionParser.new do |opts|
     options[:priorsFile] = priors_file
   end
 
-  options[:postsFile] = 'Parameter Posteriors.csv'
+  options[:postsFile] = 'Parameter_Posteriors.csv'
   opts.on(
     '--postsFile postsFile',
-    'Filename of posterior distributions (default = "Parameter Posteriors.csv")'
+    'Filename of posterior distributions (default = "Parameter_Posteriors.csv")'
   ) do |posts_file|
     options[:postsFile] = posts_file
   end
@@ -263,6 +250,16 @@ parser = OptionParser.new do |opts|
     options[:noCleanup] = true
   end
 
+  options[:noEP] = false
+  opts.on('--noEP', 'Do not run EnergyPlus') do
+    options[:noeEP] = true
+  end
+
+  options[:noplots] = false
+  opts.on('--noPlots', 'Do not produce any PDF plots') do
+    options[:noplots] = true
+  end
+
   options[:verbose] = false
   opts.on(
     '-v', '--verbose', 'Run in verbose mode with more output info printed'
@@ -279,41 +276,26 @@ parser.parse!
 
 # If the user didn't give the --osmName option, parse the rest of the input
 # arguments for a *.osm
-if options[:osmName].nil?
-  if ARGV.grep(/.osm/).any?
-    temp = ARGV.grep(/.osm/)
-    osm_name = temp[0]
-  else
-    puts 'An OpenStudio OSM file must be indicated by the --osmNAME option ' \
-         'or giving a filename ending with .osm on the command line'
-    abort
-  end
-else # Otherwise the --osmName option was used
-  osm_name = options[:osmName]
-end
+error_msg = 'An OpenStudio OSM file must be indicated by the --osm option ' \
+  'or giving a filename ending with .osm on the command line'
+osm_path = File.absolute_path(parse_argv(options[:osmName], '.osm', error_msg))
 
 # If the user didn't give the --epwName option, parse the rest of the input
 # arguments for a *.epw
-if options[:epwName].nil?
-  if ARGV.grep(/.epw/).any?
-    temp = ARGV.grep(/.epw/)
-    epw_name = temp[0]
-  else
-    puts 'An .epw weather file must be indicated by the --epwNAME option ' \
-         'or giving a filename ending with .epw on the command line'
-    abort
-  end
-else # Otherwise the --epwName option was used
-  epw_name = options[:epwName]
-end
+error_msg = 'An .epw weather file must be indicated by the --epw option ' \
+  'or giving a filename ending with .epw on the command line'
+epw_path = File.absolute_path(parse_argv(options[:epwName], '.epw', error_msg))
+
 
 # Assign analysis settings
-priors_name = options[:priorsFile]
-cal_data_com_name = options[:comFile]
-cal_data_field_name = options[:fieldFile]
+priors_path = File.absolute_path(options[:priorsFile])
+outspec_path = File.absolute_path(options[:outFile])
+
+com_name = options[:comFile]
+field_name = options[:fieldFile]
 posts_name = options[:postsFile]
 pvals_name = options[:pvalsFile]
-outfile_name = options[:outFile]
+
 num_mcmc = Integer(options[:numMCMC])
 num_out_vars = Integer(options[:numOutVars])
 num_w_vars = Integer(options[:numWVars])
@@ -321,6 +303,7 @@ num_burnin = Integer(options[:numBurnin])
 randseed = Integer(options[:randseed])
 no_run_cal = options[:noRunCal]
 skip_cleanup = options[:noCleanup]
+no_plots = options[:noplots]
 verbose = options[:verbose]
 
 if verbose
@@ -334,42 +317,13 @@ if verbose
 end
 
 # Extract out just the base filename from the OSM file as the building name
-building_name = File.basename(osm_name, '.osm')
+building_name = File.basename(osm_path, '.osm')
 
 # Check if .osm model exists and if so, load it
-osm_path = File.absolute_path(osm_name)
-if File.exist?(osm_path)
-  puts "Using OSM file #{osm_path}" if verbose
-else
-  puts "OpenStudio file #{osm_path} not found!"
-  abort
-end
+model = read_osm_file(osm_path, verbose)
 
-# Check if .epw exists and if so, load it
-epw_path = File.absolute_path(epw_name)
-if File.exist?(epw_path)
-  puts "Using EPW file #{epw_path}" if verbose
-else
-  puts "Weather model #{epw_path} not found!"
-  abort
-end
-
-# Check if output file exist and if so, load it
-outfile_path = File.absolute_path(outfile_name)
-if File.exist?(outfile_path)
-  puts "Using output settings = #{outfile_path}" if verbose
-  workbook = RubyXL::Parser.parse(outfile_path)
-  meters_table = []
-  meters_table_row = []
-  workbook['Meters'].each do |row|
-    meters_table_row = []
-    row.cells.each { |cell| meters_table_row.push(cell.value) }
-    meters_table.push(meters_table_row)
-  end
-else
-  puts "#{outfile_path} was NOT found!"
-  abort
-end
+# Check if or .epw file exists and if so, load it 
+check_epw_file(epw_path, verbose)
 
 if verbose
   puts "Generating posterior values file = #{posts_name}"
@@ -398,46 +352,26 @@ end
 
 # Acquire the path of the working directory that is the user's project folder
 path = Dir.pwd
-cal_output_path = "#{path}/Calibration_Output/"
-posts_path = "#{cal_output_path}/#{posts_name}"
-pvals_filename = "#{cal_output_path}/#{pvals_name}"
-graphs_output_folder = "#{cal_output_path}/"
-Dir.mkdir(cal_output_path) unless Dir.exist?(cal_output_path)
+prerun_dir = File.join(path, 'PreRuns_Output')
+output_dir = File.join(path, 'Calibration_Output')
+com_path = File.join(prerun_dir, com_name)
+field_path = File.join(prerun_dir, field_name)
+posts_path = File.join(output_dir, posts_name)
+pvals_path = File.join(output_dir, pvals_name)
+graphs_dir = output_dir
+Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
-# Check if priors file exists
-priors_path = File.absolute_path(priors_name)
-if File.exist?(priors_path)
-  puts "Using priors csv file #{priors_path}" if verbose
-else
-  puts "Priors file #{priors_path} not found!"
-  abort
-end
-
-# Check if COM file exists
-cal_data_com_path = File.absolute_path(cal_data_com_name)
-if File.exist?(cal_data_com_path)
-  puts "Using simulation output file = #{cal_data_com_path}" if verbose
-else
-  puts "com.txt file #{cal_data_com_path} not found!"
-  abort
-end
-
-# Check if FIELD file exists
-cal_data_field_path = File.absolute_path(cal_data_field_name)
-if File.exist?(cal_data_field_path)
-  puts "Using utility data file = #{cal_data_field_path}" if verbose
-else
-  puts "field.txt file #{cal_data_field_path} not found!"
-  abort
-end
+check_file_exist(priors_path, 'Priors CSV File', verbose)
+check_file_exist(com_path, 'Computer Simulation File', verbose)
+check_file_exist(field_path, 'Utility Data File', verbose)
 
 # Perform Bayesian calibration
 code_path = ENV['BCUSCODE']
 puts "Using code path = #{code_path}\n\r" if verbose
-BCRunner.run_bc(
-  code_path, priors_path, cal_data_com_path, cal_data_field_path,
+BCRunner.run_BC(
+  code_path, priors_path, com_path, field_path,
   num_out_vars, num_w_vars, num_mcmc,
-  pvals_filename, posts_path, verbose, randseed
+  pvals_path, posts_path, verbose, randseed
 )
 
 if num_burnin >= num_mcmc
@@ -448,69 +382,25 @@ end
 
 puts 'Generating posterior distribution plots' if verbose
 # Could pass in graph file names too
-GraphGenerator.graphPosteriors(
-  priors_path, pvals_filename, num_burnin, graphs_output_folder
-)
+unless no_plots
+  GraphGenerator.graphPosteriors(
+    priors_path, pvals_path, num_burnin, graphs_dir, verbose
+  )
+end
 
 # Run calibrated model
 unless no_run_cal
   puts "\nGenerate and run calibrated model" if verbose
 
-  cal_model_folder = "#{path}/Calibrated_Model"
-  cal_model_name = "Calibrated_#{building_name}"
+  cal_model_dir = File.join(path, 'Calibrated_Model')
+  cal_model_path = File.join(cal_model_dir, "Calibrated_#{building_name}.osm")
 
-  # Generate calibrated osm
-  model = OpenStudio::Model::Model.load(osm_path).get
-  parameters = CSV.read(priors_path, headers: true)
-  parameter_names = parameters['Object in the model']
-  parameter_types = parameters['Parameter Type']
-
-  posterior = CSV.read(posts_path, headers: true, converters: :numeric)
-  headers = posterior.headers()
-  posterior_average = [0] * headers.length
-  headers.each_with_index do |header, index|
-    posterior_average[index] = average(posterior[header])
-  end
-
-  uncertainty_parameters = UncertainParameters.new
-  parameter_value = posterior_average
-  uncertainty_parameters.apply(
-    model, parameter_types, parameter_names, parameter_value
+  cal_osm = CalibratedOSM.new
+  cal_osm.gen_and_sim(
+    osm_path, epw_path, priors_path, posts_path,
+    outspec_path, cal_model_path, cal_model_dir, verbose
   )
-  workbook = RubyXL::Parser.parse(outfile_path)
-  meters_table = []
-  meters_table_row = []
-  workbook['Meters'].each do |row|
-    meters_table_row = []
-    row.cells.each { |cell| meters_table_row.push(cell.value) }
-    meters_table.push(meters_table_row)
-  end
 
-  # Add reporting meters
-  (1..(meters_table.length - 1)).each do |meter_index|
-    meter = OpenStudio::Model::OutputMeter.new(model)
-    meter.setName(meters_table[meter_index][0].to_s)
-    meter.setReportingFrequency(meters_table[meter_index][1].to_s)
-  end
-  variable = OpenStudio::Model::OutputVariable.new(
-    'Site Outdoor Air Drybulb Temperature', model
-  )
-  variable.setReportingFrequency('Monthly')
-  variable = OpenStudio::Model::OutputVariable.new(
-    'Site Ground Reflected Solar Radiation Rate per Area', model
-  )
-  variable.setReportingFrequency('Monthly')
-
-  model.save("#{cal_model_folder}/#{cal_model_name}.osm", true)
-
-  runner = RunOSM.new
-  runner.run_osm(cal_model_folder, epw_path, "#{cal_model_folder}/Simulations")
-
-  # Read Simulation Results
-  sql_file_path =
-    "#{cal_model_folder}/Simulations/#{cal_model_name}/run/eplusout.sql"
-  output_folder = cal_model_folder
-  OutPut.read([sql_file_path], outfile_path, output_folder)
 end
 
 puts 'BC.rb Completed Successfully!'
