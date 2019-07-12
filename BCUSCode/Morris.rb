@@ -1,4 +1,4 @@
-# Copyright © 2019 , UChicago Argonne, LLC
+# Copyright © 2019, UChicago Argonne, LLC
 # All Rights Reserved
 # OPEN SOURCE LICENSE
 
@@ -57,134 +57,14 @@
 # 10-Aug-2015 Ralph Muehleisen
 # Added seed and verbose to call
 
-# 08-Apr-2017 Ralph Muehleisen
-# combined LHS_gen.rb and Morris.rb into one .rb file and pulled cdf_inverse
-# out of each Class and into a common def to eliminate identical code in two
-# classes
-
 require 'rinruby'
 require 'csv'
+
+require_relative 'bcus_utils'
 
 # rubocop:disable Lint/UselessAssignment
 R.echo(enabled = false)
 # rubocop:enable Lint/UselessAssignment
-
-def cdf_inverse(lhs_random_num, prob_distribution)
-  R.assign('q', lhs_random_num)
-  case prob_distribution[1]
-  when /Normal Absolute/
-    R.assign('mean', prob_distribution[2])
-    R.assign('std', prob_distribution[3])
-    R.eval 'samples <- qnorm(q, mean, std)'
-
-  when /Normal Relative/
-    R.assign('mean', prob_distribution[2] * prob_distribution[0])
-    R.assign('std', prob_distribution[3] * prob_distribution[0])
-    R.eval 'samples <- qnorm(q, mean, std)'
-
-  when /Uniform Absolute/
-    R.assign('min', prob_distribution[4])
-    R.assign('max', prob_distribution[5])
-    R.eval 'samples <- qunif(q, min, max)'
-
-  when /Uniform Relative/
-    R.assign('min', prob_distribution[4] * prob_distribution[0])
-    R.assign('max', prob_distribution[5] * prob_distribution[0])
-    R.eval 'samples <- qunif(q, min, max)'
-
-  when /Triangle Absolute/
-    R.assign('min', prob_distribution[4])
-    R.assign('max', prob_distribution[5])
-    R.assign('mode', prob_distribution[2])
-    R.eval 'library("triangle")'
-    R.eval 'samples <- qtriangle(q, min, max, mode)'
-
-  when /Triangle Relative/
-    R.assign('min', prob_distribution[4] * prob_distribution[0])
-    R.assign('max', prob_distribution[5] * prob_distribution[0])
-    R.assign('mode', prob_distribution[2] * prob_distribution[0])
-    R.eval 'library("triangle")'
-    R.eval 'samples <- qtriangle(q, min, max, mode)'
-
-  when /LogNormal Absolute/
-    R.assign('log_mean', prob_distribution[2])
-    R.assign('log_std', prob_distribution[3])
-    R.eval 'samples <- qlnorm(q, log_mean, log_std)'
-  else
-    R.samples = []
-  end
-  return R.samples
-end # cdf_inverse
-
-# Class to generate Latin Hypercube design sample
-class LHSGenerator
-  def random_num_generate(
-    n_runs, n_parameters, output_dir, randseed = 0, verbose = false
-  )
-    R.assign('numRuns', n_runs)
-    R.assign('numParams', n_parameters)
-    R.assign('randseed', randseed) # set the random seed.
-
-    R.eval <<-RCODE
-      library("lhs")
-      if (randseed!=0) {
-          set.seed(randseed)
-      } else {
-          set.seed(NULL)
-      }
-      lhs <- randomLHS(numRuns, numParams)
-    RCODE
-    lhs_table = R.lhs.transpose
-
-    row_index = 0
-    CSV.open("#{output_dir}/Random_LHD_Samples.csv", 'wb') do |csv|
-      (0..lhs_table.row_count).each do |row_index|
-        csv << lhs_table.row(row_index).to_a
-      end
-    end
-    if verbose
-      puts "Random_LHD_Samples.csv with the size of #{lhs_table.row_count} "\
-        "rows and #{lhs_table.column_count} columns is generated"
-    end
-    return lhs_table
-  end
-
-  def lhd_samples_generator(
-    uqtable_file_path, n_runs, output_dir, randseed = 0, verbose = false
-  )
-    table = CSV.read(uqtable_file_path.to_s)
-    n_parameters = table.count - 1 # the first row is the header
-    lhs_random_table = random_num_generate(
-      n_runs, n_parameters, output_dir, randseed, verbose
-    )
-    row_index = 0
-    CSV.open("#{output_dir}/LHD_Sample.csv", 'wb') do |csv|
-      header = table[0].to_a[0, 2]
-      (1..n_runs).each { |sample_index| header << "Run #{sample_index}" }
-      csv << header
-      CSV.foreach(
-        uqtable_file_path.to_s, headers: true, converters: :numeric
-      ) do |parameter|
-        prob_distribution = [
-          parameter['Parameter Base Value'],
-          parameter['Distribution'],
-          parameter['Mean or Mode'],
-          parameter['Std Dev'],
-          parameter['Min'],
-          parameter['Max']
-        ]
-        q = lhs_random_table.row(row_index).to_a
-        csv << (
-          table[row_index + 1].to_a[0, 2] + cdf_inverse(q, prob_distribution)
-        )
-        row_index += 1
-      end
-    end
-    return unless verbose # using guard clause as per ruby style guide
-    puts 'LHD_Sample.csv has been generated and saved!' if verbose
-    puts "It includes #{n_runs} simulation runs" if verbose
-  end
-end
 
 # Class for performing SA with Morris method
 class Morris
@@ -208,7 +88,7 @@ class Morris
   # => [1.0, 10.0]
   #
 
-  def design_matrix_generator(
+  def morris_samples_generator(
     file_name, morris_r, morris_levels, output_dir,
     randseed = 0, verbose = false
   )
@@ -238,7 +118,7 @@ class Morris
     RCODE
 
     design_matrix = R.X
-    CSV.open("#{output_dir}/Morris_0_1_Design.csv", 'wb') do |csv|
+    CSV.open(File.join(output_dir, 'Morris_0_1_Design.csv'), 'wb') do |csv|
       (0..design_matrix.row_count).each do |row_index|
         csv << design_matrix.row(row_index).to_a
       end
@@ -246,7 +126,7 @@ class Morris
 
     # CDF transform
     row_index = 0
-    CSV.open("#{output_dir}/Morris_CDF_Tran_Design.csv", 'wb') do |csv|
+    CSV.open(File.join(output_dir, 'Morris_CDF_Tran_Design.csv'), 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..design_matrix.row_count).each do |sample_index|
         header << "Run #{sample_index}"
