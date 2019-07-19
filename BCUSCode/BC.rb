@@ -371,7 +371,7 @@ puts "Using code path = #{code_path}\n\r" if verbose
 BCRunner.run_BC(
   code_path, priors_path, com_path, field_path,
   num_out_vars, num_w_vars, num_mcmc,
-  pvals_path, posts_path, verbose, randseed
+  pvals_path, posts_path, randseed, verbose
 )
 
 if num_burnin >= num_mcmc
