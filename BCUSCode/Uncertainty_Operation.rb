@@ -110,7 +110,7 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def lights_watts_per_area_method(
+  def lights_watts_per_area_set(
     model, parameter_types, parameter_names, parameter_value
   )
     parameter_types.each_with_index do |type, index|
@@ -128,7 +128,7 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def plugload_watts_per_area_method(
+  def plugload_watts_per_area_set(
     model, parameter_types, parameter_names, parameter_value
   )
     parameter_types.each_with_index do |type, index|
@@ -147,7 +147,7 @@ class OperationUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def people_area_per_person_method(
+  def people_area_per_person_set(
     model, parameter_types, parameter_names, parameter_value
   )
     parameter_types.each_with_index do |type, index|

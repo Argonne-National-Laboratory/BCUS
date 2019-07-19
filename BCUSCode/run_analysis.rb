@@ -357,9 +357,9 @@ else
       output_dir, "UQ_#{building_name}_thermostat.csv"
     )
     model_output_path = File.join(model_dir, "Sample#{k + 1}.osm")
-    uncertainty_parameters.thermostat_adjust(
+    uncertainty_parameters.apply_thermostat(
       model, uq_table, uq_path_thermostat, model_output_path,
-      param_types, param_values
+      param_types, param_values[k]
     )
 
     puts "Sample#{k + 1} is saved to the folder of Models" if verbose

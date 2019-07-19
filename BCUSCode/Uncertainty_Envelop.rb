@@ -49,53 +49,50 @@
 
 class EnvelopUncertainty < OpenStudio::Model::Model
 
-  attr_reader :std_material_name
-  attr_reader :std_material_conductivity
-  attr_reader :std_material_density
-  attr_reader :std_material_specificHeat
-  attr_reader :std_material_solarAbsorptance
-  attr_reader :std_material_thermalAbsorptance
-  attr_reader :std_material_visibleAbsorptance
-  attr_reader :std_glazing_material_name
-  attr_reader :std_glazing_conductivity
-  attr_reader :std_glazing_thermalResistance
-  attr_reader :std_glazing_solarTransmittance
-  attr_reader :std_glazing_frontSideSolarReflectanceatNormalIncidence 
-  attr_reader :std_glazing_backSideSolarReflectanceatNormalIncidence 
-  attr_reader :std_glazing_infraredTransmittance
-  attr_reader :std_glazing_visibleTransmittanceatNormalIncidence
-  attr_reader :std_glazing_frontSideVisibleReflectanceatNormalIncidence
-  attr_reader :std_glazing_backSideVisibleReflectanceatNormalIncidence
-  attr_reader :std_glazing_frontSideInfraredHemisphericalEmissivity
-  attr_reader :std_glazing_backSideInfraredHemisphericalEmissivity
-  attr_reader :std_glazing_dirtCorrectionFactorforSolarandVisibleTransmittance
-
+  attr_reader :std_mat_name
+  attr_reader :std_mat_conductivity
+  attr_reader :std_mat_density
+  attr_reader :std_mat_specificHeat
+  attr_reader :std_mat_solarAbsorptance
+  attr_reader :std_mat_thermalAbsorptance
+  attr_reader :std_mat_visibleAbsorptance
+  attr_reader :std_glz_name
+  attr_reader :std_glz_conductivity
+  attr_reader :std_glz_thermalResistance
+  attr_reader :std_glz_solarTransmittance
+  attr_reader :std_glz_front_solarReflectance
+  attr_reader :std_glz_back_solarReflectance
+  attr_reader :std_glz_infraredTransmittance
+  attr_reader :std_glz_visibleTransmittance
+  attr_reader :std_glz_front_visibleReflectance
+  attr_reader :std_glz_back_visibleReflectance
+  attr_reader :std_glz_front_infraredEmissivity
+  attr_reader :std_glz_back_infraredEmissivity
+  attr_reader :std_glz_dirtCorrectionFactor
 
   def initialize
-    @std_material_name = Array.new
-    @std_material_conductivity = Array.new
-    @std_material_density = Array.new
-    @std_material_specificHeat = Array.new
-    @std_material_solarAbsorptance = Array.new
-    @std_material_thermalAbsorptance = Array.new
-    @std_material_visibleAbsorptance = Array.new
-    @std_glazing_material_name = Array.new
-    @std_glazing_conductivity = Array.new
-    @std_glazing_thermalResistance = Array.new
-    @std_glazing_solarTransmittance = Array.new
-    @std_glazing_frontSideSolarReflectanceatNormalIncidence = Array.new
-    @std_glazing_backSideSolarReflectanceatNormalIncidence = Array.new
-    @std_glazing_infraredTransmittance = Array.new
-    @std_glazing_visibleTransmittanceatNormalIncidence = Array.new
-    @std_glazing_frontSideVisibleReflectanceatNormalIncidence = Array.new
-    @std_glazing_backSideVisibleReflectanceatNormalIncidence = Array.new
-    @std_glazing_frontSideInfraredHemisphericalEmissivity = Array.new
-    @std_glazing_backSideInfraredHemisphericalEmissivity = Array.new
-    @std_glazing_dirtCorrectionFactorforSolarandVisibleTransmittance = Array.new
-    @surface_constructions = Array.new
-    @sub_surface_constructions = Array.new
-
-
+    @std_mat_name = []
+    @std_mat_conductivity = []
+    @std_mat_density = []
+    @std_mat_specificHeat = []
+    @std_mat_solarAbsorptance = []
+    @std_mat_thermalAbsorptance = []
+    @std_mat_visibleAbsorptance = []
+    @std_glz_name = []
+    @std_glz_conductivity = []
+    @std_glz_thermalResistance = []
+    @std_glz_solarTransmittance = []
+    @std_glz_front_solarReflectance = []
+    @std_glz_back_solarReflectance = []
+    @std_glz_infraredTransmittance = []
+    @std_glz_visibleTransmittance = []
+    @std_glz_front_visibleReflectance = []
+    @std_glz_back_visibleReflectance = []
+    @std_glz_front_infraredEmissivity = []
+    @std_glz_back_infraredEmissivity = []
+    @std_glz_dirtCorrectionFactor = []
+    @surface_constructions = []
+    @sub_surface_constructions = []
   end
 
   def material_find(model)
@@ -104,24 +101,42 @@ class EnvelopUncertainty < OpenStudio::Model::Model
       construction = surface.construction.get
       @surface_constructions << construction.to_Construction.get
     end
-    # find name and property for standard opaque material
+
+    # Find name and property for standard opaque material
     @surface_constructions.each do |surface_construction|
       construction_layers = surface_construction.layers
       construction_layers.each do |construction_layer|
         unless construction_layer.to_StandardOpaqueMaterial.empty?
-          unless @std_material_name.include?(construction_layer.to_StandardOpaqueMaterial.get.name.to_s)
-            @std_material_name << construction_layer.to_StandardOpaqueMaterial.get.name.to_s
-            @std_material_conductivity << construction_layer.to_StandardOpaqueMaterial.get.thermalConductivity
-            @std_material_density << construction_layer.to_StandardOpaqueMaterial.get.density
-            @std_material_specificHeat << construction_layer.to_StandardOpaqueMaterial.get.specificHeat
-            @std_material_solarAbsorptance << construction_layer.to_StandardOpaqueMaterial.get.solarAbsorptance
-            @std_material_thermalAbsorptance << construction_layer.to_StandardOpaqueMaterial.get.thermalAbsorptance
-            @std_material_visibleAbsorptance << construction_layer.to_StandardOpaqueMaterial.get.visibleAbsorptance
+          unless @std_mat_name.include?(
+            construction_layer.to_StandardOpaqueMaterial.get.name.to_s
+          )
+            @std_mat_name <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.name.to_s
+            @std_mat_conductivity <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.thermalConductivity
+            @std_mat_density <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.density
+            @std_mat_specificHeat <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.specificHeat
+            @std_mat_solarAbsorptance <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.solarAbsorptance
+            @std_mat_thermalAbsorptance <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.thermalAbsorptance
+            @std_mat_visibleAbsorptance <<
+              construction_layer.to_StandardOpaqueMaterial
+              .get.visibleAbsorptance
           end
         end
       end
     end
-    # find name and property for glazing material
+
+    # Find name and property for glazing material
     sub_surfaces = model.getSubSurfaces
     sub_surfaces.each do |sub_surface|
       construction = sub_surface.construction.get
@@ -131,20 +146,48 @@ class EnvelopUncertainty < OpenStudio::Model::Model
       unless sub_surface_construction.layers.empty?
         sub_surface_construction.layers.each do |construction_layer|
           unless construction_layer.to_StandardGlazing.empty?
-            unless @std_glazing_material_name.include?(construction_layer.to_StandardGlazing.get.name.to_s)
-              @std_glazing_material_name << construction_layer.to_StandardGlazing.get.name.to_s
-              @std_glazing_conductivity << construction_layer.to_StandardGlazing.get.thermalConductivity
-              @std_glazing_thermalResistance << construction_layer.to_StandardGlazing.get.thermalResistance
-              @std_glazing_solarTransmittance << construction_layer.to_StandardGlazing.get.solarTransmittance
-              @std_glazing_frontSideSolarReflectanceatNormalIncidence << construction_layer.to_StandardGlazing.get.frontSideSolarReflectanceatNormalIncidence
-              @std_glazing_backSideSolarReflectanceatNormalIncidence << construction_layer.to_StandardGlazing.get.backSideSolarReflectanceatNormalIncidence
-              @std_glazing_infraredTransmittance << construction_layer.to_StandardGlazing.get.infraredTransmittance
-              @std_glazing_visibleTransmittanceatNormalIncidence << construction_layer.to_StandardGlazing.get.infraredTransmittance
-              @std_glazing_frontSideVisibleReflectanceatNormalIncidence << construction_layer.to_StandardGlazing.get.frontSideVisibleReflectanceatNormalIncidence
-              @std_glazing_backSideVisibleReflectanceatNormalIncidence << construction_layer.to_StandardGlazing.get.backSideVisibleReflectanceatNormalIncidence
-              @std_glazing_frontSideInfraredHemisphericalEmissivity << construction_layer.to_StandardGlazing.get.frontSideInfraredHemisphericalEmissivity
-              @std_glazing_backSideInfraredHemisphericalEmissivity << construction_layer.to_StandardGlazing.get.backSideInfraredHemisphericalEmissivity
-              @std_glazing_dirtCorrectionFactorforSolarandVisibleTransmittance << construction_layer.to_StandardGlazing.get.dirtCorrectionFactorforSolarandVisibleTransmittance
+            unless @std_glz_name.include?(
+              construction_layer.to_StandardGlazing.get.name.to_s
+            )
+              @std_glz_name <<
+                construction_layer.to_StandardGlazing
+                .get.name.to_s
+              @std_glz_conductivity <<
+                construction_layer.to_StandardGlazing
+                .get.thermalConductivity
+              @std_glz_thermalResistance <<
+                construction_layer.to_StandardGlazing
+                .get.thermalResistance
+              @std_glz_solarTransmittance <<
+                construction_layer.to_StandardGlazing
+                .get.solarTransmittance
+              @std_glz_front_solarReflectance <<
+                construction_layer.to_StandardGlazing
+                .get.frontSideSolarReflectanceatNormalIncidence
+              @std_glz_back_solarReflectance <<
+                construction_layer.to_StandardGlazing
+                .get.backSideSolarReflectanceatNormalIncidence
+              @std_glz_infraredTransmittance <<
+                construction_layer.to_StandardGlazing
+                .get.infraredTransmittance
+              @std_glz_visibleTransmittance <<
+                construction_layer.to_StandardGlazing
+                .get.infraredTransmittance
+              @std_glz_front_visibleReflectance <<
+                construction_layer.to_StandardGlazing
+                .get.frontSideVisibleReflectanceatNormalIncidence
+              @std_glz_back_visibleReflectance <<
+                construction_layer.to_StandardGlazing
+                .get.backSideVisibleReflectanceatNormalIncidence
+              @std_glz_front_infraredEmissivity <<
+                construction_layer.to_StandardGlazing
+                .get.frontSideInfraredHemisphericalEmissivity
+              @std_glz_back_infraredEmissivity <<
+                construction_layer.to_StandardGlazing
+                .get.backSideInfraredHemisphericalEmissivity
+              @std_glz_dirtCorrectionFactor <<
+                construction_layer.to_StandardGlazing
+                .get.dirtCorrectionFactorforSolarandVisibleTransmittance
             end
           end
         end
@@ -152,7 +195,7 @@ class EnvelopUncertainty < OpenStudio::Model::Model
     end
   end
 
-  def material_set(model, parameter_types, parameter_names, parameter_value)
+  def material_set(model, param_types, param_names, param_values)
     materials_changed = []
     surface_constructions = []
     surfaces = model.getSurfaces
@@ -163,31 +206,38 @@ class EnvelopUncertainty < OpenStudio::Model::Model
     surface_constructions.each do |surface_construction|
       surface_construction.layers.each do |construction_layer|
         unless construction_layer.to_StandardOpaqueMaterial.empty?
-          standard_opaque_material = construction_layer.to_StandardOpaqueMaterial.get
-          parameter_types.each_with_index do |type, index|
-            unless materials_changed.include?(type + standard_opaque_material.name.to_s)
-              if parameter_names[index]== standard_opaque_material.name.to_s
-                case type
+          standard_opaque_material =
+            construction_layer.to_StandardOpaqueMaterial.get
+          param_types.each_with_index do |type, index|
+            unless materials_changed.include?(
+              type + standard_opaque_material.name.to_s
+            )
+              if param_names[index]== standard_opaque_material.name.to_s
+                param_set =
+                  case type
                   when /Conductivity/
-                    standard_opaque_material.setThermalConductivity(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setThermalConductivity'
                   when /Density/
-                    standard_opaque_material.setDensity(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setDensity'
                   when /SpecificHeat/
-                    standard_opaque_material.setSpecificHeat(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setSpecificHeat'
                   when /SolarAbsorptance/
-                    standard_opaque_material.setSolarAbsorptance(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setSolarAbsorptance'
                   when /ThermalAbsorptance/
-                    standard_opaque_material.setThermalAbsorptance(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setThermalAbsorptance'
                   when /VisibleAbsorptance/
-                    standard_opaque_material.setVisibleAbsorptance(parameter_value[index])
-                    materials_changed << type + standard_opaque_material.name.to_s
+                    'setVisibleAbsorptance'
+                  else
+                    nil
+                  end
+                unless param_set.nil?
+                  standard_opaque_material.send(
+                    param_set.to_sym, param_values[index]
+                  )
+                  materials_changed <<
+                    type + standard_opaque_material.name.to_s
+                  break
                 end
-                break
               end
             end
           end
@@ -206,48 +256,48 @@ class EnvelopUncertainty < OpenStudio::Model::Model
       construction_layers.each do |construction_layer|
         unless construction_layer.to_StandardGlazing.empty?
           standard_glazing_material = construction_layer.to_StandardGlazing.get
-          parameter_types.each_with_index do |type, index|
-            unless materials_changed.include?(type + standard_glazing_material.name.to_s)
-              if parameter_names[index] == standard_glazing_material.name.to_s
-                case type
+          param_types.each_with_index do |type, index|
+            unless materials_changed.include?(
+              type + standard_glazing_material.name.to_s
+            )
+              if param_names[index] == standard_glazing_material.name.to_s
+                param_set =
+                  case type
                   when /Conductivity/
-                    standard_glazing_material.setThermalConductivity(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setThermalConductivity'
                   when /ThermalResistance/
-                    standard_glazing_material.setThermalResistance(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setThermalResistance'
                   when /SolarTransmittance/
-                    standard_glazing_material.setSolarTransmittance(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setSolarTransmittance'
                   when /FrontSideSolarReflectance/
-                    standard_glazing_material.setFrontSideSolarReflectanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setFrontSideSolarReflectanceatNormalIncidence'
                   when /BackSideSolarReflectance/
-                    standard_glazing_material.setBackSideSolarReflectanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setBackSideSolarReflectanceatNormalIncidence'
                   when /InfraredTransmittance/
-                    standard_glazing_material.setInfraredTransmittance(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setInfraredTransmittance'
                   when /VisibleTransmittance/
-                    standard_glazing_material.setVisibleTransmittanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setVisibleTransmittanceatNormalIncidence'
                   when /FrontSideVisibleReflectance/
-                    standard_glazing_material.setFrontSideVisibleReflectanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setFrontSideVisibleReflectanceatNormalIncidence'
                   when /BackSideVisibleReflectance/
-                    standard_glazing_material.setBackSideVisibleReflectanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setBackSideVisibleReflectanceatNormalIncidence'
                   when /FrontSideInfraredHemisphericalEmissivity/
-                    standard_glazing_material.setFrontSideVisibleReflectanceatNormalIncidence(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setFrontSideVisibleReflectanceatNormalIncidence'
                   when /BackSideInfraredHemisphericalEmissivity/
-                    standard_glazing_material.setBackSideInfraredHemisphericalEmissivity(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setBackSideInfraredHemisphericalEmissivity'
                   when /DirtCorrectionFactor/
-                    standard_glazing_material.setDirtCorrectionFactorforSolarandVisibleTransmittance(parameter_value[index])
-                    materials_changed << type + standard_glazing_material.name.to_s
+                    'setDirtCorrectionFactorforSolarandVisibleTransmittance'
+                  else
+                    nil
+                  end
+                unless param_set.nil?
+                  standard_glazing_material.send(
+                    param_set.to_sym, param_values[index]
+                  )
+                  materials_changed <<
+                    type + standard_glazing_material.name.to_s
+                  break
                 end
-                break
               end
             end
           end
@@ -257,24 +307,32 @@ class EnvelopUncertainty < OpenStudio::Model::Model
   end
 
   # Infiltration object is unique at building level
-  def infiltration_flow_per_ext_surface_method(model, parameter_types, parameter_names, parameter_value)
-    parameter_types.each_with_index do |type, index|
-      if parameter_names[index] =~ /FlowPerExteriorArea/
+  def infiltration_flow_per_ext_surface_set(
+    model, param_types, param_names, param_values
+  )
+    param_types.each_with_index do |type, index|
+      if param_names[index] =~ /FlowPerExteriorArea/
         case type
-          when /Infiltration/
-            space_infiltration_objects = model.getSpaceInfiltrationDesignFlowRates
-            space_infiltration_objects.each do |space_infiltration_object|
-              space_infiltration_object.remove
+        when /Infiltration/
+          space_infiltration_objects =
+            model.getSpaceInfiltrationDesignFlowRates
+          space_infiltration_objects.each do |space_infiltration_object|
+            space_infiltration_object.remove
+          end
+          # Loop through spacetypes used in the model adding
+          # space infiltration objects
+          # Space type is required entry to define a thermal space
+          space_types = model.getSpaceTypes
+          space_types.each do |space_type|
+            if space_type.spaces.size > 0
+              new_space_type_infil =
+                OpenStudio::Model::SpaceInfiltrationDesignFlowRate.new(model)
+              new_space_type_infil.setSpaceType(space_type)
+              new_space_type_infil.setFlowperExteriorSurfaceArea(
+                param_values[index]
+              )
             end
-            #loop through spacetypes used in the model adding space infiltration objects
-            space_types = model.getSpaceTypes # Space type is required entry to define a thermal space
-            space_types.each do |space_type|
-              if space_type.spaces.size > 0
-                new_space_type_infil = OpenStudio::Model::SpaceInfiltrationDesignFlowRate.new(model)
-                new_space_type_infil.setSpaceType(space_type)
-                new_space_type_infil.setFlowperExteriorSurfaceArea(parameter_value[index])
-              end
-            end
+          end
         end
       end
     end

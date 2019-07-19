@@ -49,127 +49,112 @@
 
 
 class DXCoilUncertainty
-  attr_reader :dx_Coil_SingleSpeed_name
-  attr_reader :dx_Coil_SingleSpeed_rated_COP
-  attr_reader :dx_Coil_SingleSpeed_rated_Total_Cooling_Capacity
-  attr_reader :dx_Coil_SingleSpeed_rated_Sensible_Heat_Ratio
-  attr_reader :dx_Coil_SingleSpeed_rated_Air_Flow_Rate
-  attr_reader :dx_Coil_TwoSpeed_name
-  attr_reader :dx_Coil_TwoSpeed_rated_High_Speed_COP
-  attr_reader :dx_Coil_TwoSpeed_rated_Low_Speed_COP
+  attr_reader :DX_coil_single_speed_name
+  attr_reader :DX_coil_single_speed_COP
+  attr_reader :DX_coil_single_speed_totalCapacity
+  attr_reader :DX_coil_single_speed_sensibleHeatRatio
+  attr_reader :DX_coil_single_speed_airFlowRate
+  attr_reader :DX_coil_two_speed_name
+  attr_reader :DX_coil_two_speed_highCOP
+  attr_reader :DX_coil_two_speed_lowCOP
 
   def initialize
-    @dx_Coil_SingleSpeed_name = Array.new
-    @dx_Coil_SingleSpeed_rated_COP = Array.new
-    @dx_Coil_SingleSpeed_rated_Total_Cooling_Capacity = Array.new
-    @dx_Coil_SingleSpeed_rated_Sensible_Heat_Ratio = Array.new
-    @dx_Coil_SingleSpeed_rated_Air_Flow_Rate = Array.new
-    @dx_Coil_TwoSpeed_name = Array.new
-    @dx_Coil_TwoSpeed_rated_High_Speed_COP = Array.new
-    @dx_Coil_TwoSpeed_rated_Low_Speed_COP = Array.new
+    @DX_coil_single_speed_name = []
+    @DX_coil_single_speed_COP = []
+    @DX_coil_single_speed_totalCapacity = []
+    @DX_coil_single_speed_sensibleHeatRatio = []
+    @DX_coil_single_speed_airFlowRate = []
+    @DX_coil_two_speed_name = []
+    @DX_coil_two_speed_highCOP = []
+    @DX_coil_two_speed_lowCOP = []
   end
 
-  def dx_Coil_SingleSpeed_find(model)
-    # loop through the air loop to find the dx coil
+  def DX_coil_single_speed_find(model)
+    # Loop through the air loop to find the DX coil
     air_loops = model.getAirLoopHVACs
     air_loops.each do |air_loop|
       supply_components = air_loop.supplyComponents
       supply_components.each do |supply_component|
-        #find DX cooiling coil single speed in the airloop
-        hVACComponent = supply_component.to_CoilCoolingDXSingleSpeed
-        unless hVACComponent.empty?
-          hVACComponent = hVACComponent.get
-          @dx_Coil_SingleSpeed_name << hVACComponent.name.to_s
-          if hVACComponent.ratedCOP.to_f > 0
-            @dx_Coil_SingleSpeed_rated_COP << hVACComponent.ratedCOP.to_f
+        # Find DX cooiling coil single speed in the airloop
+        component = supply_component.to_CoilCoolingDXSingleSpeed
+        unless component.empty?
+          component = component.get
+          @DX_coil_single_speed_name << component.name.to_s
+          if component.ratedCOP.to_f > 0
+            @DX_coil_single_speed_COP << component.ratedCOP.to_f
           end
-          if hVACComponent.ratedTotalCoolingCapacity.to_f > 0
-            @dx_Coil_SingleSpeed_rated_Total_Cooling_Capacity <<
-              hVACComponent.ratedTotalCoolingCapacity.to_f
+          if component.ratedTotalCoolingCapacity.to_f > 0
+            @DX_coil_single_speed_totalCapacity <<
+              component.ratedTotalCoolingCapacity.to_f
           end
-          if hVACComponent.ratedSensibleHeatRatio.to_f > 0
-            @dx_Coil_SingleSpeed_rated_Sensible_Heat_Ratio <<
-              hVACComponent.ratedSensibleHeatRatio.to_f
+          if component.ratedSensibleHeatRatio.to_f > 0
+            @DX_coil_single_speed_sensibleHeatRatio <<
+              component.ratedSensibleHeatRatio.to_f
           end
-          if hVACComponent.ratedAirFlowRate.to_f > 0
-            @dx_Coil_SingleSpeed_rated_Air_Flow_Rate <<
-              hVACComponent.ratedAirFlowRate.to_f
+          if component.ratedAirFlowRate.to_f > 0
+            @DX_coil_single_speed_airFlowRate <<
+              component.ratedAirFlowRate.to_f
           end
         end
       end
     end
   end
 
-  def dx_Coil_TwoSpeed_find(model)
-    # loop through the air loop to find the dx coil
+  def DX_coil_two_speed_find(model)
+    # Loop through the air loop to find the DX coil
     air_loops = model.getAirLoopHVACs
     air_loops.each do |air_loop|
       supply_components = air_loop.supplyComponents
       supply_components.each do |supply_component|
-        #find DX cooiling coil Two speed in the air loop
-        hVACComponent = supply_component.to_CoilCoolingDXTwoSpeed
-        unless hVACComponent.empty?
-          hVACComponent = hVACComponent.get
-          @dx_Coil_TwoSpeed_name << hVACComponent.name.to_s
-          if hVACComponent.ratedHighSpeedCOP.to_f > 0
-            @dx_Coil_TwoSpeed_rated_High_Speed_COP <<
-              hVACComponent.ratedHighSpeedCOP.to_f
+        # Find DX cooiling coil two speed in the air loop
+        component = supply_component.to_CoilCoolingDXTwoSpeed
+        unless component.empty?
+          component = component.get
+          @DX_coil_two_speed_name << component.name.to_s
+          if component.ratedHighSpeedCOP.to_f > 0
+            @DX_coil_two_speed_highCOP << component.ratedHighSpeedCOP.to_f
           end
-          if hVACComponent.ratedLowSpeedCOP.to_f > 0
-            @dx_Coil_TwoSpeed_rated_Low_Speed_COP <<
-              hVACComponent.ratedLowSpeedCOP.to_f
+          if component.ratedLowSpeedCOP.to_f > 0
+            @DX_coil_two_speed_lowCOP << component.ratedLowSpeedCOP.to_f
           end
         end
       end
     end
   end
 
-  def dx_Coil_SingleSpeed_method(
-    model, parameter_types, parameter_names, parameter_value
-  )
-    parameter_types.each_with_index do |type, index|
-      if type =~ /DXCoolingCoilSingleSpeedRatedTotalCapacity/
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXSingleSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXSingleSpeed
-              hVACComponent = hVACComponent.get
-              hVACComponent.setRatedTotalCoolingCapacity(
-                parameter_value[index]
-              )
-            end
-          end
+  def DX_coil_single_speed_set(model, param_types, param_names, param_values)
+    self.DX_coil_set(model, param_types, param_names, param_values)
+  end
+
+  def DX_coil_two_speed_set(model, param_types, param_names, param_values)
+    self.DX_coil_set(model, param_types, param_names, param_values)
+  end
+
+  def DX_coil_set(model, param_types, _param_names, param_values)
+    param_types.each_with_index do |type, index|
+      param_get, param_set =
+        case type
+        when /DXCoolingCoilSingleSpeedRatedTotalCapacity/
+          ['to_CoilCoolingDXSingleSpeed', 'setRatedTotalCoolingCapacity']
+        when /DXCoolingCoilSingleSpeedRatedSenisbleHeatRatio/
+          ['to_CoilCoolingDXSingleSpeed', 'setRatedSensibleHeatRatio']
+        when /DXCoolingCoilSingleSpeedRatedCOP/
+          ['to_CoilCoolingDXSingleSpeed', 'setRatedCOP']
+        when /DXCoolingCoilSingleSpeedRatedAirFlowRate/
+          ['to_CoilCoolingDXSingleSpeed', 'setRatedAirFlowRate']
+        when /DXCoolingCoilTwoSpeedRatedHighSpeedCOP/
+          ['to_CoilCoolingDXTwoSpeed', 'setRatedHighSpeedCOP']
+        when /DXCoolingCoilTwoSpeedRatedLowSpeedCOP/
+          ['to_CoilCoolingDXTwoSpeed', 'setRatedLowSpeedCOP']
+        else
+          [nil, nil]
         end
-      elsif type =~ /DXCoolingCoilSingleSpeedRatedSenisbleHeatRatio/
+      unless param_get.nil?
         model.getAirLoopHVACs.each do |air_loop|
           air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXSingleSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXSingleSpeed
-              hVACComponent = hVACComponent.get
-              hVACComponent.setRatedSensibleHeatRatio(parameter_value[index])
-            end
-          end
-        end
-      elsif type =~ /DXCoolingCoilSingleSpeedRatedCOP/
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXSingleSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXSingleSpeed
-              hVACComponent = hVACComponent.get
-              optionalDoubleCOP = OpenStudio::OptionalDouble.new(
-                parameter_value[index]
-              )
-              hVACComponent.setRatedCOP(optionalDoubleCOP)
-            end
-          end
-        end
-      elsif type =~ /DXCoolingCoilSingleSpeedRatedAirFlowRate/
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXSingleSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXSingleSpeed
-              hVACComponent = hVACComponent.get
-              hVACComponent.setRatedAirFlowRate(parameter_value[index])
+            unless supply_component.send(param_get.to_sym).empty?
+              component = supply_component.send(param_get.to_sym).get
+              component.send(param_set.to_sym, param_values[index])
             end
           end
         end
@@ -177,35 +162,5 @@ class DXCoilUncertainty
     end
   end
 
-  def dx_Coil_TwoSpeed_method(
-    model, parameter_types, parameter_names, parameter_value
-  )
-    parameter_types.each_with_index do |type, index|
-      if type =~ /DXCoolingCoilTwoSpeedRatedHighSpeedCOP/
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXTwoSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXTwoSpeed
-              hVACComponent = hVACComponent.get
-              hVACComponent.setRatedHighSpeedCOP(parameter_value[index])
-            end
-          end
-        end
-      elsif type =~ /DXCoolingCoilTwoSpeedRatedLowSpeedCOP/
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_CoilCoolingDXTwoSpeed.empty?
-              hVACComponent = supply_component.to_CoilCoolingDXTwoSpeed
-              hVACComponent = hVACComponent.get
-              hVACComponent.setRatedLowSpeedCOP(parameter_value[index])
-            end
-          end
-        end
-      end
-    end
-  end
 end 
-
-
-
  

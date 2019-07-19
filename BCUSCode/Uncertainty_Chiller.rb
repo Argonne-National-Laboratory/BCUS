@@ -50,36 +50,35 @@
 
 class ChillerUncertainty < OpenStudio::Model::Model
   attr_reader :chiller_name
-  attr_reader :chiller_Reference_COP
+  attr_reader :chiller_ref_COPs
 
   def initialize
-    @chiller_name = Array.new
-    @chiller_Reference_COP =Array.new
+    @chiller_name = []
+    @chiller_ref_COPs =[]
   end
 
   def chiller_find(model)
-    #loop through to find water boiler
+    # Loop through to find chiller
     model.getLoops.each do |loop|
       loop.supplyComponents.each do |supply_component|
         unless supply_component.to_ChillerElectricEIR.empty?
           chiller = supply_component.to_ChillerElectricEIR.get
           @chiller_name << chiller.name.to_s
-          @chiller_Reference_COP << chiller.referenceCOP.to_f
+          @chiller_ref_COPs << chiller.referenceCOP.to_f
         end
       end
     end
   end
 
-  # find thermal efficiency for boiler
-  def chiller_method(model, parameter_types, parameter_names, parameter_value)
-    parameter_types.each_with_index do |type, index|
+  # Set chiller COP
+  def chiller_set(model, param_types, param_names, param_values)
+    param_types.each_with_index do |type, index|
       if type =~ /ChillerElectricEIRReferenceCOP/
         model.getLoops.each do |loop|
           loop.supplyComponents.each do |supply_component|
             unless supply_component.to_ChillerElectricEIR.empty?
               chiller = supply_component.to_ChillerElectricEIR.get
-              chiller.setReferenceCOP(parameter_value[index])
-
+              chiller.setReferenceCOP(param_values[index])
             end
           end
         end

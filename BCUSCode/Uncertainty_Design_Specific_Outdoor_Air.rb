@@ -48,21 +48,21 @@
 # design specific outdoor air uncertainty distribution.
 
 
-
 class DesignSpecificOutdoorAirUncertainty
-  attr_reader :design_spec_outdoor_air_name
-  attr_reader :design_spec_outdoor_air_flow_per_person
-  attr_reader :design_spec_outdoor_air_flow_per_floor_area
-  attr_reader :design_spec_outdoor_air_flow_rate
+  attr_reader :design_spec_OA_name
+  attr_reader :design_spec_OA_flow_per_person
+  attr_reader :design_spec_OA_flow_per_floor_area
+  attr_reader :design_spec_OA_flow_rate
 
   def initialize
-    @design_spec_outdoor_air_name = Array.new
-    @design_spec_outdoor_air_flow_per_person = Array.new
-    @design_spec_outdoor_air_flow_per_floor_area = Array.new
-    @design_spec_outdoor_air_flow_rate = Array.new
+    @design_spec_OA_name = []
+    @design_spec_OA_flow_per_person = []
+    @design_spec_OA_flow_per_floor_area = []
+    @design_spec_OA_flow_rate = []
   end
 
-  def design_spec_outdoor_air_find(model)
+  def design_spec_OA_find(model)
+    # Space type is required entry to define a thermal space
     space_types = model.getSpaceTypes
     instances_array = []
     space_types.each do |space_type|
@@ -72,27 +72,36 @@ class DesignSpecificOutdoorAirUncertainty
     instances_array.each do |instance|
       next if instance.empty?
       instance = instance.get
-      @design_spec_outdoor_air_name << instance.name.to_s
+      @design_spec_OA_name << instance.name.to_s
       if instance.outdoorAirFlowperPerson > 0
-        @design_spec_outdoor_air_flow_per_person <<
+        @design_spec_OA_flow_per_person <<
           instance.outdoorAirFlowperPerson.to_f
       end
       if instance.outdoorAirFlowperFloorArea > 0
-        @design_spec_outdoor_air_flow_per_floor_area<<
+        @design_spec_OA_flow_per_floor_area<<
           instance.outdoorAirFlowperFloorArea.to_f
       end
       if instance.outdoorAirFlowRate > 0
-        @design_spec_outdoor_air_flow_rate <<
+        @design_spec_OA_flow_rate <<
           instance.outdoorAirFlowRate.to_f
       end
     end
   end
 
-  def design_spec_outdoor_air_method(
-    model, parameter_types, parameter_names, parameter_value
-  )
-    parameter_types.each_with_index do |type, index|
-      if type =~ /OutdoorAirFlowPerPerson/
+  def design_spec_OA_set(model, param_types, _param_names, param_values)
+    param_types.each_with_index do |type, index|
+      param_set = 
+        case type
+        when /OutdoorAirFlowPerPerson/
+          'setOutdoorAirFlowperPerson'
+        when /OutdoorairFlowPerZoneFloorArea/
+          'setOutdoorAirFlowperFloorArea'
+        when /OutdoorAirFlowRate/
+          'setOutdoorAirFlowRate'
+        else
+          nil
+        end
+      unless param_set.nil?
         instances_array = []
         model.getSpaceTypes.each do |space_type|
           next unless space_type.spaces.size > 0
@@ -101,31 +110,10 @@ class DesignSpecificOutdoorAirUncertainty
         instances_array.each do |instance|
           next if instance.empty?
           instance = instance.get
-          instance.setOutdoorAirFlowperPerson(parameter_value[index])
-        end
-      elsif type =~ /OutdoorairFlowPerZoneFloorArea/
-        instances_array = []
-        model.getSpaceTypes.each do |space_type|
-          next unless space_type.spaces.size > 0
-          instances_array << space_type.designSpecificationOutdoorAir
-        end
-        instances_array.each do |instance|
-          next if instance.empty?
-          instance = instance.get
-          instance.setOutdoorAirFlowperFloorArea(parameter_value[index])
-        end
-      elsif type =~ /OutdoorAirFlowRate/
-        instances_array = []
-        model.getSpaceTypes.each do |space_type|
-          next unless space_type.spaces.size > 0
-          instances_array << space_type.designSpecificationOutdoorAir
-        end
-        instances_array.each do |instance|
-          next if instance.empty?
-          instance = instance.get
-          instance.setOutdoorAirFlowRate(parameter_value[index])
+          instance.send(param_set.to_sym, param_values[index])
         end
       end
     end
   end
+
 end

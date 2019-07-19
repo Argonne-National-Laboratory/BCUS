@@ -48,15 +48,15 @@
 # Class for boiler uncertainty
 class BoilerUncertainty < OpenStudio::Model::Model
   attr_reader :hotwaterboiler_name
-  attr_reader :hotwaterboiler_thermal_efficiency
+  attr_reader :hotwaterboiler_efficiency
   attr_reader :steamboiler_name
-  attr_reader :steamboiler_thermal_efficiency
+  attr_reader :steamboiler_efficiency
 
   def initialize
     @hotwaterboiler_name = []
-    @hotwaterboiler_thermal_efficiency = []
+    @hotwaterboiler_efficiency = []
     @steamboiler_name = []
-    @steamboiler_thermal_efficiency = []
+    @steamboiler_efficiency = []
   end
 
   def boiler_find(model)
@@ -65,7 +65,7 @@ class BoilerUncertainty < OpenStudio::Model::Model
       next if boiler_water.to_BoilerHotWater.empty?
       water_unit = boiler_water.to_BoilerHotWater.get
       @hotwaterboiler_name << water_unit.name.to_s
-      @hotwaterboiler_thermal_efficiency <<
+      @hotwaterboiler_efficiency <<
         water_unit.nominalThermalEfficiency.to_f
       ## add else nil
     end
@@ -74,28 +74,36 @@ class BoilerUncertainty < OpenStudio::Model::Model
       next if boiler_steam.to_BoilerSteam.empty?
       steam_unit = boiler_steam.to_BoilerSteam.get
       @steamboiler_name << steam_unit.name.to_s
-      @steamboiler_thermal_efficiency <<
+      @steamboiler_efficiency <<
         steam_unit.nominalThermalEfficiency.to_f
     end
   end
 
-  # Find thermal efficiency for boiler
-  def boiler_efficiency_method(
-    model, parameter_types, _parameter_names, parameter_value
-  )
-    parameter_types.each_with_index do |type, index|
-      if type =~ /HotWaterBoiler/
-        model.getBoilerHotWaters.each do |boiler_water|
-          unless boiler_water.to_BoilerHotWater.empty?
-            water_unit = boiler_water.to_BoilerHotWater.get
-            water_unit.setNominalThermalEfficiency(parameter_value[index])
-          end
+  # Set thermal efficiency for boiler
+  def boiler_set(model, param_types, _param_names, param_values)
+    param_types.each_with_index do |type, index|
+      unit_get, param_get, param_set =
+        case type
+        when /HotWaterBoilerEfficiency/
+          [
+            'getBoilerHotWaters',
+            'to_BoilerHotWater',
+            'setNominalThermalEfficiency'
+          ]
+        when /SteamBoilerEfficiency/
+          [
+            'getBoilerSteams',
+            'to_BoilerSteam',
+            'setNominalThermalEfficiency'
+          ]
+        else
+          [nil, nil]
         end
-      elsif type =~ /SteamBoiler/
-        model.getBoilerSteams.each do |boiler_steam|
-          unless boiler_steam.to_BoilerSteam.empty?
-            steam_unit = boiler_steam.to_BoilerSteam.get
-            steam_unit.setNominalThermalEfficiency(parameter_value[index])
+      unless unit_get.nil?
+        model.send(unit_get.to_sym).each do |unit|
+          unless unit.send(param_get.to_sym).empty?
+            water_unit = unit.send(param_get.to_sym).get
+            water_unit.send(param_set.to_sym, param_values[index])
           end
         end
       end
