@@ -49,7 +49,6 @@
 #   2. Call GraphPosteriors code in R
 
 
-
 #===============================================================%
 #     author: Matt Riddle, Yuming Sun										        %
 #     date: Feb 27, 2015										                    %
@@ -81,9 +80,6 @@
 # None, but graphPosteriors.R will generate pdf files with graphs
 #===============================================================#
 
-# graphPred: Function to graph predicted model results
-
-# this function is not currently being used
 
 require 'rinruby'
 
@@ -109,12 +105,15 @@ module GraphGenerator
     R.assign('burnin', burnin)
     R.assign('graphs_output_folder', graphs_output_folder)
     R.eval(
-      'graphPosteriors(params_filename, pvals_filename, burnin,
-      graphs_output_folder, verbose)'
+      'graphPosteriors(
+         params_filename, pvals_filename, burnin, graphs_output_folder, verbose
+       )'
     )
 
   end
 
+  # graphPred: Function to graph predicted model results
+  # This function is not currently being used
   def self.graphPred(
     com_filename, field_filename, expred_filename, yyxpred_filename,
     verbose = false
@@ -126,8 +125,10 @@ module GraphGenerator
     R.assign('expred_filename', expred_filename)
     R.assign('yyxpred_filename', yyxpred_filename)
     R.eval(
-      'graphPred(com_filename, field_filename, expred_filename,
-      yyxpred_filename)'
+      'graphPred(
+         com_filename, field_filename, expred_filename, yyxpred_filename
+       )'
     )
   end
+
 end

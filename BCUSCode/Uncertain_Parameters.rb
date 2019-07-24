@@ -92,7 +92,7 @@ class UncertainParameters
   end
 
   # Write into the uq cvs the uncertainty distribution information
-  def find(model, uq_table, out_file_path_name, verbose = false)
+  def find(model, uq_table, uq_file, verbose = false)
     @envelop_uncertainty.material_find(model)
     @operation_uncertainty.operation_parameters_find(model)
     @boiler_uncertainty.boiler_find(model)
@@ -103,16 +103,13 @@ class UncertainParameters
     @DX_cooling_coil_uncertainty.DX_coil_two_speed_find(model)
     @chillerEIR_uncertainty.chiller_find(model)
 
-    # Create a csv file that contains uncertain parameters
-    CSV.open(out_file_path_name.to_s, 'wb') do |csv|
+    # Create a csv file that contains uncertain parameters and write in
+    # the created csv file (take input from uncertainty)
+    CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
         'Parameter Type', 'Object in the model', 'Parameter Base Value',
         'Distribution', 'Mean or Mode', 'Std Dev', 'Min', 'Max'
       ]
-    end
-
-    # Write in the created csv file (take input from uncertainty)
-    CSV.open(out_file_path_name.to_s, 'a+') do |csv|
       uq_table.each do |uq_param|
         next if uq_param[3] == 'Off'
         if verbose
@@ -590,7 +587,7 @@ class UncertainParameters
         end
       end
     end
-    puts "#{out_file_path_name} has been generated." if verbose
+    puts "#{uq_file} has been generated." if verbose
   end
 
   def apply(model, param_types, param_names, param_values)
@@ -633,18 +630,14 @@ class UncertainParameters
   end
 
   def apply_thermostat(
-    model, uq_table, out_file_path_name, model_output_path,
-    param_types, param_values
+    model, uq_table, uq_file, model_out, param_types, param_values
   )
     # Create a csv file that contains thermostat if the user turn it on
-    CSV.open(out_file_path_name.to_s, 'wb') do |csv|
+    CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
       'Parameter Type', 'Object in the model',
       'Parameter Base Value', 'Adjusted Value'
       ]
-    end
-    
-    CSV.open(out_file_path_name.to_s, 'a+') do |csv|
       uq_table.each do |uq_param|
         next if uq_param[3] == 'Off'
         case uq_param[1]
@@ -655,7 +648,7 @@ class UncertainParameters
               next unless type =~ /CoolingSetpoint/
               adjust_value_cooling = param_values[index]
               @thermostat_uncertainty.cooling_set(
-                model, adjust_value_cooling, model_output_path
+                model, adjust_value_cooling, model_out
               )
               @thermostat_uncertainty.clg_set_sch_value.each_with_index do |value, index1|
                 csv << [
@@ -671,7 +664,7 @@ class UncertainParameters
               next unless type =~ /HeatingSetpoint/
               adjust_value_heating = param_values[index]
               @thermostat_uncertainty.heating_set(
-                model, adjust_value_heating, model_output_path
+                model, adjust_value_heating, model_out
               )
               @thermostat_uncertainty.htg_set_sch_value.each_with_index do |value, index1|
                 csv << [

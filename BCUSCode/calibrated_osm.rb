@@ -58,17 +58,17 @@ require_relative 'process_simulation_sqls'
 # Class to generate and run calibrated model
 class CalibratedOSM
   def gen_and_sim(
-    osm_file, weather_file, prior_file, post_file,
-    meter_set_file, cal_model_file, output_folder, verbose
+    osm_file, epw_file, priors_file, posts_file,
+    out_spec_file, cal_model_dir, verbose
   )
-
+    building_name = File.basename(osm_file, '.osm')
     model = OpenStudio::Model::Model.load(osm_file).get
 
-    params = CSV.read(prior_file, headers: true)
+    params = CSV.read(priors_file, headers: true)
     param_names = params['Object in the model']
     param_types = params['Parameter Type']
 
-    post = CSV.read(post_file, headers: true, converters: :numeric)
+    post = CSV.read(posts_file, headers: true, converters: :numeric)
     headers = post.headers()
     post_average = [0] * headers.length
     headers.each_with_index do |header, index|
@@ -80,25 +80,30 @@ class CalibratedOSM
     uncertainty_parameters.apply(model, param_types, param_names, param_value)
 
     # Add reporting meters
-    meters_table = read_meters_table(meter_set_file, verbose)
+    meters_table = read_table(
+      out_spec_file, 'Output Seetings', 'Meters', verbose
+    )
     add_reporting_meters_to_model(model, meters_table)
 
     # Add weather variable reporting to model and set its frequency
-    add_output_variable_to_model(
+    add_output_variables_to_model(
       model, 'Site Outdoor Air Drybulb Temperature', 'Monthly'
     )
-    add_output_variable_to_model(
+    add_output_variables_to_model(
       model, 'Site Ground Reflected Solar Radiation Rate per Area', 'Monthly'
     )
 
+    cal_model_file = File.join(
+      cal_model_dir, "Calibrated_#{building_name}.osm"
+    )
     model.save(cal_model_file, true)
 
-    sim_dir = File.join(output_folder, 'Cal_Simulations')
+    sim_dir = File.join(cal_model_dir, 'Cal_Simulations')
     runner = RunOSM.new
-    runner.run_osm(output_folder, weather_file, sim_dir)
+    runner.run_osm(cal_model_dir, epw_file, sim_dir)
 
     # Read Simulation Results
-    OutPut.read(sim_dir, meter_set_file, output_folder)
+    OutPut.read(sim_dir, out_spec_file, cal_model_dir)
   end
 end
 

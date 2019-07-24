@@ -70,7 +70,7 @@ R.echo(enabled = false)
 # Class to generate Latin Hypercube design sample
 class LHD
   def random_num_generate(
-    n_runs, n_parameters, output_dir, randseed = 0, verbose = false
+    n_runs, n_parameters, out_dir, randseed = 0, verbose = false
   )
     R.assign('numRuns', n_runs)
     R.assign('numParams', n_parameters)
@@ -88,7 +88,7 @@ class LHD
     lhs_table = R.lhs.transpose
 
     row_index = 0
-    CSV.open(File.join(output_dir, 'Random_LHD_Samples.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, 'Random_LHD_Samples.csv'), 'wb') do |csv|
       (0..lhs_table.row_count).each do |row_index|
         csv << lhs_table.row(row_index).to_a
       end
@@ -101,20 +101,21 @@ class LHD
   end
 
   def lhd_samples_generator(
-    uqtable_file_path, n_runs, output_dir, randseed = 0, verbose = false
+    uq_file, n_runs, out_dir, randseed = 0, verbose = false
   )
-    table = CSV.read(uqtable_file_path.to_s)
+    table = CSV.read(uq_file.to_s)
     n_parameters = table.count - 1 # the first row is the header
     lhs_random_table = random_num_generate(
-      n_runs, n_parameters, output_dir, randseed, verbose
+      n_runs, n_parameters, out_dir, randseed, verbose
     )
+
     row_index = 0
-    CSV.open(File.join(output_dir, 'LHD_Sample.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, 'LHD_Sample.csv'), 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..n_runs).each { |sample_index| header << "Run #{sample_index}" }
       csv << header
       CSV.foreach(
-        uqtable_file_path.to_s, headers: true, converters: :numeric
+        uq_file.to_s, headers: true, converters: :numeric
       ) do |parameter|
         prob_distribution = [
           parameter['Parameter Base Value'],

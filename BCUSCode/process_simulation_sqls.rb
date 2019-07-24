@@ -53,47 +53,89 @@ require 'csv'
 def sql_table_lookup(in_string, sql_file)
   case in_string
   when /Total Site Energy/
-    table_out = sql_file.totalSiteEnergy.get unless sql_file.totalSiteEnergy.empty?
+    unless sql_file.totalSiteEnergy.empty?
+      table_out = sql_file.totalSiteEnergy.get
+    end
   when /Total Source Energy/
-    table_out = sql_file.totalSourceEnergy.get unless sql_file.totalSourceEnergy.empty?
+    unless sql_file.totalSourceEnergy.empty?
+      table_out = sql_file.totalSourceEnergy.get
+    end
   when /Electricity Total End Uses/
-    table_out = sql_file.electricityTotalEndUses.get unless sql_file.electricityTotalEndUses.empty?
+    unless sql_file.electricityTotalEndUses.empty?
+      table_out = sql_file.electricityTotalEndUses.get
+    end
   when /Electricity Heating/
-    table_out = sql_file.electricityHeating.get unless sql_file.electricityHeating.empty?
+    unless sql_file.electricityHeating.empty?
+      table_out = sql_file.electricityHeating.get
+    end
   when /Electricity Cooling/
-    table_out = sql_file.electricityCooling.get unless sql_file.electricityCooling.empty?
+    unless sql_file.electricityCooling.empty?
+      table_out = sql_file.electricityCooling.get
+    end
   when /Electricity Water Systems/
-    table_out = sql_file.electricityWaterSystems.get unless sql_file.electricityWaterSystems.empty?
+    unless sql_file.electricityWaterSystems.empty?
+      table_out = sql_file.electricityWaterSystems.get
+    end
   when /Electricity Interior Lighting/
-    table_out = sql_file.electricityInteriorLighting.get unless sql_file.electricityInteriorLighting.empty?
+    unless sql_file.electricityInteriorLighting.empty?
+      table_out = sql_file.electricityInteriorLighting.get
+    end
   when /Electricity Exterior Lighting/
-    table_out = sql_file.electricityExteriorLighting.get unless sql_file.electricityExteriorLighting.empty?
+    unless sql_file.electricityExteriorLighting.empty?
+      table_out = sql_file.electricityExteriorLighting.get
+    end
   when /Electricity Interior Equipment/
-    table_out = sql_file.electricityInteriorEquipment.get unless sql_file.electricityInteriorEquipment.empty?
+    unless sql_file.electricityInteriorEquipment.empty?
+      table_out = sql_file.electricityInteriorEquipment.get
+    end
   when /Electricity Exterior Equipment/
-    table_out = sql_file.electricityExteriorEquipment.get unless sql_file.electricityExteriorEquipment.empty?
+    unless sql_file.electricityExteriorEquipment.empty?
+      table_out = sql_file.electricityExteriorEquipment.get
+    end
   when /Electricity Fans/
-    table_out = sql_file.electricityFans.get unless sql_file.electricityFans.empty?
+    unless sql_file.electricityFans.empty?
+      table_out = sql_file.electricityFans.get
+    end
   when /Electricity Pumps/
-    table_out = sql_file.electricityPumps.get unless sql_file.electricityPumps.empty?
+    unless sql_file.electricityPumps.empty?
+      table_out = sql_file.electricityPumps.get
+    end
   when /Electricity Heat Rejection/
-    table_out = sql_file.electricityHeatRejection.get unless sql_file.electricityHeatRejection.empty?
+    unless sql_file.electricityHeatRejection.empty?
+      table_out = sql_file.electricityHeatRejection.get
+    end
   when /Natural Gas Total End Uses/
-    table_out = sql_file.naturalGasTotalEndUses.get unless sql_file.naturalGasTotalEndUses.empty?
+    unless sql_file.naturalGasTotalEndUses.empty?
+      table_out = sql_file.naturalGasTotalEndUses.get
+    end
   when /Natural Gas Heating/
-    table_out = sql_file.naturalGasHeating.get unless sql_file.naturalGasHeating.empty?
+    unless sql_file.naturalGasHeating.empty?
+      table_out = sql_file.naturalGasHeating.get
+    end
   when /Natural Gas Cooling/
-    table_out = sql_file.naturalGasCooling.get unless sql_file.naturalGasCooling.empty?
+    unless sql_file.naturalGasCooling.empty?
+      table_out = sql_file.naturalGasCooling.get
+    end
   when /Natural Gas Water Systems/
-    table_out = sql_file.naturalGasWaterSystems.get unless sql_file.naturalGasWaterSystems.empty?
+    unless sql_file.naturalGasWaterSystems.empty?
+      table_out = sql_file.naturalGasWaterSystems.get
+    end
   when /District Cooling/
-    table_out = sql_file.districtCoolingCooling.get unless sql_file.districtCoolingCooling.empty?
+    unless sql_file.districtCoolingCooling.empty?
+      table_out = sql_file.districtCoolingCooling.get
+    end
   when /District Heating/
-    table_out = sql_file.districtHeatingHeating.get unless sql_file.districtHeatingHeating.empty?
+    unless sql_file.districtHeatingHeating.empty?
+      table_out = sql_file.districtHeatingHeating.get
+    end
   when /District Cooling Total End Uses/
-    table_out = sql_file.districtCoolingTotalEndUses.get unless sql_file.districtCoolingTotalEndUses.empty?
+    unless sql_file.districtCoolingTotalEndUses.empty?
+      table_out = sql_file.districtCoolingTotalEndUses.get
+    end
   when /District Heating Total End Uses/
-    table_out = sql_file.districtHeatingTotalEndUses.get unless sql_file.districtHeatingTotalEndUses.empty?
+    unless sql_file.districtHeatingTotalEndUses.empty?
+      table_out = sql_file.districtHeatingTotalEndUses.get
+    end
   else
     abort('Invalid selection of Annual outputs - terminating script')
   end
@@ -105,8 +147,7 @@ end
 # Module for output postproess
 module OutPut
   def self.read(
-    simulation_folder, setting_file, output_folder,
-    weather = false, verbose = false
+    sim_dir, setting_file, out_dir, weather = false, verbose = false
   )
 
     # Output table
@@ -117,7 +158,7 @@ module OutPut
       header[output_num - 1] = output_table[output_num].to_s[2..-3]
     end
 
-    osm_files = Dir.glob(File.join(simulation_folder, '*.osm'))
+    osm_files = Dir.glob(File.join(sim_dir, '*.osm'))
     num_of_runs = osm_files.length
 
     sql_paths = []
@@ -126,7 +167,7 @@ module OutPut
     end
 
     if verbose
-      puts "List of SQL files to process in #{simulation_folder}"
+      puts "List of SQL files to process in #{sim_dir}"
       puts sql_paths
     end
 
@@ -140,24 +181,18 @@ module OutPut
       end
     end
 
-    CSV.open(
-      File.join(output_folder, 'Simulation_Results_Building_Total_Energy.csv'),
-      'wb'
-    ) do |csv|
+    result_file = File.join(
+      out_dir, 'Simulation_Results_Building_Total_Energy.csv'
+    )
+    CSV.open(result_file, 'wb') do |csv|
       csv << header
-    end
-
-    CSV.open(
-      File.join(output_folder, 'Simulation_Results_Building_Total_Energy.csv'),
-      'a+'
-    ) do |csv|
       data_table.each do |row|
         csv << row
       end
     end
 
     if verbose
-      puts "Simulation results saved to #{output_folder}/" \
+      puts "Simulation results saved to #{out_dir}/" \
         'Simulation_Results_Building_Total_Energy.csv'
     end
 
@@ -180,8 +215,9 @@ module OutPut
         # RUN PERIOD 1
         # We need this to ensure we select data for actual weather period
         # run and not the sizing runs
-        query_var_index = "SELECT EnvironmentPeriodIndex FROM environmentperiods
-                            WHERE EnvironmentName = 'RUN PERIOD 1'"
+        query_var_index =
+          "SELECT EnvironmentPeriodIndex FROM environmentperiods
+           WHERE EnvironmentName = 'RUN PERIOD 1'"
 
         if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
           var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
@@ -189,11 +225,13 @@ module OutPut
           # Generate the query for the data from ReportVariableWithTime
           # that has matching meter table name, reporting frequency,
           # and is Run Period 1
-          query_var_value = "SELECT Value FROM ReportVariableWithTime
-           WHERE Name = '#{meters_table[meter_index][0]}'
-           AND ReportingFrequency = '#{meters_table[meter_index][1]}'
-           AND EnvironmentPeriodIndex = #{var_index}"
-          var_value << sql_file.execAndReturnVectorOfDouble(query_var_value).get
+          query_var_value =
+            "SELECT Value FROM ReportVariableWithTime
+             WHERE Name = '#{meters_table[meter_index][0]}'
+             AND ReportingFrequency = '#{meters_table[meter_index][1]}'
+             AND EnvironmentPeriodIndex = #{var_index}"
+          var_value <<
+            sql_file.execAndReturnVectorOfDouble(query_var_value).get
         else
           var_value << []
         end
@@ -219,7 +257,7 @@ module OutPut
 
       meter_names = meters_table[meter_index][0].split(':')
       meter_file = "Meter_#{meter_names[0]}_#{meter_names[1]}.csv"
-      CSV.open(File.join(output_folder, meter_file), 'wb') do |csv|
+      CSV.open(File.join(out_dir, meter_file), 'wb') do |csv|
         csv << header
         var_value.transpose.each_with_index do |row, time|
           row.insert(0, time + 1)
@@ -236,9 +274,9 @@ module OutPut
     # Query dry bulb temperature
     query_var_index =
       "SELECT ReportVariableDataDictionaryIndex
-      FROM ReportVariableDataDictionary
-      WHERE VariableName = 'Site Outdoor Air Drybulb Temperature'
-      AND ReportingFrequency = 'Monthly'"
+       FROM ReportVariableDataDictionary
+       WHERE VariableName = 'Site Outdoor Air Drybulb Temperature'
+       AND ReportingFrequency = 'Monthly'"
 
     if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
@@ -253,9 +291,10 @@ module OutPut
     # Query horizontal solar irradiation
     query_var_index =
       "SELECT ReportVariableDataDictionaryIndex
-      FROM ReportVariableDataDictionary
-      WHERE VariableName = 'Site Ground Reflected Solar Radiation Rate per Area'
-      AND ReportingFrequency = 'Monthly'"
+       FROM ReportVariableDataDictionary
+       WHERE VariableName =
+        'Site Ground Reflected Solar Radiation Rate per Area'
+       AND ReportingFrequency = 'Monthly'"
 
     if !sql_file.execAndReturnFirstDouble(query_var_index).empty?
       var_index = sql_file.execAndReturnFirstDouble(query_var_index).get
@@ -272,7 +311,7 @@ module OutPut
 
     weather_out = weather_var.transpose * num_of_runs
 
-    CSV.open(File.join(output_folder, 'Monthly_Weather.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, 'Monthly_Weather.csv'), 'wb') do |csv|
       csv << ['Monthly DryBuld Temp [C]', 'Monthly Horizontal Solar [W/m^2]']
       weather_out.each { |row| csv << row }
     end

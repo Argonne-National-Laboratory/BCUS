@@ -70,9 +70,9 @@
 # numOutputVars = number of y (output) variables in input files
 # numWeatherVars = number of x (e.g., weather) variables in input files
 # numMCMCSteps: the number of steps to run the mcmc algorithm for
-# pvals_filename: filename that diagnositc results of mcmc runs will be saved to
-# posteriorDist_filename: filename that posterior distributions for parameters
-#   will be saved to
+# pvals_filename: filename that diagnositc results of mcmc runs will be saved
+# to posteriorDist_filename: filename that posterior distributions
+# for parameters will be saved to
 
 #===============================================================#
 #                           OUTPUTS                             #

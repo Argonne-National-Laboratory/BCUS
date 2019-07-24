@@ -89,11 +89,10 @@ class Morris
   #
 
   def morris_samples_generator(
-    file_name, morris_r, morris_levels, output_dir,
-    randseed = 0, verbose = false
+    uq_file, morris_r, morris_levels, out_dir, randseed = 0, verbose = false
   )
     puts "Randseed = #{randseed}" if verbose
-    table = CSV.read(file_name.to_s)
+    table = CSV.read(uq_file.to_s)
     n_parameters = table.count - 1 # the first row is the header
     R.assign('randseed', randseed) # set the random seed
     R.assign('n', n_parameters)
@@ -114,11 +113,11 @@ class Morris
         )
       )
       X <- design$X
-      save(design, file="#{output_dir}/Morris_design")
+      save(design, file="#{out_dir}/Morris_design")
     RCODE
 
     design_matrix = R.X
-    CSV.open(File.join(output_dir, 'Morris_0_1_Design.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, 'Morris_0_1_Design.csv'), 'wb') do |csv|
       (0..design_matrix.row_count).each do |row_index|
         csv << design_matrix.row(row_index).to_a
       end
@@ -126,7 +125,7 @@ class Morris
 
     # CDF transform
     row_index = 0
-    CSV.open(File.join(output_dir, 'Morris_CDF_Tran_Design.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, 'Morris_CDF_Tran_Design.csv'), 'wb') do |csv|
       header = table[0].to_a[0, 2]
       (1..design_matrix.row_count).each do |sample_index|
         header << "Run #{sample_index}"
@@ -134,7 +133,7 @@ class Morris
       csv << header
 
       CSV.foreach(
-        file_name.to_s, headers: true, converters: :numeric
+        uq_file.to_s, headers: true, converters: :numeric
       ) do |parameter|
         prob_distribution = [
           parameter['Parameter Base Value'],
