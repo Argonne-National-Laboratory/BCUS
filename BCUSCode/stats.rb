@@ -38,25 +38,7 @@
 
 # ******************************************************************************
 
-# Modified Date and By:
-# - Updated on August 2016 by Yuna Zhang from Argonne National Laboratory
-# - Updated on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
-# - Created on Feb 27 2015 by Yuming Sun and Matt Riddle from Argonne National
-#   Laboratory
-
-# 1. Introduction
-# This is the main code used for generating random variables using LHS
-
-#===============================================================%
-#     author: Yuming Sun and Matt Riddle                        %
-#     date: Feb 27, 2015                                        %
-#===============================================================%
-
-# Main code used for generated random variables
-
-# 10-Aug-2015 Ralph Muehleisen
-# Added seed and verbose to call
-
+require 'fileutils'
 require 'rinruby'
 require 'csv'
 
@@ -66,89 +48,142 @@ require_relative 'bcus_utils'
 R.echo(enabled = false)
 # rubocop:enable Lint/UselessAssignment
 
-# Class for performing SA with Morris method
-class Morris
-  # Compute the sensitivities for the given model via the Morris method
-  # model is a method (obtained by a call to method(:mymodelfunction))
-  # representing the model to test
-  # model should take, as input, a vector of length n_params
-  # n_repetitions is the number of repetitions that will be performed during
-  # the Morris sampling
-  # param_lower_bounds and param_upper_bounds are both vectors of length
-  # n_params, giving the upper
-  # and lower bounds for each parameter
-  #
-  #
-  # example usage:
-  #
-  # def myfun(x):
-  # return x[0]+10*x[1]
-  # end
-  # Morris.compute_sensitivities(methd(:myfun), 2, 10, [0,0], [1,1])
-  # => [1.0, 10.0]
-  #
+class Stats
+  def generate_design(
+    n_vars, design_type, params, out_dir, randseed = 0, verbose = false
+  )
+    R.assign('numVars', n_vars)
+    R.assign('randseed', randseed)
 
-  def morris_samples_generator(
-    uq_file, morris_r, morris_levels, out_dir, randseed = 0, verbose = false
+    case design_type
+    when 'LHD'
+      R.assign('numRuns', params[:n_runs])
+      R.eval <<-RCODE
+        library("lhs")
+        if (randseed!=0) {
+            set.seed(randseed)
+        } else {
+            set.seed(NULL)
+        }
+        lhs <- randomLHS(numRuns, numVars)
+      RCODE
+      design = R.lhs
+    when 'Morris'
+      R.assign('mR', params[:morris_r])
+      R.assign('mL', params[:morris_l])
+      R.assign('mJ', params[:morris_l]**2 / 2 / (params[:morris_l] - 1))
+      R.eval <<-RCODE
+        library("sensitivity")
+        if (randseed!=0) {
+          set.seed(randseed)
+        } else {
+          set.seed(NULL)
+        }
+        design <- morris(
+          NULL, numVars, mR, binf=0.05, bsup=0.95, scale=FALSE,
+          design = list(type = "oat", levels = mL, grid.jump = mJ)
+        )
+        X <- design$X
+        save(design, file="#{out_dir}/Morris_design")
+      RCODE
+      design = R.X
+    end
+
+    CSV.open(File.join(out_dir, "#{design_type}_Design.csv"), 'wb') do |csv|
+      (0..design.row_count).each { |index| csv << design.row(index).to_a }
+    end
+    if verbose
+      puts "#{design_type}_Design.csv with the size of #{design.row_count} " \
+        "rows and #{design.column_count} columns is generated"
+    end
+    return design
+  end
+
+  def samples_generator(
+    uq_file, design_type, params, out_dir, randseed = 0, verbose = false
   )
     puts "Randseed = #{randseed}" if verbose
     table = CSV.read(uq_file.to_s)
-    n_parameters = table.count - 1 # the first row is the header
-    R.assign('randseed', randseed) # set the random seed
-    R.assign('n', n_parameters)
-    R.assign('mR', morris_r)
+    # The first row is the header
+    n_variables = table.count - 1
+    design = generate_design(
+      n_variables, design_type, params, out_dir, randseed, verbose
+    )
 
-    R.eval <<-RCODE
-      library("sensitivity")
-      if (randseed!=0) {
-        set.seed(randseed)
-      } else {
-        set.seed(NULL)
-      }
-      design <- morris(
-        NULL, n, mR, binf=0.05, bsup=0.95, scale=FALSE,
-        design = list(
-          type = "oat", levels = #{morris_levels},
-          grid.jump = #{morris_levels**2 / 2 / (morris_levels - 1)}
-        )
-      )
-      X <- design$X
-      save(design, file="#{out_dir}/Morris_design")
-    RCODE
-
-    design_matrix = R.X
-    CSV.open(File.join(out_dir, 'Morris_0_1_Design.csv'), 'wb') do |csv|
-      (0..design_matrix.row_count).each do |row_index|
-        csv << design_matrix.row(row_index).to_a
-      end
-    end
-
-    # CDF transform
+    out_filename = "#{design_type}_Sample.csv"
     row_index = 0
-    CSV.open(File.join(out_dir, 'Morris_CDF_Tran_Design.csv'), 'wb') do |csv|
+    CSV.open(File.join(out_dir, out_filename), 'wb') do |csv|
+      # Headers
       header = table[0].to_a[0, 2]
-      (1..design_matrix.row_count).each do |sample_index|
-        header << "Run #{sample_index}"
-      end
+      (1..design.row_count).each { |index| header << "Run #{index}" }
       csv << header
-
-      CSV.foreach(
-        uq_file.to_s, headers: true, converters: :numeric
-      ) do |parameter|
+      # Samples
+      CSV.foreach(uq_file.to_s, headers: true, converters: :numeric) do |param|
         prob_distribution = [
-          parameter['Parameter Base Value'],
-          parameter['Distribution'],
-          parameter['Mean or Mode'],
-          parameter['Std Dev'],
-          parameter['Min'],
-          parameter['Max']
+          param['Parameter Base Value'],
+          param['Distribution'],
+          param['Mean or Mode'],
+          param['Std Dev'],
+          param['Min'],
+          param['Max']
         ]
-        q = design_matrix.transpose.row(row_index).to_a
-        csv <<
+        q = design.transpose.row(row_index).to_a
+        csv << (
           table[row_index + 1].to_a[0, 2] + cdf_inverse(q, prob_distribution)
+        )
         row_index += 1
       end
     end
+    return unless verbose # using guard clause as per ruby style guide
+    puts "#{out_filename} has been generated and saved!" if verbose
+    puts "It includes #{design.row_count} simulation runs" if verbose
+  end
+
+  def cdf_inverse(lhs_random_num, prob_distribution)
+    R.assign('q', lhs_random_num)
+    case prob_distribution[1]
+    when /Normal Absolute/
+      R.assign('mean', prob_distribution[2])
+      R.assign('std', prob_distribution[3])
+      R.eval 'samples <- qnorm(q, mean, std)'
+  
+    when /Normal Relative/
+      R.assign('mean', prob_distribution[2] * prob_distribution[0])
+      R.assign('std', prob_distribution[3] * prob_distribution[0])
+      R.eval 'samples <- qnorm(q, mean, std)'
+  
+    when /Uniform Absolute/
+      R.assign('min', prob_distribution[4])
+      R.assign('max', prob_distribution[5])
+      R.eval 'samples <- qunif(q, min, max)'
+  
+    when /Uniform Relative/
+      R.assign('min', prob_distribution[4] * prob_distribution[0])
+      R.assign('max', prob_distribution[5] * prob_distribution[0])
+      R.eval 'samples <- qunif(q, min, max)'
+  
+    when /Triangle Absolute/
+      R.assign('min', prob_distribution[4])
+      R.assign('max', prob_distribution[5])
+      R.assign('mode', prob_distribution[2])
+      R.eval 'library("triangle")'
+      R.eval 'samples <- qtriangle(q, min, max, mode)'
+  
+    when /Triangle Relative/
+      R.assign('min', prob_distribution[4] * prob_distribution[0])
+      R.assign('max', prob_distribution[5] * prob_distribution[0])
+      R.assign('mode', prob_distribution[2] * prob_distribution[0])
+      R.eval 'library("triangle")'
+      R.eval 'samples <- qtriangle(q, min, max, mode)'
+  
+    when /LogNormal Absolute/
+      R.assign('log_mean', prob_distribution[2])
+      R.assign('log_std', prob_distribution[3])
+      R.eval 'samples <- qlnorm(q, log_mean, log_std)'
+    else
+      R.samples = []
+    end
+    return R.samples
   end
 
   def compute_sensitivities(
@@ -226,4 +261,5 @@ class Morris
       }
     RCODE
   end
+
 end

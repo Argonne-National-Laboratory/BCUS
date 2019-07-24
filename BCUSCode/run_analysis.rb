@@ -52,8 +52,7 @@ require 'openstudio'
 # Use require_relative to include ruby functions developed in the project
 require_relative 'bcus_utils'
 require_relative 'uncertain_parameters'
-require_relative 'LHD'
-require_relative 'Morris'
+require_relative 'Stats'
 require_relative 'run_osm'
 require_relative 'process_simulation_sqls'
 require_relative 'BC_runner'
@@ -222,23 +221,26 @@ module RunAnalysis
     case run_type
     when 'UA'
       # Generate LHD sample
-      lhd = LHD.new
-      lhd.lhd_samples_generator(
-        uq_file, num_lhd_runs, out_dir, randseed, verbose
+      stats = Stats.new
+      params = {:n_runs => num_lhd_runs}
+      stats.samples_generator(
+        uq_file, 'LHD', params, out_dir, randseed, verbose
       )
       sample_file = File.join(out_dir, 'LHD_Sample.csv')
     when 'SA'
       # Generate Morris design sample
-      mor = Morris.new
-      mor.morris_samples_generator(
-        uq_file, morris_reps, morris_levels, out_dir, randseed, verbose
+      stats = Stats.new
+      params = {:morris_r => morris_reps, :morris_l => morris_levels}
+      stats.samples_generator(
+        uq_file, 'Morris', params, out_dir, randseed, verbose
       )
-      sample_file = File.join(out_dir, 'Morris_CDF_Tran_Design.csv')
+      sample_file = File.join(out_dir, 'Morris_Sample.csv')
     when 'BC'
       # Generate LHD sample
-      lhd = LHD.new
-      lhd.lhd_samples_generator(
-        priors_file, num_lhd_runs, out_dir, randseed, verbose
+      stats = Stats.new
+      params = {:n_runs => num_lhd_runs}
+      stats.samples_generator(
+        priors_file, 'LHD', params, out_dir, randseed, verbose
       )
       sample_file = File.join(out_dir, 'LHD_Sample.csv')
     end
@@ -316,7 +318,7 @@ module RunAnalysis
     # SA post-process
     if run_type == 'SA'
       max_chars = 60
-      mor.compute_sensitivities(
+      stats.compute_sensitivities(
         File.join(out_dir, 'Simulation_Results_Building_Total_Energy.csv'),
         uq_file, out_dir, max_chars, verbose
       )
@@ -333,8 +335,8 @@ module RunAnalysis
           [
             'Meter_Electricity_Facility.csv',
             'Meter_Gas_Facility.csv',
-            'Morris_0_1_Design.csv',
-            'Morris_CDF_Tran_Design.csv',
+            'Morris_Design.csv',
+            'Morris_Sample.csv',
             'Simulation_Results_Building_Total_Energy.csv'
           ]
         end
