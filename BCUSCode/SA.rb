@@ -39,9 +39,11 @@
 # ******************************************************************************
 
 # 1. Introduction
-# This is the main code used for running Bayesian calibration to generate
-# posterior distributions and graphing results
+# This is the main function of sensitivity analysis using Morris Method[1].
 
+# References:
+# [1] M. D. Morris, 1991, Factorial sampling plans for preliminary
+#     computational experiments, Technometrics, 33, 161 - 174.
 
 require 'optparse'
 
@@ -50,7 +52,7 @@ require_relative 'run_analysis'
 # Parse command line inputs from the user
 options = {:osmName => nil, :epwName => nil}
 parser = OptionParser.new do |opts|
-  opts.banner = 'Usage: BC.rb [options]'
+  opts.banner = 'Usage: SA.rb [options]'
 
   # osmName: OpenStudio Model Name in .osm
   opts.on('-o', '--osm osmName', 'osmName') do |osm_name|
@@ -62,20 +64,28 @@ parser = OptionParser.new do |opts|
     options[:epwName] = epw_name
   end
 
-  options[:priorsFile] = 'Parameter_Priors.csv'
+  options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
   opts.on(
-    '--priors priorsFile',
-    'Prior uncertainty information file, default "Parameter_Priors.csv"'
-  ) do |priors_file|
-    options[:priorsFile] = priors_file
+    '-u', '--uqRepo uqRepo',
+    'UQ repository file, default "Parameter_UQ_Repositorty_V1.0.xlsx"'
+  ) do |uq_repo|
+    options[:uqRepo] = uq_repo
   end
 
-  options[:utilityData] = 'Utility_Data.csv'
+  options[:morrisR] = 5
   opts.on(
-    '--utilityData utilityData',
-    'Utility data file, default "Utility_Data.csv"'
-  ) do |utility_data|
-    options[:utilityData] = utility_data
+    '--morrisR morrisR',
+    'Number of repetitions for morris method, default 5'
+  ) do |morris_r|
+    options[:morrisR] = morris_r
+  end
+
+  options[:morrisL] = 20
+  opts.on(
+    '--morrisL morrisL',
+    'Number of levels for each parameter for morris method, default 20'
+  ) do |morris_l|
+    options[:morrisL] = morris_l
   end
 
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
@@ -84,76 +94,6 @@ parser = OptionParser.new do |opts|
     'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
   ) do |out_file|
     options[:outFile] = out_file
-  end
-
-  options[:simFile] = 'cal_sim_data.txt'
-  opts.on(
-    '--simFile simFile',
-    'Filename of simulation outputs, default "cal_sim_data.txt"'
-  ) do |sim_file|
-    options[:simFile] = sim_file
-  end
-
-  options[:fieldFile] = 'cal_field_data.txt'
-  opts.on(
-    '--fieldFile fieldFile',
-    'Filename of utility data for comparison, default "cal_field_data.txt"'
-  ) do |field_file|
-    options[:fieldFile] = field_file
-  end
-
-  options[:postsFile] = 'Parameter_Posteriors.csv'
-  opts.on(
-    '--postsFile postsFile',
-    'Filename of posterior distributions, default "Parameter_Posteriors.csv"'
-  ) do |posts_file|
-    options[:postsFile] = posts_file
-  end
-
-  options[:pvalsFile] = 'pvals.csv'
-  opts.on(
-    '--pvalsFile pvalsFile',
-    'Filename of pvals, default "pvals.csv"'
-  ) do |pvals_file|
-    options[:pvalsFile] = pvals_file
-  end
-
-  options[:numLHD] = 500
-  opts.on(
-    '--numLHD numLHD',
-    'Number of sample points of Monte Carlo simulation ' \
-    'with Latin Hypercube Design sampling, default 500'
-  ) do |num_lhd|
-    options[:numLHD] = num_lhd
-  end
-
-  options[:numMCMC] = 30_000
-  opts.on(
-    '--numMCMC numMCMC', 'Number of MCMC steps, default 3000'
-  ) do |num_mcmc|
-    options[:numMCMC] = num_mcmc
-  end
-
-  options[:numOutVars] = 1
-  opts.on(
-    '--numOutVars numOutVars',
-    'Number of output variables, 1 or 2, default 1'
-  ) do |num_out_vars|
-    options[:numOutVars] = num_out_vars
-  end
-  options[:numWVars] = 2
-  opts.on(
-    '--numWVars numWVars', 'Number of weather variables, default 2'
-  ) do |num_w_vars|
-    options[:numWVars] = num_w_vars
-  end
-
-  options[:numBurnin] = 500
-  opts.on(
-    '--numBurnin numBurnin',
-    'Number of burning samples to throw out, default 500'
-  ) do |num_burnin|
-    options[:numBurnin] = num_burnin
   end
 
   options[:randseed] = 0
@@ -172,29 +112,14 @@ parser = OptionParser.new do |opts|
     options[:numProcesses] = n_processes
   end
 
-  options[:noSim] = false
-  opts.on('--noSim', 'Do not run computer simulation') do
-    options[:noSim] = true
-  end
-
   options[:noEP] = false
   opts.on('--noEP', 'Do not run EnergyPlus') do
     options[:noEP] = true
   end
-  
+
   options[:noCleanup] = false
   opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
     options[:noCleanup] = true
-  end
-  
-  options[:noplots] = false
-  opts.on('--noPlots', 'Do not produce any PDF plots') do
-    options[:noplots] = true
-  end
-
-  options[:noRunCal] = false
-  opts.on('--noRunCal', 'Do not run the calibrated model when complete') do
-    options[:noRunCal] = true
   end
 
   options[:interactive] = false
@@ -222,6 +147,6 @@ end
 parser.parse!
 
 # Run main analysis function
-RunAnalysis.run('BC', options)
+RunAnalysis.run('SA', options)
 
-puts 'BC.rb Completed Successfully!'
+puts "SA.rb completed successfully!"
