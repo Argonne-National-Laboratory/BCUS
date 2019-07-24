@@ -52,7 +52,7 @@ require 'openstudio'
 # Use require_relative to include ruby functions developed in the project
 require_relative 'bcus_utils'
 require_relative 'uncertain_parameters'
-require_relative 'Stats'
+require_relative 'stats'
 require_relative 'run_osm'
 require_relative 'process_simulation_sqls'
 require_relative 'BC_runner'
@@ -86,6 +86,7 @@ module RunAnalysis
     out_spec_file = File.absolute_path(options[:outFile])
     randseed = Integer(options[:randseed])
     num_processes = Integer(options[:numProcesses])
+    no_sim = options[:noSim]
     no_ep = options[:noEP]
     no_cleanup = options[:noCleanup]
     run_interactive = options[:interactive]
@@ -94,6 +95,8 @@ module RunAnalysis
     # If we are choosing noEP we also want to skip cleanup even if
     # it hasn't been selected
     no_cleanup = true if no_ep
+
+    run_type = 'BC_no_sim' if run_type == 'BC' && no_sim
 
     case run_type
     when 'UA'
@@ -114,56 +117,60 @@ module RunAnalysis
         puts "Using morris levels = #{morris_levels}"
       end
 
-    when 'BC'
+    when /BC/
+      puts 'Running Bayesian calibration' if verbose
+      if run_type == 'BC'
+        utility_file = File.absolute_path(options[:utilityData]) 
+        num_lhd_runs = Integer(options[:numLHD])
+        puts "Using number of LHD samples  = #{num_lhd_runs}" if verbose
+      end
+
       priors_file = File.absolute_path(options[:priorsFile])
-      utility_file = File.absolute_path(options[:utilityData])
 
       sim_name = options[:simFile]
       field_name = options[:fieldFile]
       posts_name = options[:postsFile]
       pvals_name = options[:pvalsFile]
 
-      num_lhd_runs = Integer(options[:numLHD])
       num_mcmc = Integer(options[:numMCMC])
       num_out_vars = Integer(options[:numOutVars])
       num_w_vars = Integer(options[:numWVars])
       num_burnin = Integer(options[:numBurnin])
+      no_plots = options[:noplots]
+      no_run_cal = options[:noRunCal]
 
       if num_burnin >= num_mcmc
         puts 'Warning: numBurnin should be less than numMCMC. ' \
             "numBurnin has been reset to 0.\n"
         num_burnin = 0
       end
-
-      no_plots = options[:noplots]
-      no_run_cal = options[:noRunCal]
-
-      if verbose
-        puts 'Running Bayesian calibration'
-        puts "Using number of LHD samples  = #{num_lhd_runs}"
+      
+      unless run_type == 'BC_no_sim'
+        if verbose
+          puts "Using number of parallel processes  = #{num_processes}"
+          puts "Using random seed = #{randseed}"
+          puts 'Not cleaning up interim files' if no_cleanup
+        end
       end
-    end
 
-    if verbose
-      puts "Using number of parallel processes  = #{num_processes}"
-      puts "Using random seed = #{randseed}"
-      puts 'Not cleaning up interim files' if no_cleanup
     end
 
     # Acquire the path of the working directory that is the user's
     # project folder
     path = Dir.pwd
-    model_dir = File.join(path, "#{run_type}_Model")
-    run_dir = File.join(path, "#{run_type}_Simulations")
-    out_dir = File.join(path, "#{run_type}_Output")
-    Dir.mkdir(out_dir) unless Dir.exist?(out_dir)
+    unless run_type == 'BC_no_sim'
+      model_dir = File.join(path, "#{run_type[0..1]}_Model")
+      run_dir = File.join(path, "#{run_type[0..1]}_Simulations")
+      out_dir = File.join(path, "#{run_type[0..1]}_Output")
+      Dir.mkdir(out_dir) unless Dir.exist?(out_dir)
+    end
 
-    if run_type == 'BC'
-      rlt_dir = File.join(path, "#{run_type}_Result")
+    if run_type =~ /BC/
+      rlt_dir = File.join(path, "BC_Result")
       Dir.mkdir(rlt_dir) unless Dir.exist?(rlt_dir)
       
-      sim_file = File.join(out_dir, sim_name)
-      field_file = File.join(out_dir, field_name)
+      sim_file = File.join(path, sim_name)
+      field_file = File.join(path, field_name)
       posts_file = File.join(rlt_dir, posts_name)
       pvals_file = File.join(rlt_dir, pvals_name)
       graphs_dir = rlt_dir
@@ -181,11 +188,11 @@ module RunAnalysis
 
     # Check if output file exist and if so, load it
     meters_table = read_table(
-      out_spec_file, 'Output Seetings', 'Meters', verbose
+      out_spec_file, 'Output Settings', 'Meters', verbose
     )
 
     # Check if UQ information file exists
-    unless run_type == 'BC'
+    unless run_type =~ /BC/
       check_file_exist(uq_repo_file, 'UQ repository file', verbose)
     else  
       check_file_exist(priors_file, 'Prior uncertainty info file', verbose)
@@ -194,186 +201,191 @@ module RunAnalysis
     wait_for_y('Running Interactively') if run_interactive
 
     ## Main process
-    # Step 1: Generate uncertainty distributions
-    if verbose
-      puts "\nStep 1: Generating distribution of uncertainty parameters"
-    end
-    undertain_parameters = UncertainParameters.new
-    unless run_type == 'BC'
-      # Load UQ repository file
-      uq_file = File.join(out_dir, "UQ_#{building_name}.csv")
-      uq_table = read_table(uq_repo_file, 'UQ repository', 'UQ', verbose)
-      # Remove the header rows
-      2.times { uq_table.delete_at(0) }
-      # Identify uncertainty parameters in the model
-      undertain_parameters.find(model, uq_table, uq_file, verbose)
-      # Check uncertainty information
-      wait_for_y("Check the #{uq_file}") if run_interactive
-    else
-      # Load prior distribution file
-      uq_table = read_prior_table(priors_file, verbose)
-    end
-
-    # Step 2: Generate design matrix for analysis
-    if verbose
-      puts "\nStep 2: Generating design Matrix and sample for analysis"
-    end
-    case run_type
-    when 'UA'
-      # Generate LHD sample
-      stats = Stats.new
-      params = {:n_runs => num_lhd_runs}
-      stats.samples_generator(
-        uq_file, 'LHD', params, out_dir, randseed, verbose
-      )
-      sample_file = File.join(out_dir, 'LHD_Sample.csv')
-    when 'SA'
-      # Generate Morris design sample
-      stats = Stats.new
-      params = {:morris_r => morris_reps, :morris_l => morris_levels}
-      stats.samples_generator(
-        uq_file, 'Morris', params, out_dir, randseed, verbose
-      )
-      sample_file = File.join(out_dir, 'Morris_Sample.csv')
-    when 'BC'
-      # Generate LHD sample
-      stats = Stats.new
-      params = {:n_runs => num_lhd_runs}
-      stats.samples_generator(
-        priors_file, 'LHD', params, out_dir, randseed, verbose
-      )
-      sample_file = File.join(out_dir, 'LHD_Sample.csv')
-    end
-
-    # Generate sample of parameters
-    samples = CSV.read(sample_file, headers: false)
-    samples.delete_at(0)
-    num_runs = samples[0].length - 2
-    param_names, param_types, param_values = extract_samples(samples)
-
-    # Step 3: Create and run all OSM simulation files
-    unless no_ep
+    unless run_type == 'BC_no_sim'
+      # Step 1: Generate uncertainty distributions
       if verbose
-        puts "Going to run #{num_runs} models. This could take a while"
+        puts "\nStep 1: Generating distribution of uncertainty parameters"
       end
-      # Generate sample of OSMs
-      (0..(param_values.length - 1)).each do |k|
-        # Reload the model explicitly to get the same starting point each time
-        model = OpenStudio::Model::Model.load(osm_file).get
-        undertain_parameters.apply(
-          model, param_types, param_names, param_values[k]
-        )
-
-        # Add reporting meters
-        add_reporting_meters_to_model(model, meters_table)
-
-        # Add weather variable reporting to model and set its frequency
-        add_output_variables_to_model(
-          model, 'Site Outdoor Air Drybulb Temperature', 'Monthly'
-        )
-        add_output_variables_to_model(
-          model, 'Site Ground Reflected Solar Radiation Rate per Area',
-          'Monthly'
-        )
-
-        # Model saved to osm file
-        model_sample_file = File.join(model_dir, "Sample#{k + 1}.osm")
-        model.save(model_sample_file, true)
-
-        # Add for thermostat algorithm
-        uq_file_thermostat = File.join(
-          out_dir, "UQ_#{building_name}_thermostat.csv"
-        )
-        undertain_parameters.apply_thermostat(
-          model, uq_table, uq_file_thermostat, model_sample_file,
-          param_types, param_values[k]
-        )
-
-        puts "Sample#{k + 1} is saved to the folder of Models" if verbose
+      undertain_parameters = UncertainParameters.new
+      unless run_type == 'BC'
+        # Load UQ repository file
+        uq_file = File.join(out_dir, "UQ_#{building_name}.csv")
+        uq_table = read_table(uq_repo_file, 'UQ repository', 'UQ', verbose)
+        # Remove the header rows
+        2.times { uq_table.delete_at(0) }
+        # Identify uncertainty parameters in the model
+        undertain_parameters.find(model, uq_table, uq_file, verbose)
+        # Check uncertainty information
+        wait_for_y("Check the #{uq_file}") if run_interactive
+      else
+        # Load prior distribution file
+        uq_table = read_prior_table(priors_file, verbose)
       end
 
-      puts "\nStep 3: Running #{num_runs} OSM simulations" if verbose
-      wait_for_y if run_interactive
-
-      runner = RunOSM.new
-      runner.run_osm(model_dir, epw_file, run_dir, num_runs, num_processes)
-
-    else
+      # Step 2: Generate design matrix for analysis
       if verbose
-        puts "\nStep 3"
-        puts '--noEP option selected, skipping creation of OpenStudio files ' \
-          'and running of EnergyPlus'
-        puts
+        puts "\nStep 2: Generating design Matrix and sample for analysis"
+      end
+      case run_type
+      when 'UA'
+        # Generate LHD sample
+        stats = Stats.new
+        params = {:n_runs => num_lhd_runs}
+        stats.samples_generator(
+          uq_file, 'LHD', params, out_dir, randseed, verbose
+        )
+        sample_file = File.join(out_dir, 'LHD_Sample.csv')
+      when 'SA'
+        # Generate Morris design sample
+        stats = Stats.new
+        params = {:morris_r => morris_reps, :morris_l => morris_levels}
+        stats.samples_generator(
+          uq_file, 'Morris', params, out_dir, randseed, verbose
+        )
+        sample_file = File.join(out_dir, 'Morris_Sample.csv')
+      when 'BC'
+        # Generate LHD sample
+        stats = Stats.new
+        params = {:n_runs => num_lhd_runs}
+        stats.samples_generator(
+          priors_file, 'LHD', params, out_dir, randseed, verbose
+        )
+        sample_file = File.join(out_dir, 'LHD_Sample.csv')
       end
 
-    end
+      # Generate sample of parameters
+      samples = CSV.read(sample_file, headers: false)
+      samples.delete_at(0)
+      num_runs = samples[0].length - 2
+      param_names, param_types, param_values = extract_samples(samples)
 
-    # Step 4: Read Simulation Results
-    if verbose
-      puts "\nStep 4: Post-processing and analyzing simulation results"
-    end
-    weather_flag = run_type.eql?('BC')
-    OutPut.read(run_dir, out_spec_file, out_dir, weather_flag, verbose)
-
-    # SA post-process
-    if run_type == 'SA'
-      max_chars = 60
-      stats.compute_sensitivities(
-        File.join(out_dir, 'Simulation_Results_Building_Total_Energy.csv'),
-        uq_file, out_dir, max_chars, verbose
-      )
-    end
-
-    # Delete intermediate files
-    unless no_cleanup
-      FileUtils.remove_dir(model_dir) if Dir.exist?(model_dir)
-      to_be_cleaned =
-        case run_type
-        when 'UA', 'BC'
-          ['Random_LHD_Samples.csv']
-        when 'SA'
-          [
-            'Meter_Electricity_Facility.csv',
-            'Meter_Gas_Facility.csv',
-            'Morris_Design.csv',
-            'Morris_Sample.csv',
-            'Simulation_Results_Building_Total_Energy.csv'
-          ]
+      # Step 3: Create and run all OSM simulation files
+      unless no_ep
+        if verbose
+          puts "Going to run #{num_runs} models. This could take a while"
         end
-      to_be_cleaned.each do |file|
-        clean_path = File.join(out_dir, file)
-        File.delete(clean_path) if File.exist?(clean_path)
+        # Generate sample of OSMs
+        (0..(param_values.length - 1)).each do |k|
+          # Reload the model explicitly to get the same starting point each time
+          model = OpenStudio::Model::Model.load(osm_file).get
+          undertain_parameters.apply(
+            model, param_types, param_names, param_values[k]
+          )
+
+          # Add reporting meters
+          add_reporting_meters_to_model(model, meters_table)
+
+          # Add weather variable reporting to model and set its frequency
+          add_output_variables_to_model(
+            model, 'Site Outdoor Air Drybulb Temperature', 'Monthly'
+          )
+          add_output_variables_to_model(
+            model, 'Site Ground Reflected Solar Radiation Rate per Area',
+            'Monthly'
+          )
+
+          # Model saved to osm file
+          model_sample_file = File.join(model_dir, "Sample#{k + 1}.osm")
+          model.save(model_sample_file, true)
+
+          # Add for thermostat algorithm
+          uq_file_thermostat = File.join(
+            out_dir, "UQ_#{building_name}_thermostat.csv"
+          )
+          undertain_parameters.apply_thermostat(
+            model, uq_table, uq_file_thermostat, model_sample_file,
+            param_types, param_values[k]
+          )
+
+          puts "Sample#{k + 1} is saved to the folder of Models" if verbose
+        end
+
+        puts "\nStep 3: Running #{num_runs} OSM simulations" if verbose
+        wait_for_y if run_interactive
+
+        runner = RunOSM.new
+        runner.run_osm(
+          model_dir, epw_file, run_dir, num_runs, num_processes, verbose
+        )
+
+      else
+        if verbose
+          puts "\nStep 3"
+          puts '--noEP option selected, skipping creation of ' \
+            'OpenStudio files and running of EnergyPlus'
+          puts
+        end
+
+      end
+
+      # Step 4: Read Simulation Results
+      if verbose
+        puts "\nStep 4: Post-processing and analyzing simulation results"
+      end
+      weather_flag = run_type.eql?('BC')
+      OutPut.read(run_dir, out_spec_file, out_dir, weather_flag, verbose)
+
+      # SA post-process
+      if run_type == 'SA'
+        max_chars = 60
+        stats.compute_sensitivities(
+          File.join(out_dir, 'Simulation_Results_Building_Total_Energy.csv'),
+          uq_file, out_dir, max_chars, verbose
+        )
+      end
+
+      # Delete intermediate files
+      unless no_cleanup
+        FileUtils.remove_dir(model_dir) if Dir.exist?(model_dir)
+        to_be_cleaned =
+          case run_type
+          when 'UA', 'BC'
+            ['LHD_Design.csv']
+          when 'SA'
+            [
+              'Meter_Electricity_Facility.csv',
+              'Meter_Gas_Facility.csv',
+              'Morris_Design.csv',
+              'Morris_Sample.csv',
+              'Simulation_Results_Building_Total_Energy.csv'
+            ]
+          end
+        to_be_cleaned.each do |file|
+          clean_path = File.join(out_dir, file)
+          File.delete(clean_path) if File.exist?(clean_path)
+        end
+      end
+
+      if run_type == 'BC'
+        # Step 5: Prepare calibration input files
+        # y_sim, monthly drybuld and solar horizontal radiation,
+        # calibration parameter samples...
+        puts "\nStep5: Preparing calibration input files" if verbose
+
+        y_elec_file = File.join(out_dir, 'Meter_Electricity_Facility.csv')
+        y_gas_file = File.join(out_dir, 'Meter_Gas_Facility.csv')
+        cal_sim_data_file = File.join(path, 'cal_sim_data.txt')
+        cal_field_data_file = File.join(path, 'cal_field_data.txt')
+        weather_file = File.join(out_dir, 'Monthly_Weather.csv')
+
+        monthly_temp, monthly_solar = read_monthly_weather(weather_file)
+
+        y_sim = get_y_sim(y_elec_file, y_gas_file)
+        y_length = get_table_length(y_elec_file)
+
+        cal_sim_data = get_cal_sim_data(
+          y_sim, y_length, samples, monthly_temp, monthly_solar
+        )
+        write_to_file(cal_sim_data, cal_sim_data_file, verbose)
+
+        cal_field_data = get_cal_field_data(
+          utility_file, monthly_temp, monthly_solar, verbose
+        )
+        write_to_file(cal_field_data, cal_field_data_file, verbose)
       end
     end
 
-    if run_type == 'BC'
-
-      # Step 5: Prepare calibration input files
-      # y_sim, monthly drybuld and solar horizontal radiation,
-      # calibration parameter samples...
-      puts "\nStep5: Preparing calibration input files" if verbose
-
-      y_elec_file = File.join(out_dir, 'Meter_Electricity_Facility.csv')
-      y_gas_file = File.join(out_dir, 'Meter_Gas_Facility.csv')
-      cal_sim_data_file = File.join(out_dir, 'cal_sim_data.txt')
-      cal_field_data_file = File.join(out_dir, 'cal_field_data.txt')
-      weather_file = File.join(out_dir, 'Monthly_Weather.csv')
-
-      monthly_temp, monthly_solar = read_monthly_weather(weather_file)
-
-      y_sim = get_y_sim(y_elec_file, y_gas_file)
-      y_length = get_table_length(y_elec_file)
-
-      cal_sim_data = get_cal_sim_data(
-        y_sim, y_length, samples, monthly_temp, monthly_solar
-      )
-      write_to_file(cal_sim_data, cal_sim_data_file, verbose)
-
-      cal_field_data = get_cal_field_data(
-        utility_file, monthly_temp, monthly_solar, verbose
-      )
-      write_to_file(cal_field_data, cal_field_data_file, verbose)
-
+    if run_type =~ /BC/
       check_file_exist(sim_file, 'Computer Simulation File', verbose)
       check_file_exist(field_file, 'Utility Data File', verbose)
 
@@ -398,7 +410,11 @@ module RunAnalysis
       #                  Monthly Global Horizontal Solar Radiation (W/M2)
     
       if verbose
-        puts "\nStep 6: Performing Bayesian calibration of computer models"
+        if run_type == 'BC'
+          puts "\nStep 6: Performing Bayesian calibration of computer models"
+        else
+          puts "\nPerforming Bayesian calibration of computer models"
+        end
         puts "Using number of output variables = #{num_out_vars}"
         puts "Using number of weather variables = #{num_w_vars}"
         puts "Using number of MCMC sample points = #{num_mcmc}"

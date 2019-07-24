@@ -139,7 +139,7 @@ def read_table(filename, file_string, file_type, verbose)
   if File.exist?(filename)
     puts "Using #{file_string} = #{filename}" if verbose
     table = read_workbook(filename, file_type)
-    pp_table(table) if file_type.eql?('Meters') && verbose
+    pp_table(table) if file_type == 'Meters' && verbose
   else
     puts "#{filename} was NOT found!"
     abort
