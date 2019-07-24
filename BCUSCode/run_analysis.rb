@@ -425,7 +425,7 @@ module RunAnalysis
       # Run calibrated model
       unless no_run_cal
         puts "\nGenerate and run calibrated model" if verbose
-        cal_model_dir = File.join(path, 'Calibrated_Model')
+        cal_model_dir = File.join(rlt_dir, 'Calibrated_Model')
         cal_osm = CalibratedOSM.new
         cal_osm.gen_and_sim(
           osm_file, epw_file, priors_file, posts_file,

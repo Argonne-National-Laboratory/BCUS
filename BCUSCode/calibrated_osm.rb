@@ -98,7 +98,7 @@ class CalibratedOSM
     )
     model.save(cal_model_file, true)
 
-    sim_dir = File.join(cal_model_dir, 'Cal_Simulations')
+    sim_dir = File.join(cal_model_dir, 'Calibrated_Simulations')
     runner = RunOSM.new
     runner.run_osm(cal_model_dir, epw_file, sim_dir)
 
