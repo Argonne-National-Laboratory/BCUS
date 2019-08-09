@@ -1,17 +1,5 @@
 ECHO "Bayesian Calibration"
-ECHO "This bash file will run the Bayesian Calibration Setup and Bayesian Calibration in following commands:"
-ECHO "ruby -S BC_Setup.rb  --osmName --epwName --outfile --priorsFile --utilityData --numLHS --seed 1  --noCleanup --verbose"
-ECHO "ruby -S BC.rb  --osmName --epwName --comFile --fieldFile --numMCMC --numOutVars --numWVars --numBurnin --priorsFile --postsFile --seed --noRunCal --noCleanup --verbose"
+ECHO "This bash file will run the Bayesian calibration in following commands:"
+ECHO "ruby -S BC.rb  --osmName --epwName --priorsFile --utilityData --outfile --simFile --fieldFile --postsFile --pvalsFile --numLHD --numMCMC --numOutVars --numWVars --numBurnin --seed --numProcesses --noSim --noEP --noCleanup --noPlots --noRunCal --interactive --verbose"
 
-export BCUS="C:\Yuna\github\BCUS"
-export RUBYPATH="$BCUS\Example"
-ruby -S BC_Setup.rb --osmName ExampleBuilding.osm --epwName Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numLHS 10 --priors Prior.csv --utilityData Utility.csv
-ruby -S BC.rb ExampleBuilding.osm Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numMCMC 200 --numBurnin 3  --noRunCal --priorsFile Prior.csv 
-
-
-
-
-
-
-
-
+ruby -S BC.rb ExampleBuilding.osm Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --priorsFile Prior.csv --utilityData Utility.csv --numLHD 10 --numMCMC 200 --numBurnin 3 --seed 1 --numProcesses 3 --noRunCal --verbose
