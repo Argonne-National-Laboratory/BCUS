@@ -84,7 +84,7 @@ module RunAnalysis
 
     # Assign common analysis settings
     out_spec_file = File.absolute_path(options[:outFile])
-    randseed = Integer(options[:randseed])
+    randseed = Integer(options[:randSeed])
     num_processes = Integer(options[:numProcesses])
     no_sim = options[:noSim]
     no_ep = options[:noEP]
@@ -120,7 +120,7 @@ module RunAnalysis
     when /BC/
       puts 'Running Bayesian calibration' if verbose
       if run_type == 'BC'
-        utility_file = File.absolute_path(options[:utilityData]) 
+        utility_file = File.absolute_path(options[:utilityData])
         num_lhd_runs = Integer(options[:numLHD])
         puts "Using number of LHD samples  = #{num_lhd_runs}" if verbose
       end
@@ -136,7 +136,7 @@ module RunAnalysis
       num_out_vars = Integer(options[:numOutVars])
       num_w_vars = Integer(options[:numWVars])
       num_burnin = Integer(options[:numBurnin])
-      no_plots = options[:noplots]
+      no_plots = options[:noPlots]
       no_run_cal = options[:noRunCal]
 
       if num_burnin >= num_mcmc
@@ -144,13 +144,11 @@ module RunAnalysis
             "numBurnin has been reset to 0.\n"
         num_burnin = 0
       end
-      
+
       unless run_type == 'BC_no_sim'
-        if verbose
-          puts "Using number of parallel processes  = #{num_processes}"
-          puts "Using random seed = #{randseed}"
-          puts 'Not cleaning up interim files' if no_cleanup
-        end
+        puts "Using number of parallel processes = #{num_processes}" if verbose
+        puts "Using random seed = #{randseed}" if verbose
+        puts 'Not cleaning up interim files' if verbose & no_cleanup
       end
 
     end
@@ -166,9 +164,9 @@ module RunAnalysis
     end
 
     if run_type =~ /BC/
-      rlt_dir = File.join(path, "BC_Result")
+      rlt_dir = File.join(path, 'BC_Result')
       Dir.mkdir(rlt_dir) unless Dir.exist?(rlt_dir)
-      
+
       sim_file = File.join(path, sim_name)
       field_file = File.join(path, field_name)
       posts_file = File.join(rlt_dir, posts_name)
@@ -192,10 +190,10 @@ module RunAnalysis
     )
 
     # Check if UQ information file exists
-    unless run_type =~ /BC/
-      check_file_exist(uq_repo_file, 'UQ repository file', verbose)
-    else  
+    if run_type =~ /BC/
       check_file_exist(priors_file, 'Prior uncertainty info file', verbose)
+    else
+      check_file_exist(uq_repo_file, 'UQ repository file', verbose)
     end
 
     wait_for_y('Running Interactively') if run_interactive
@@ -207,7 +205,10 @@ module RunAnalysis
         puts "\nStep 1: Generating distribution of uncertainty parameters"
       end
       undertain_parameters = UncertainParameters.new
-      unless run_type == 'BC'
+      if run_type == 'BC'
+        # Load prior distribution file
+        uq_table = read_prior_table(priors_file, verbose)
+      else
         # Load UQ repository file
         uq_file = File.join(out_dir, "UQ_#{building_name}.csv")
         uq_table = read_table(uq_repo_file, 'UQ repository', 'UQ', verbose)
@@ -217,9 +218,6 @@ module RunAnalysis
         undertain_parameters.find(model, uq_table, uq_file, verbose)
         # Check uncertainty information
         wait_for_y("Check the #{uq_file}") if run_interactive
-      else
-        # Load prior distribution file
-        uq_table = read_prior_table(priors_file, verbose)
       end
 
       # Step 2: Generate design matrix for analysis
@@ -260,7 +258,14 @@ module RunAnalysis
       param_names, param_types, param_values = extract_samples(samples)
 
       # Step 3: Create and run all OSM simulation files
-      unless no_ep
+      if no_ep
+        if verbose
+          puts "\nStep 3"
+          puts '--noEP option selected, skipping creation of ' \
+          'OpenStudio files and running of EnergyPlus'
+          puts
+        end
+      else
         if verbose
           puts "Going to run #{num_runs} models. This could take a while"
         end
@@ -307,14 +312,6 @@ module RunAnalysis
         runner.run_osm(
           model_dir, epw_file, run_dir, num_runs, num_processes, verbose
         )
-
-      else
-        if verbose
-          puts "\nStep 3"
-          puts '--noEP option selected, skipping creation of ' \
-            'OpenStudio files and running of EnergyPlus'
-          puts
-        end
 
       end
 
@@ -386,29 +383,30 @@ module RunAnalysis
     end
 
     if run_type =~ /BC/
-      check_file_exist(sim_file, 'Computer Simulation File', verbose)
-      check_file_exist(field_file, 'Utility Data File', verbose)
 
       # Step 6: Perform Bayesian calibration
       # Require the following files from parametric simulations
       # Parameters_Priors.csv
       # cal_field_data.txt
       # cal_sim_data.txt
-      
+
       # LHD design is used now
       # Space filling design could be adopted later
-      
+
       # cal_sim_data.txt: Computation data
       # In the order of: Monthly Energy Output;
       #                  Monthly Dry-bulb Temperature (C),
       #                  Monthly Global Horizontal Solar Radiation (W/M2)
       #                  Calibration Parameters
-      
+
       # cal_field_data.txt: Observed data
       # In the order of: Monthly Energy Output;
       #                  Monthly Dry-bulb Temperature (C),
       #                  Monthly Global Horizontal Solar Radiation (W/M2)
-    
+
+      check_file_exist(sim_file, 'Computer Simulation File', verbose)
+      check_file_exist(field_file, 'Utility Data File', verbose)
+
       if verbose
         if run_type == 'BC'
           puts "\nStep 6: Performing Bayesian calibration of computer models"
@@ -450,9 +448,6 @@ module RunAnalysis
           out_spec_file, cal_model_dir, verbose
         )
       end
-
     end
-
   end
-
 end

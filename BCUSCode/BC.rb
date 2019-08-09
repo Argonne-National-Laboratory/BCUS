@@ -42,7 +42,6 @@
 # This is the main code used for running Bayesian calibration to generate
 # posterior distributions and graphing results
 
-
 require 'optparse'
 
 require_relative 'run_analysis'
@@ -64,7 +63,7 @@ parser = OptionParser.new do |opts|
 
   options[:priorsFile] = 'Parameter_Priors.csv'
   opts.on(
-    '--priors priorsFile',
+    '--priorsFile priorsFile',
     'Prior uncertainty information file, default "Parameter_Priors.csv"'
   ) do |priors_file|
     options[:priorsFile] = priors_file
@@ -156,12 +155,12 @@ parser = OptionParser.new do |opts|
     options[:numBurnin] = num_burnin
   end
 
-  options[:randseed] = 0
+  options[:randSeed] = 0
   opts.on(
     '--seed seednum',
     'Integer random number seed, 0 = no seed, default 0'
   ) do |seednum|
-    options[:randseed] = seednum
+    options[:randSeed] = seednum
   end
 
   options[:numProcesses] = 0
@@ -181,15 +180,15 @@ parser = OptionParser.new do |opts|
   opts.on('--noEP', 'Do not run EnergyPlus') do
     options[:noEP] = true
   end
-  
+
   options[:noCleanup] = false
   opts.on('-n', '--noCleanup', 'Do not clean up intermediate files.') do
     options[:noCleanup] = true
   end
-  
-  options[:noplots] = false
+
+  options[:noPlots] = false
   opts.on('--noPlots', 'Do not produce any PDF plots') do
-    options[:noplots] = true
+    options[:noPlots] = true
   end
 
   options[:noRunCal] = false

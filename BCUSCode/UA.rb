@@ -85,12 +85,12 @@ parser = OptionParser.new do |opts|
     options[:outFile] = out_file
   end
 
-  options[:randseed] = 0
+  options[:randSeed] = 0
   opts.on(
     '--seed seednum',
     'Integer random number seed, 0 = no seed, default 0'
   ) do |seednum|
-    options[:randseed] = seednum
+    options[:randSeed] = seednum
   end
 
   options[:numProcesses] = 0
@@ -138,4 +138,4 @@ parser.parse!
 # Run main analysis function
 RunAnalysis.run('UA', options)
 
-puts "UA.rb completed successfully!"
+puts 'UA.rb completed successfully!'
