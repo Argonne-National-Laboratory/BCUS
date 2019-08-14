@@ -49,7 +49,6 @@ require 'fileutils'
 require 'rubyXL'
 require 'csv'
 
-# rubocop:disable LineLength
 def sql_table_lookup(in_string, sql_file)
   case in_string
   when /Total Site Energy/
@@ -143,7 +142,6 @@ def sql_table_lookup(in_string, sql_file)
   return table_out
 end
 
-# rubocop:enable LineLength
 # Module for output postproess
 module OutPut
   def self.read(

@@ -108,7 +108,6 @@ class UncertainParameters
 
     # Create a csv file that contains uncertain parameters and write in
     # the created csv file (take input from uncertainty)
-    # rubocop:disable Metrics/LineLength
     CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
         'Parameter Type', 'Object in the model', 'Parameter Base Value',
@@ -144,7 +143,8 @@ class UncertainParameters
               "StandardOpaqueMaterial #{uq_param[2]} not found\n\n"
             )
           else
-            @envelop_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @envelop_uncertainty.send(param_attr.to_sym)
+                                .each_with_index do |value, index|
               csv << [
                 param_name, @envelop_uncertainty.std_mat_name[index],
                 value, *uq_param[4..8]
@@ -223,7 +223,8 @@ class UncertainParameters
               "StandardGlazing #{uq_param[2]} not found\n\n"
             )
           else
-            @envelop_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @envelop_uncertainty.send(param_attr.to_sym)
+                                .each_with_index do |value, index|
               csv << [
                 param_name, @envelop_uncertainty.std_glz_name[index],
                 value, *uq_param[4..8]
@@ -252,7 +253,8 @@ class UncertainParameters
           if param_attr.nil?
             abort("\n!!!ABORTING!!! Lights #{uq_param[2]} not found\n\n")
           else
-            @operation_uncertainty.lights_space_type.each_with_index do |spacetype, index|
+            @operation_uncertainty.lights_space_type
+                                  .each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
                 @operation_uncertainty.send(param_attr.to_sym)[index],
@@ -274,7 +276,8 @@ class UncertainParameters
           if param_attr.nil?
             abort("\n!!!ABORTING!!! PlugLoad #{uq_param[2]} not found\n\n")
           else
-            @operation_uncertainty.plugload_space_type.each_with_index do |spacetype, index|
+            @operation_uncertainty.plugload_space_type
+                                  .each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
                 @operation_uncertainty.send(param_attr.to_sym)[index],
@@ -296,7 +299,8 @@ class UncertainParameters
           if param_attr.nil?
             abort("\n!!!ABORTING!!! People #{uq_param[2]} not found\n\n")
           else
-            @operation_uncertainty.people_space_type.each_with_index do |spacetype, index|
+            @operation_uncertainty.people_space_type
+                                  .each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
                 @operation_uncertainty.send(param_attr.to_sym)[index],
@@ -317,7 +321,8 @@ class UncertainParameters
               "\n!!!ABORTING!!! HotWaterBoiler #{uq_param[2]} not found\n\n"
             )
           else
-            @boiler_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @boiler_uncertainty.send(param_attr.to_sym)
+                               .each_with_index do |value, index|
               csv << [
                 param_name, @boiler_uncertainty.hotwaterboiler_name[index],
                 value, *uq_param[4..8]
@@ -335,7 +340,8 @@ class UncertainParameters
           if param_attr.nil?
             abort("\n!!!ABORTING!!! SteamBoiler #{uq_param[2]} not found\n\n")
           else
-            @boiler_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @boiler_uncertainty.send(param_attr.to_sym)
+                               .each_with_index do |value, index|
               csv << [
                 param_name, @boiler_uncertainty.steamboiler_name[index],
                 value, *uq_param[4..8]
@@ -363,7 +369,8 @@ class UncertainParameters
               "\n!!!ABORTING!!! FanConstantVolume #{uq_param[2]} not found\n\n"
             )
           else
-            @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @fan_pump_uncertainty.send(param_attr.to_sym)
+                                 .each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.fan_constant_name[index],
                 value, *uq_param[4..8]
@@ -391,7 +398,8 @@ class UncertainParameters
               "\n!!!ABORTING!!! FanVariableVolume #{uq_param[2]} not found\n\n"
             )
           else
-            @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @fan_pump_uncertainty.send(param_attr.to_sym)
+                                 .each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.fan_variable_name[index],
                 value, *uq_param[4..8]
@@ -414,7 +422,8 @@ class UncertainParameters
               "\n!!!ABORTING!!! PumpConstantSpeed #{uq_param[2]} not found\n\n"
             )
           else
-            @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @fan_pump_uncertainty.send(param_attr.to_sym)
+                                 .each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.pump_constant_name[index],
                 value, *uq_param[4..8]
@@ -437,7 +446,8 @@ class UncertainParameters
               "\n!!!ABORTING!!! PumpVariableSpeed #{uq_param[2]} not found\n\n"
             )
           else
-            @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @fan_pump_uncertainty.send(param_attr.to_sym)
+                                 .each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.pump_variable_name[index],
                 value, *uq_param[4..8]
@@ -471,7 +481,8 @@ class UncertainParameters
               "DesignSpecificationOutdoorAir #{uq_param[2]} not found\n\n"
             )
           else
-            @design_spec_OA_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @design_spec_OA_uncertainty.send(param_attr.to_sym)
+                                       .each_with_index do |value, index|
               csv << [
                 param_name,
                 @design_spec_OA_uncertainty.design_spec_OA_name[index],
@@ -511,7 +522,8 @@ class UncertainParameters
               "SingleSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
             )
           else
-            @DX_cooling_coil_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @DX_cooling_coil_uncertainty.send(param_attr.to_sym)
+                                        .each_with_index do |value, index|
               csv << [
                 param_name,
                 @DX_cooling_coil_uncertainty.DX_coil_single_speed_name[index],
@@ -541,7 +553,8 @@ class UncertainParameters
               "TwoSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
             )
           else
-            @DX_cooling_coil_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @DX_cooling_coil_uncertainty.send(param_attr.to_sym)
+                                        .each_with_index do |value, index|
               csv << [
                 param_name,
                 @DX_cooling_coil_uncertainty.DX_coil_two_speed_name[index],
@@ -563,7 +576,8 @@ class UncertainParameters
               "ChillerElectricEIR #{uq_param[2]} not found\n\n"
             )
           else
-            @chillerEIR_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
+            @chillerEIR_uncertainty.send(param_attr.to_sym)
+                                   .each_with_index do |value, index|
               csv << [
                 param_name,
                 @chillerEIR_uncertainty.chiller_name[index],
@@ -592,7 +606,6 @@ class UncertainParameters
       end
     end
     puts "#{uq_file} has been generated." if verbose
-    # rubocop:enable Metrics/LineLength
   end
 
   def apply(model, param_types, param_names, param_values)
@@ -638,7 +651,6 @@ class UncertainParameters
     model, uq_table, uq_file, model_out, param_types, param_values
   )
     # Create a csv file that contains thermostat if the user turn it on
-    # rubocop:disable Metrics/LineLength
     CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
         'Parameter Type', 'Object in the model',
@@ -656,7 +668,8 @@ class UncertainParameters
               @thermostat_uncertainty.cooling_set(
                 model, adjust_value_cooling, model_out
               )
-              @thermostat_uncertainty.clg_set_sch_value.each_with_index do |value, index1|
+              @thermostat_uncertainty.clg_set_sch_value
+                                     .each_with_index do |value, index1|
                 csv << [
                   'CoolingSetpoint',
                   @thermostat_uncertainty.clg_set_sch_name[index1],
@@ -672,7 +685,8 @@ class UncertainParameters
               @thermostat_uncertainty.heating_set(
                 model, adjust_value_heating, model_out
               )
-              @thermostat_uncertainty.htg_set_sch_value.each_with_index do |value, index1|
+              @thermostat_uncertainty.htg_set_sch_value
+                                     .each_with_index do |value, index1|
                 csv << [
                   'HeatingSetpoint',
                   @thermostat_uncertainty.htg_set_sch_name[index1],
@@ -685,6 +699,5 @@ class UncertainParameters
         end
       end
     end
-    # rubocop:enable Metrics/LineLength
   end
 end
