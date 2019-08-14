@@ -79,8 +79,10 @@ require_relative 'uncertainty_fan_pump'
 require_relative 'uncertainty_operation'
 require_relative 'uncertainty_thermostat'
 
+# Class to represent uncertain model parameters
 class UncertainParameters
   def initialize
+    # rubocop:disable Naming/VariableName
     @envelop_uncertainty = EnvelopUncertainty.new
     @operation_uncertainty = OperationUncertainty.new
     @boiler_uncertainty = BoilerUncertainty.new
@@ -89,6 +91,7 @@ class UncertainParameters
     @DX_cooling_coil_uncertainty = DXCoilUncertainty.new
     @chillerEIR_uncertainty = ChillerUncertainty.new
     @thermostat_uncertainty = ThermostatUncertainty.new
+    # rubocop:enable Naming/VariableName
   end
 
   # Write into the uq cvs the uncertainty distribution information
@@ -105,6 +108,7 @@ class UncertainParameters
 
     # Create a csv file that contains uncertain parameters and write in
     # the created csv file (take input from uncertainty)
+    # rubocop:disable Metrics/LineLength
     CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
         'Parameter Type', 'Object in the model', 'Parameter Base Value',
@@ -120,111 +124,111 @@ class UncertainParameters
           param_attr, param_name =
             case uq_param[2]
             when /Conductivity/
-              ['std_mat_conductivity', 'Conductivity']
+              %w[std_mat_conductivity Conductivity]
             when /Density/
-              ['std_mat_density', 'Density']
+              %w[std_mat_density Density]
             when /SpecificHeat/
-              ['std_mat_specificHeat', 'SpecificHeat']
+              %w[std_mat_specificHeat SpecificHeat]
             when /SolarAbsorptance/
-              ['std_mat_solarAbsorptance', 'SolarAbsorptance']
+              %w[std_mat_solarAbsorptance SolarAbsorptance]
             when /ThermalAbsorptance/
-              ['std_mat_thermalAbsorptance', 'ThermalAbsorptance']
+              %w[std_mat_thermalAbsorptance ThermalAbsorptance]
             when /VisibleAbsorptance/
-              ['std_mat_visibleAbsorptance', 'VisibleAbsorptance']
+              %w[std_mat_visibleAbsorptance VisibleAbsorptance]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "StandardOpaqueMaterial #{uq_param[2]} not found\n\n"
+            )
+          else
             @envelop_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @envelop_uncertainty.std_mat_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "StandardOpaqueMaterial #{uq_param[2]} not found\n\n"
-            )
           end
         when /StandardGlazing/
           param_attr, param_name =
             case uq_param[2]
             when /Conductivity/
-              [
-                'std_glz_conductivity',
-                'Conductivity'
+              %w[
+                std_glz_conductivity
+                Conductivity
               ]
             when /ThermalResistance/
-              [
-                'std_glz_thermalResistance',
-                'ThermalResistance'
+              %w[
+                std_glz_thermalResistance
+                ThermalResistance
               ]
             when /SolarTransmittance/
-              [
-                'std_glz_solarTransmittance',
-                'SolarTransmittance'
+              %w[
+                std_glz_solarTransmittance
+                SolarTransmittance
               ]
             when /FrontSideSolarReflectance/
-              [
-                'std_glz_front_solarReflectance',
-                'FrontSideSolarReflectance'
+              %w[
+                std_glz_front_solarReflectance
+                FrontSideSolarReflectance
               ]
             when /BackSideSolarReflectance/
-              [
-                'std_glz_back_solarReflectance',
-                'BackSideSolarReflectance'
+              %w[
+                std_glz_back_solarReflectance
+                BackSideSolarReflectance
               ]
             when /InfraredTransmittance/
-              [
-                'std_glz_infraredTransmittance',
-                'InfraredTransmittance'
+              %w[
+                std_glz_infraredTransmittance
+                InfraredTransmittance
               ]
             when /VisibleTransmittance/
-              [
-                'std_glz_visibleTransmittance',
-                'VisibleTransmittance'
+              %w[
+                std_glz_visibleTransmittance
+                VisibleTransmittance
               ]
             when /FrontSideVisibleReflectance/
-              [
-                'std_glz_front_visibleReflectance',
-                'FrontSideVisibleReflectance'
+              %w[
+                std_glz_front_visibleReflectance
+                FrontSideVisibleReflectance
               ]
             when /BackSideVisibleReflectance/
-              [
-                'std_glz_back_visibleReflectance',
-                'BackSideVisibleReflectance'
+              %w[
+                std_glz_back_visibleReflectance
+                BackSideVisibleReflectance
               ]
             when /FrontSideInfraredHemisphericalEmissivity/
-              [
-                'std_glz_front_infraredEmissivity',
-                'FrontSideInfraredHemisphericalEmissivity'
+              %w[
+                std_glz_front_infraredEmissivity
+                FrontSideInfraredHemisphericalEmissivity
               ]
             when /BackSideInfraredHemisphericalEmissivity/
-              [
-                'std_glz_back_infraredEmissivity',
-                'BackSideInfraredHemisphericalEmissivity'
+              %w[
+                std_glz_back_infraredEmissivity
+                BackSideInfraredHemisphericalEmissivity
               ]
             when /DirtCorrectionFactor/
-              [
-                'std_glz_dirtCorrectionFactor',
-                'DirtCorrectionFactor'
+              %w[
+                std_glz_dirtCorrectionFactor
+                DirtCorrectionFactor
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "StandardGlazing #{uq_param[2]} not found\n\n"
+            )
+          else
             @envelop_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @envelop_uncertainty.std_glz_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "StandardGlazing #{uq_param[2]} not found\n\n"
-            )
           end
         when /Infiltration/
           case uq_param[2]
@@ -238,14 +242,16 @@ class UncertainParameters
           param_attr, param_name =
             case uq_param[2]
             when /WattsPerSpaceFloorArea/
-              [
-                'lights_watts_per_floor_area',
-                'Lights_WattsPerSpaceFloorArea'
+              %w[
+                lights_watts_per_floor_area
+                Lights_WattsPerSpaceFloorArea
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort("\n!!!ABORTING!!! Lights #{uq_param[2]} not found\n\n")
+          else
             @operation_uncertainty.lights_space_type.each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
@@ -253,21 +259,21 @@ class UncertainParameters
                 *uq_param[4..8]
               ]
             end
-          else
-            abort("\n!!!ABORTING!!! Lights #{uq_param[2]} not found\n\n")
           end
         when /PlugLoad/
           param_attr, param_name =
             case uq_param[2]
             when /WattsPerSpaceFloorArea/
-              [
-                'plugload_watts_per_floor_area',
-                'PlugLoad_WattsPerSpaceFloorArea'
+              %w[
+                plugload_watts_per_floor_area
+                PlugLoad_WattsPerSpaceFloorArea
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort("\n!!!ABORTING!!! PlugLoad #{uq_param[2]} not found\n\n")
+          else
             @operation_uncertainty.plugload_space_type.each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
@@ -275,21 +281,21 @@ class UncertainParameters
                 *uq_param[4..8]
               ]
             end
-          else
-            abort("\n!!!ABORTING!!! PlugLoad #{uq_param[2]} not found\n\n")
           end
         when /People/
           param_attr, param_name =
             case uq_param[2]
             when /SpaceFloorAreaPerPerson/
-              [
-                'people_floor_area_per_person',
-                'People_SpaceFloorAreaPerPerson'
+              %w[
+                people_floor_area_per_person
+                People_SpaceFloorAreaPerPerson
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort("\n!!!ABORTING!!! People #{uq_param[2]} not found\n\n")
+          else
             @operation_uncertainty.people_space_type.each_with_index do |spacetype, index|
               csv << [
                 param_name, spacetype,
@@ -297,171 +303,174 @@ class UncertainParameters
                 *uq_param[4..8]
               ]
             end
-          else
-            abort("\n!!!ABORTING!!! People #{uq_param[2]} not found\n\n")
           end
         when /HotWaterBoiler/
           param_attr, param_name =
             case uq_param[2]
             when /Efficiency/
-              ['hotwaterboiler_efficiency', 'HotWaterBoilerEfficiency']
+              %w[hotwaterboiler_efficiency HotWaterBoilerEfficiency]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! HotWaterBoiler #{uq_param[2]} not found\n\n"
+            )
+          else
             @boiler_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @boiler_uncertainty.hotwaterboiler_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! HotWaterBoiler #{uq_param[2]} not found\n\n"
-            )
           end
         when /SteamBoiler/
           param_attr, param_name =
             case uq_param[2]
             when /Efficiency/
-              ['steamboiler_efficiency', 'SteamBoilerEfficiency']
+              %w[steamboiler_efficiency SteamBoilerEfficiency]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort("\n!!!ABORTING!!! SteamBoiler #{uq_param[2]} not found\n\n")
+          else
             @boiler_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @boiler_uncertainty.steamboiler_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort("\n!!!ABORTING!!! SteamBoiler #{uq_param[2]} not found\n\n")
           end
         when /FanConstantVolume/
           param_attr, param_name =
             case uq_param[2]
             when /Efficiency/
-              [
-                'fan_constant_efficiency',
-                'FanConstantVolumeEfficiency'
+              %w[
+                fan_constant_efficiency
+                FanConstantVolumeEfficiency
               ]
             when /Motor_efficiency/
-              [
-                'fan_constant_motorEfficiency',
-                'FanConstantVolumeMotorEfficiency'
+              %w[
+                fan_constant_motorEfficiency
+                FanConstantVolumeMotorEfficiency
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! FanConstantVolume #{uq_param[2]} not found\n\n"
+            )
+          else
             @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.fan_constant_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! FanConstantVolume #{uq_param[2]} not found\n\n"
-            )
           end
         when /FanVariableVolume/
           param_attr, param_name =
             case uq_param[2]
             when /Efficiency/
-              [
-                'fan_variable_efficiency',
-                'FanVariableVolumeEfficiency'
+              %w[
+                fan_variable_efficiency
+                FanVariableVolumeEfficiency
               ]
             when /Motor_efficiency/
-              [
-                'fan_variable_motorEfficiency',
-                'FanVariableVolumeMotorEfficiency'
+              %w[
+                fan_variable_motorEfficiency
+                FanVariableVolumeMotorEfficiency
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! FanVariableVolume #{uq_param[2]} not found\n\n"
+            )
+          else
             @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.fan_variable_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! FanVariableVolume #{uq_param[2]} not found\n\n"
-            )
           end
         when /PumpConstantSpeed/
           param_attr, param_name =
             case uq_param[2]
             when /Motor_efficiency/
-              [
-                'pump_constant_motorEfficiency',
-                'PumpConstantSpeedMotorEfficiency'
+              %w[
+                pump_constant_motorEfficiency
+                PumpConstantSpeedMotorEfficiency
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! PumpConstantSpeed #{uq_param[2]} not found\n\n"
+            )
+          else
             @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.pump_constant_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! PumpConstantSpeed #{uq_param[2]} not found\n\n"
-            )
           end
         when /PumpVariableSpeed/
           param_attr, param_name =
             case uq_param[2]
             when /Motor_efficiency/
-              [
-                'pump_variable_motorEfficiency',
-                'PumpVariableSpeedMotorEfficiency'
+              %w[
+                pump_variable_motorEfficiency
+                PumpVariableSpeedMotorEfficiency
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! PumpVariableSpeed #{uq_param[2]} not found\n\n"
+            )
+          else
             @fan_pump_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name, @fan_pump_uncertainty.pump_variable_name[index],
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! PumpVariableSpeed #{uq_param[2]} not found\n\n"
-            )
           end
         when /DesignSpecificationOutdoorAir/
           param_attr, param_name =
             case uq_param[2]
             when /OutdoorAirFlowPerPerson/
-              [
-                'design_spec_OA_flow_per_person',
-                'DesignSpecificOutdoorAirFlowPerPerson'
+              %w[
+                design_spec_OA_flow_per_person
+                DesignSpecificOutdoorAirFlowPerPerson
               ]
             when /OutdoorairFlowPerZoneFloorArea/
-              [
-                'design_spec_OA_flow_per_floor_area',
-                'DesignSpecificOutdoorAirFlowPerZoneFloorArea'
+              %w[
+                design_spec_OA_flow_per_floor_area
+                DesignSpecificOutdoorAirFlowPerZoneFloorArea
               ]
             when /OutdoorAirFlowRate/
-              [
-                'design_spec_OA_flow_rate',
-                'DesignSpecificOutdoorAirFlowRate'
+              %w[
+                design_spec_OA_flow_rate
+                DesignSpecificOutdoorAirFlowRate
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "DesignSpecificationOutdoorAir #{uq_param[2]} not found\n\n"
+            )
+          else
             @design_spec_OA_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name,
@@ -469,39 +478,39 @@ class UncertainParameters
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "DesignSpecificationOutdoorAir #{uq_param[2]} not found\n\n"
-            )
           end
         when /SingleSpeedDXCoolingUnits/
           param_attr, param_name =
             case uq_param[2]
             when /RatedTotalCoolingCapacity/
-              [
-                'DX_coil_single_speed_totalCapacity',
-                'DXCoolingCoilSingleSpeedRatedTotalCapacity'
+              %w[
+                DX_coil_single_speed_totalCapacity
+                DXCoolingCoilSingleSpeedRatedTotalCapacity
               ]
             when /RatedSenisbleHeatRatio/
-              [
-                'DX_coil_single_speed_sensibleHeatRatio',
-                'DXCoolingCoilSingleSpeedRatedSenisbleHeatRatio'
+              %w[
+                DX_coil_single_speed_sensibleHeatRatio
+                DXCoolingCoilSingleSpeedRatedSenisbleHeatRatio
               ]
             when /RatedCOP/
-              [
-                'DX_coil_single_speed_COP',
-                'DXCoolingCoilSingleSpeedRatedCOP'
+              %w[
+                DX_coil_single_speed_COP
+                DXCoolingCoilSingleSpeedRatedCOP
               ]
             when /RatedAirFlowRate/
-              [
-                'DX_coil_single_speed_airFlowRate',
-                'DXCoolingCoilSingleSpeedRatedAirFlowRate'
+              %w[
+                DX_coil_single_speed_airFlowRate
+                DXCoolingCoilSingleSpeedRatedAirFlowRate
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "SingleSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
+            )
+          else
             @DX_cooling_coil_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name,
@@ -509,29 +518,29 @@ class UncertainParameters
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "SingleSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
-            )
           end
         when /TwoSpeedDXCoolingUnits/
           param_attr, param_name =
             case uq_param[2]
             when /RatedHighSpeedCOP/
-              [
-                'DX_coil_two_speed_highCOP',
-                'DXCoolingCoilTwoSpeedRatedHighSpeedCOP'
+              %w[
+                DX_coil_two_speed_highCOP
+                DXCoolingCoilTwoSpeedRatedHighSpeedCOP
               ]
             when /RatedLowSpeedCOP/
-              [
-                'DX_coil_two_speed_lowCOP',
-                'DXCoolingCoilTwoSpeedRatedLowSpeedCOP'
+              %w[
+                DX_coil_two_speed_lowCOP
+                DXCoolingCoilTwoSpeedRatedLowSpeedCOP
               ]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "TwoSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
+            )
+          else
             @DX_cooling_coil_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name,
@@ -539,21 +548,21 @@ class UncertainParameters
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "TwoSpeedDXCoolingUnits #{uq_param[2]} not found\n\n"
-            )
           end
         when /ChillerElectricEIR/
           param_attr, param_name =
             case uq_param[2]
             when /ReferenceCOP/
-              ['chiller_ref_COPs', 'ChillerElectricEIRReferenceCOP']
+              %w[chiller_ref_COPs ChillerElectricEIRReferenceCOP]
             else
               [nil, nil]
             end
-          unless param_attr.nil?
+          if param_attr.nil?
+            abort(
+              "\n!!!ABORTING!!! " \
+              "ChillerElectricEIR #{uq_param[2]} not found\n\n"
+            )
+          else
             @chillerEIR_uncertainty.send(param_attr.to_sym).each_with_index do |value, index|
               csv << [
                 param_name,
@@ -561,11 +570,6 @@ class UncertainParameters
                 value, *uq_param[4..8]
               ]
             end
-          else
-            abort(
-              "\n!!!ABORTING!!! " \
-              "ChillerElectricEIR #{uq_param[2]} not found\n\n"
-            )
           end
         when /ThermostatSettings/
           case uq_param[2]
@@ -588,6 +592,7 @@ class UncertainParameters
       end
     end
     puts "#{uq_file} has been generated." if verbose
+    # rubocop:enable Metrics/LineLength
   end
 
   def apply(model, param_types, param_names, param_values)
@@ -633,10 +638,11 @@ class UncertainParameters
     model, uq_table, uq_file, model_out, param_types, param_values
   )
     # Create a csv file that contains thermostat if the user turn it on
+    # rubocop:disable Metrics/LineLength
     CSV.open(uq_file.to_s, 'wb') do |csv|
       csv << [
-      'Parameter Type', 'Object in the model',
-      'Parameter Base Value', 'Adjusted Value'
+        'Parameter Type', 'Object in the model',
+        'Parameter Base Value', 'Adjusted Value'
       ]
       uq_table.each do |uq_param|
         next if uq_param[3] == 'Off'
@@ -679,5 +685,6 @@ class UncertainParameters
         end
       end
     end
+    # rubocop:enable Metrics/LineLength
   end
 end

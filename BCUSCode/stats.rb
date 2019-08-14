@@ -48,6 +48,7 @@ require_relative 'bcus_utils'
 R.echo(enabled = false)
 # rubocop:enable Lint/UselessAssignment
 
+# Class to perform statistical analysis
 class Stats
   def generate_design(
     n_vars, design_type, params, out_dir, randseed = 0, verbose = false
@@ -146,36 +147,36 @@ class Stats
       R.assign('mean', prob_distribution[2])
       R.assign('std', prob_distribution[3])
       R.eval 'samples <- qnorm(q, mean, std)'
-  
+
     when /Normal Relative/
       R.assign('mean', prob_distribution[2] * prob_distribution[0])
       R.assign('std', prob_distribution[3] * prob_distribution[0])
       R.eval 'samples <- qnorm(q, mean, std)'
-  
+
     when /Uniform Absolute/
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
       R.eval 'samples <- qunif(q, min, max)'
-  
+
     when /Uniform Relative/
       R.assign('min', prob_distribution[4] * prob_distribution[0])
       R.assign('max', prob_distribution[5] * prob_distribution[0])
       R.eval 'samples <- qunif(q, min, max)'
-  
+
     when /Triangle Absolute/
       R.assign('min', prob_distribution[4])
       R.assign('max', prob_distribution[5])
       R.assign('mode', prob_distribution[2])
       R.eval 'library("triangle")'
       R.eval 'samples <- qtriangle(q, min, max, mode)'
-  
+
     when /Triangle Relative/
       R.assign('min', prob_distribution[4] * prob_distribution[0])
       R.assign('max', prob_distribution[5] * prob_distribution[0])
       R.assign('mode', prob_distribution[2] * prob_distribution[0])
       R.eval 'library("triangle")'
       R.eval 'samples <- qtriangle(q, min, max, mode)'
-  
+
     when /LogNormal Absolute/
       R.assign('log_mean', prob_distribution[2])
       R.assign('log_std', prob_distribution[3])
@@ -261,5 +262,4 @@ class Stats
       }
     RCODE
   end
-
 end

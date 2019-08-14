@@ -58,14 +58,11 @@ require 'fileutils'
 require 'csv'
 
 def parse_argv(cmd_option, extension, error_msg)
-  if cmd_option.nil?
-    regex = Regexp.new(extension)
-    return ARGV.grep(regex)[0] if ARGV.grep(regex).any?
-    puts error_msg + "\n!!!Terminating Execution!!!"
-    abort
-  else
-    return cmd_option
-  end
+  return cmd_option unless cmd_option.nil?
+  regex = Regexp.new(extension)
+  return ARGV.grep(regex)[0] if ARGV.grep(regex).any?
+  puts error_msg + "\n!!!Terminating Execution!!!"
+  abort
 end
 
 # Define prompt to wait for user to enter y or Y to continue for interactive

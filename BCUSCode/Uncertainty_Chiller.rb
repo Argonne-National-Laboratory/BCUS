@@ -38,52 +38,49 @@
 
 # ******************************************************************************
 
-
 # Modified Date and By:
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-
 
 # 1. Introduction
 # This is the subfunction called by uncertain_parameters to generate
 # chiller efficiency uncertainty distribution.
 
-
+# Class to describe chiller uncertainty
 class ChillerUncertainty < OpenStudio::Model::Model
   attr_reader :chiller_name
   attr_reader :chiller_ref_COPs
 
   def initialize
+    # rubocop:disable Naming/VariableName
     @chiller_name = []
-    @chiller_ref_COPs =[]
+    @chiller_ref_COPs = []
+    # rubocop:enable Naming/VariableName
   end
 
   def chiller_find(model)
     # Loop through to find chiller
     model.getLoops.each do |loop|
       loop.supplyComponents.each do |supply_component|
-        unless supply_component.to_ChillerElectricEIR.empty?
-          chiller = supply_component.to_ChillerElectricEIR.get
-          @chiller_name << chiller.name.to_s
-          @chiller_ref_COPs << chiller.referenceCOP.to_f
-        end
+        next if supply_component.to_ChillerElectricEIR.empty?
+        chiller = supply_component.to_ChillerElectricEIR.get
+        @chiller_name << chiller.name.to_s
+        @chiller_ref_COPs << chiller.referenceCOP.to_f
       end
     end
   end
 
   # Set chiller COP
-  def chiller_set(model, param_types, param_names, param_values)
+  def chiller_set(model, param_types, _param_names, param_values)
     param_types.each_with_index do |type, index|
-      if type =~ /ChillerElectricEIRReferenceCOP/
-        model.getLoops.each do |loop|
-          loop.supplyComponents.each do |supply_component|
-            unless supply_component.to_ChillerElectricEIR.empty?
-              chiller = supply_component.to_ChillerElectricEIR.get
-              chiller.setReferenceCOP(param_values[index])
-            end
+      next unless type =~ /ChillerElectricEIRReferenceCOP/
+      model.getLoops.each do |loop|
+        loop.supplyComponents.each do |supply_component|
+          unless supply_component.to_ChillerElectricEIR.empty?
+            chiller = supply_component.to_ChillerElectricEIR.get
+            chiller.setReferenceCOP(param_values[index])
           end
         end
       end
     end
   end
-
 end

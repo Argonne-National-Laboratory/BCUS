@@ -382,72 +382,69 @@ module RunAnalysis
       end
     end
 
-    if run_type =~ /BC/
+    # Step 6: Perform Bayesian calibration
+    # Require the following files from parametric simulations
+    # Parameters_Priors.csv
+    # cal_field_data.txt
+    # cal_sim_data.txt
 
-      # Step 6: Perform Bayesian calibration
-      # Require the following files from parametric simulations
-      # Parameters_Priors.csv
-      # cal_field_data.txt
-      # cal_sim_data.txt
+    # LHD design is used now
+    # Space filling design could be adopted later
 
-      # LHD design is used now
-      # Space filling design could be adopted later
+    # cal_sim_data.txt: Computation data
+    # In the order of: Monthly Energy Output;
+    #                  Monthly Dry-bulb Temperature (C),
+    #                  Monthly Global Horizontal Solar Radiation (W/M2)
+    #                  Calibration Parameters
 
-      # cal_sim_data.txt: Computation data
-      # In the order of: Monthly Energy Output;
-      #                  Monthly Dry-bulb Temperature (C),
-      #                  Monthly Global Horizontal Solar Radiation (W/M2)
-      #                  Calibration Parameters
+    # cal_field_data.txt: Observed data
+    # In the order of: Monthly Energy Output;
+    #                  Monthly Dry-bulb Temperature (C),
+    #                  Monthly Global Horizontal Solar Radiation (W/M2)
 
-      # cal_field_data.txt: Observed data
-      # In the order of: Monthly Energy Output;
-      #                  Monthly Dry-bulb Temperature (C),
-      #                  Monthly Global Horizontal Solar Radiation (W/M2)
+    return unless run_type =~ /BC/
+    check_file_exist(sim_file, 'Computer Simulation File', verbose)
+    check_file_exist(field_file, 'Utility Data File', verbose)
 
-      check_file_exist(sim_file, 'Computer Simulation File', verbose)
-      check_file_exist(field_file, 'Utility Data File', verbose)
-
-      if verbose
-        if run_type == 'BC'
-          puts "\nStep 6: Performing Bayesian calibration of computer models"
-        else
-          puts "\nPerforming Bayesian calibration of computer models"
-        end
-        puts "Using number of output variables = #{num_out_vars}"
-        puts "Using number of weather variables = #{num_w_vars}"
-        puts "Using number of MCMC sample points = #{num_mcmc}"
-        puts "Using number of burn-in sample points = #{num_burnin}"
-        puts "Generating posterior values file = #{posts_name}"
-        puts "Generating pvals file = #{pvals_name}"
+    if verbose
+      if run_type == 'BC'
+        puts "\nStep 6: Performing Bayesian calibration of computer models"
+      else
+        puts "\nPerforming Bayesian calibration of computer models"
       end
-
-      # Perform Bayesian calibration
-      code_path = ENV['BCUSCODE']
-      puts "Using code path = #{code_path}\n\r" if verbose
-      BCRunner.run_BC(
-        code_path, priors_file, sim_file, field_file,
-        num_out_vars, num_w_vars, num_mcmc,
-        pvals_file, posts_file, randseed, verbose
-      )
-
-      puts 'Generating posterior distribution plots' if verbose
-      # Could pass in graph file names too
-      unless no_plots
-        GraphGenerator.graphPosteriors(
-          priors_file, pvals_file, num_burnin, graphs_dir, verbose
-        )
-      end
-
-      # Run calibrated model
-      unless no_run_cal
-        puts "\nGenerate and run calibrated model" if verbose
-        cal_model_dir = File.join(rlt_dir, 'Calibrated_Model')
-        cal_osm = CalibratedOSM.new
-        cal_osm.gen_and_sim(
-          osm_file, epw_file, priors_file, posts_file,
-          out_spec_file, cal_model_dir, verbose
-        )
-      end
+      puts "Using number of output variables = #{num_out_vars}"
+      puts "Using number of weather variables = #{num_w_vars}"
+      puts "Using number of MCMC sample points = #{num_mcmc}"
+      puts "Using number of burn-in sample points = #{num_burnin}"
+      puts "Generating posterior values file = #{posts_name}"
+      puts "Generating pvals file = #{pvals_name}"
     end
+
+    # Perform Bayesian calibration
+    code_path = ENV['BCUSCODE']
+    puts "Using code path = #{code_path}\n\r" if verbose
+    BCRunner.run_BC(
+      code_path, priors_file, sim_file, field_file,
+      num_out_vars, num_w_vars, num_mcmc,
+      pvals_file, posts_file, randseed, verbose
+    )
+
+    puts 'Generating posterior distribution plots' if verbose
+    # Could pass in graph file names too
+    unless no_plots
+      GraphGenerator.graph_posteriors(
+        priors_file, pvals_file, num_burnin, graphs_dir, verbose
+      )
+    end
+
+    # Run calibrated model
+    return if no_run_cal
+    puts "\nGenerate and run calibrated model" if verbose
+    cal_model_dir = File.join(rlt_dir, 'Calibrated_Model')
+    cal_osm = CalibratedOSM.new
+    cal_osm.gen_and_sim(
+      osm_file, epw_file, priors_file, posts_file,
+      out_spec_file, cal_model_dir, verbose
+    )
   end
 end

@@ -47,7 +47,7 @@
 # This method applies the uncertainty analysis to all the fans and pumps
 # in the loop. It cannot detect single fan on certain loop
 
-
+# Class to describe fan pump uncertainty
 class FanPumpUncertainty
   attr_reader :fan_constant_name
   attr_reader :fan_constant_efficiency
@@ -60,8 +60,8 @@ class FanPumpUncertainty
   attr_reader :pump_variable_name
   attr_reader :pump_variable_motorEfficiency
 
-
   def initialize
+    # rubocop:disable Naming/VariableName
     @fan_constant_name = []
     @fan_constant_efficiency = []
     @fan_constant_motorEfficiency = []
@@ -72,6 +72,7 @@ class FanPumpUncertainty
     @pump_constant_motorEfficiency = []
     @pump_variable_name = []
     @pump_variable_motorEfficiency = []
+    # rubocop:enable Naming/VariableName
   end
 
   def fan_find(model)
@@ -123,11 +124,11 @@ class FanPumpUncertainty
   end
 
   def fan_set(model, param_types, param_names, param_values)
-    self.supply_component_set(model, param_types, param_names, param_values)
+    supply_component_set(model, param_types, param_names, param_values)
   end
 
   def pump_set(model, param_types, param_names, param_values)
-    self.supply_component_set(model, param_types, param_names, param_values)
+    supply_component_set(model, param_types, param_names, param_values)
   end
 
   def supply_component_set(model, param_types, _param_names, param_values)
@@ -135,31 +136,29 @@ class FanPumpUncertainty
       param_get, param_set =
         case type
         when /FanConstantVolumeEfficiency/
-          ['to_FanConstantVolume', 'setFanEfficiency']
+          %w[to_FanConstantVolume setFanEfficiency]
         when /FanConstantVolumeMotorEfficiency/
-          ['to_FanConstantVolume', 'setMotorEfficiency']
+          %w[to_FanConstantVolume setMotorEfficiency]
         when /FanVariableVolumeEfficiency/
-          ['to_FanVariableVolume', 'setFanEfficiency']
+          %w[to_FanVariableVolume setFanEfficiency]
         when /FanVariableVolumeMotorEfficiency/
-          ['to_FanVariableVolume', 'setMotorEfficiency']
+          %w[to_FanVariableVolume setMotorEfficiency]
         when /PumpConstantSpeedMotorEfficiency/
-          ['to_PumpConstantSpeed', 'setMotorEfficiency']
+          %w[to_PumpConstantSpeed setMotorEfficiency]
         when /PumpVariableSpeedMotorEfficiency/
-          ['to_PumpVariableSpeed', 'setMotorEfficiency']
+          %w[to_PumpVariableSpeed setMotorEfficiency]
         else
           [nil, nil]
         end
-      unless param_get.nil?
-        model.getLoops.each do |loop|
-          loop.supplyComponents.each do |supply_component|
-            unless supply_component.send(param_get.to_sym).empty?
-              component = supply_component.send(param_get.to_sym).get
-              component.send(param_set.to_sym, param_values[index])
-            end
+      next if param_get.nil?
+      model.getLoops.each do |loop|
+        loop.supplyComponents.each do |supply_component|
+          unless supply_component.send(param_get.to_sym).empty?
+            component = supply_component.send(param_get.to_sym).get
+            component.send(param_set.to_sym, param_values[index])
           end
         end
       end
     end
   end
-
 end

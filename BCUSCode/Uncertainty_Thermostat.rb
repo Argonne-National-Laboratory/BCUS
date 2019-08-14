@@ -38,10 +38,8 @@
 
 # ******************************************************************************
 
-
 # Modified Date and By:
 # - Created on July 2016 by Yuna Zhang from Argonne National Laboratory
-
 
 # 1. Introduction
 # This is the subfunction called by uncertain_parameters to set uncertainty
@@ -51,7 +49,7 @@
 # 2. Call structure
 # Refer to 'Function Call Structure_UA.pptx'
 
-
+# Class to describe thermostat uncertainty
 class ThermostatUncertainty < OpenStudio::Model::Model
   attr_reader :clg_set_sch_name
   attr_reader :htg_set_sch_name
@@ -66,95 +64,92 @@ class ThermostatUncertainty < OpenStudio::Model::Model
   end
 
   def cooling_set(model, adjust_value, model_out)
-    self.setpoint_set(model, 'cooling', adjust_value, model_out)
+    setpoint_set(model, 'cooling', adjust_value, model_out)
   end
 
   def heating_set(model, adjust_value, model_out)
-    self.setpoint_set(model, 'heating', adjust_value, model_out)
+    setpoint_set(model, 'heating', adjust_value, model_out)
   end
 
   def setpoint_set(model, conditioning, adjust_value, model_out)
     param_get, param_set =
       case conditioning
       when 'cooling'
-        [
-          'coolingSetpointTemperatureSchedule',
-          'setCoolingSetpointTemperatureSchedule'
+        %w[
+          coolingSetpointTemperatureSchedule
+          setCoolingSetpointTemperatureSchedule
         ]
       when 'heating'
-        [
-          'heatingSetpointTemperatureSchedule',
-          'setHeatingSetpointTemperatureSchedule'
+        %w[
+          heatingSetpointTemperatureSchedule
+          setHeatingSetpointTemperatureSchedule
         ]
       else
         [nil, nil]
       end
 
-    unless param_get.nil?
-      # Push schedules to hash to avoid making unnecessary duplicates
-      set_schs = {}
-      set_sch_names = []
-      set_sch_values = []
+    return if param_get.nil?
+    # Push schedules to hash to avoid making unnecessary duplicates
+    set_schs = {}
+    set_sch_names = []
+    set_sch_values = []
 
-      # Get thermostats and setpoint schedules
-      thermostats = model.getThermostatSetpointDualSetpoints
-      thermostats.each do |thermostat|
-        # Setup new cooling setpoint schedule
-        set_sch = thermostat.send(param_get.to_sym)
-        if not set_sch.empty?
-          # Clone of not alredy in hash
-          if set_schs.has_key?(set_sch.get.name.to_s)
-            set_sch_new = set_schs[set_sch.get.name.to_s]
-          else
-            set_sch_new = set_sch.get.clone(model).to_Schedule.get
-            set_sch_new.setName("#{set_sch_new.name} adjusted")
-            # Add to the hash
-            set_schs[set_sch.get.name.to_s] = set_sch_new
-          end
-          # Hook up clone to thermostat
-          thermostat.send(param_set.to_sym, set_sch_new)
-        end
+    # Get thermostats and setpoint schedules
+    thermostats = model.getThermostatSetpointDualSetpoints
+    thermostats.each do |thermostat|
+      # Setup new cooling setpoint schedule
+      set_sch = thermostat.send(param_get.to_sym)
+      next if set_sch.empty?
+      # Clone of not alredy in hash
+      if set_schs.key?(set_sch.get.name.to_s)
+        set_sch_new = set_schs[set_sch.get.name.to_s]
+      else
+        set_sch_new = set_sch.get.clone(model).to_Schedule.get
+        set_sch_new.setName("#{set_sch_new.name} adjusted")
+        # Add to the hash
+        set_schs[set_sch.get.name.to_s] = set_sch_new
       end
-
-      # Old name and new object for schedule
-      set_schs.each do |k, v|
-        set_sch_name = v.name.to_s
-        if not v.to_ScheduleRuleset.empty?
-          # Array to store profiles inules.each do |rule|
-          profiles = []
-          schedule = v.to_ScheduleRuleset.get
-          #push default profiles to array
-          default_rule = schedule.defaultDaySchedule
-          profiles << default_rule
-          #push profiles to array
-          rules = schedule.scheduleRules
-          rules.each do |rule|
-            day_sch = rule.daySchedule
-            profiles << day_sch
-          end
-
-          profiles.each do |sch_day|
-            day_time_vector = sch_day.times
-            day_value_vector = sch_day.values
-            for i in 0..(day_time_vector.size - 1)
-              set_sch_names << "#{set_sch_name}time #{i}"
-              set_sch_values << day_value_vector[i].to_f
-              target_value = day_value_vector[i] - adjust_value
-              sch_day.addValue(day_time_vector[i], target_value)
-            end
-          end
-        end
-      end
-
-      case conditioning
-      when 'cooling'
-        @clg_set_sch_name, @clg_set_sch_value = set_sch_names, set_sch_values
-      when 'heating'
-        @htg_set_sch_name, @htg_set_sch_value = set_sch_names, set_sch_values
-      end
-      model.save("#{model_out}", true)
+      # Hook up clone to thermostat
+      thermostat.send(param_set.to_sym, set_sch_new)
     end
-  
-  end
 
+    # Old name and new object for schedule
+    set_schs.each do |_k, v|
+      set_sch_name = v.name.to_s
+      next if v.to_ScheduleRuleset.empty?
+      # Array to store profiles inules.each do |rule|
+      profiles = []
+      schedule = v.to_ScheduleRuleset.get
+      # Push default profiles to array
+      default_rule = schedule.defaultDaySchedule
+      profiles << default_rule
+      # Push profiles to array
+      rules = schedule.scheduleRules
+      rules.each do |rule|
+        day_sch = rule.daySchedule
+        profiles << day_sch
+      end
+
+      profiles.each do |sch_day|
+        day_time_vector = sch_day.times
+        day_value_vector = sch_day.values
+        (0..(day_time_vector.size - 1)).each do |i|
+          set_sch_names << "#{set_sch_name}time #{i}"
+          set_sch_values << day_value_vector[i].to_f
+          target_value = day_value_vector[i] - adjust_value
+          sch_day.addValue(day_time_vector[i], target_value)
+        end
+      end
+    end
+
+    case conditioning
+    when 'cooling'
+      @clg_set_sch_name = set_sch_names
+      @clg_set_sch_value = set_sch_values
+    when 'heating'
+      @htg_set_sch_name = set_sch_names
+      @htg_set_sch_value = set_sch_values
+    end
+    model.save(model_out.to_s, true)
+  end
 end

@@ -85,26 +85,17 @@ class BoilerUncertainty < OpenStudio::Model::Model
       unit_get, param_get, param_set =
         case type
         when /HotWaterBoilerEfficiency/
-          [
-            'getBoilerHotWaters',
-            'to_BoilerHotWater',
-            'setNominalThermalEfficiency'
-          ]
+          %w[getBoilerHotWaters to_BoilerHotWater setNominalThermalEfficiency]
         when /SteamBoilerEfficiency/
-          [
-            'getBoilerSteams',
-            'to_BoilerSteam',
-            'setNominalThermalEfficiency'
-          ]
+          %w[getBoilerSteams to_BoilerSteam setNominalThermalEfficiency]
         else
           [nil, nil]
         end
-      unless unit_get.nil?
-        model.send(unit_get.to_sym).each do |unit|
-          unless unit.send(param_get.to_sym).empty?
-            water_unit = unit.send(param_get.to_sym).get
-            water_unit.send(param_set.to_sym, param_values[index])
-          end
+      next if unit_get.nil?
+      model.send(unit_get.to_sym).each do |unit|
+        unless unit.send(param_get.to_sym).empty?
+          water_unit = unit.send(param_get.to_sym).get
+          water_unit.send(param_set.to_sym, param_values[index])
         end
       end
     end

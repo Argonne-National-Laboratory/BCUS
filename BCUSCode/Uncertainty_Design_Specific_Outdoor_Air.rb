@@ -38,16 +38,14 @@
 
 # ******************************************************************************
 
-
 # Modified Date and By:
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-
 
 # 1. Introduction
 # This is the subfunction called by uncertain_parameters to generate
 # design specific outdoor air uncertainty distribution.
 
-
+# Class to describe design specific outdoor air uncertainty
 class DesignSpecificOutdoorAirUncertainty
   attr_reader :design_spec_OA_name
   attr_reader :design_spec_OA_flow_per_person
@@ -55,18 +53,21 @@ class DesignSpecificOutdoorAirUncertainty
   attr_reader :design_spec_OA_flow_rate
 
   def initialize
+    # rubocop:disable Naming/VariableName
     @design_spec_OA_name = []
     @design_spec_OA_flow_per_person = []
     @design_spec_OA_flow_per_floor_area = []
     @design_spec_OA_flow_rate = []
+    # rubocop:enable Naming/VariableName
   end
 
+  # rubocop:disable Naming/MethodName
   def design_spec_OA_find(model)
     # Space type is required entry to define a thermal space
     space_types = model.getSpaceTypes
     instances_array = []
     space_types.each do |space_type|
-      next unless space_type.spaces.size > 0
+      next if space_type.spaces.empty?
       instances_array << space_type.designSpecificationOutdoorAir
     end
     instances_array.each do |instance|
@@ -78,7 +79,7 @@ class DesignSpecificOutdoorAirUncertainty
           instance.outdoorAirFlowperPerson.to_f
       end
       if instance.outdoorAirFlowperFloorArea > 0
-        @design_spec_OA_flow_per_floor_area<<
+        @design_spec_OA_flow_per_floor_area <<
           instance.outdoorAirFlowperFloorArea.to_f
       end
       if instance.outdoorAirFlowRate > 0
@@ -90,7 +91,7 @@ class DesignSpecificOutdoorAirUncertainty
 
   def design_spec_OA_set(model, param_types, _param_names, param_values)
     param_types.each_with_index do |type, index|
-      param_set = 
+      param_set =
         case type
         when /OutdoorAirFlowPerPerson/
           'setOutdoorAirFlowperPerson'
@@ -98,22 +99,19 @@ class DesignSpecificOutdoorAirUncertainty
           'setOutdoorAirFlowperFloorArea'
         when /OutdoorAirFlowRate/
           'setOutdoorAirFlowRate'
-        else
-          nil
         end
-      unless param_set.nil?
-        instances_array = []
-        model.getSpaceTypes.each do |space_type|
-          next unless space_type.spaces.size > 0
-          instances_array << space_type.designSpecificationOutdoorAir
-        end
-        instances_array.each do |instance|
-          next if instance.empty?
-          instance = instance.get
-          instance.send(param_set.to_sym, param_values[index])
-        end
+      next if param_set.nil?
+      instances_array = []
+      model.getSpaceTypes.each do |space_type|
+        next if space_type.spaces.empty?
+        instances_array << space_type.designSpecificationOutdoorAir
+      end
+      instances_array.each do |instance|
+        next if instance.empty?
+        instance = instance.get
+        instance.send(param_set.to_sym, param_values[index])
       end
     end
   end
-
+  # rubocop:enable Naming/MethodName
 end

@@ -38,16 +38,14 @@
 
 # ******************************************************************************
 
-
 # Modified Date and By:
 # - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
-
 
 # 1. Introduction
 # This is the subfunction called by uncertain_parameters to generate DX coil
 # uncertainty distribution.
 
-
+# Class to describe DX coil uncertainty
 class DXCoilUncertainty
   attr_reader :DX_coil_single_speed_name
   attr_reader :DX_coil_single_speed_COP
@@ -59,6 +57,7 @@ class DXCoilUncertainty
   attr_reader :DX_coil_two_speed_lowCOP
 
   def initialize
+    # rubocop:disable Naming/VariableName
     @DX_coil_single_speed_name = []
     @DX_coil_single_speed_COP = []
     @DX_coil_single_speed_totalCapacity = []
@@ -67,8 +66,10 @@ class DXCoilUncertainty
     @DX_coil_two_speed_name = []
     @DX_coil_two_speed_highCOP = []
     @DX_coil_two_speed_lowCOP = []
+    # rubocop:enable Naming/VariableName
   end
 
+  # rubocop:disable Naming/MethodName
   def DX_coil_single_speed_find(model)
     # Loop through the air loop to find the DX coil
     air_loops = model.getAirLoopHVACs
@@ -77,24 +78,23 @@ class DXCoilUncertainty
       supply_components.each do |supply_component|
         # Find DX cooiling coil single speed in the airloop
         component = supply_component.to_CoilCoolingDXSingleSpeed
-        unless component.empty?
-          component = component.get
-          @DX_coil_single_speed_name << component.name.to_s
-          if component.ratedCOP.to_f > 0
-            @DX_coil_single_speed_COP << component.ratedCOP.to_f
-          end
-          if component.ratedTotalCoolingCapacity.to_f > 0
-            @DX_coil_single_speed_totalCapacity <<
-              component.ratedTotalCoolingCapacity.to_f
-          end
-          if component.ratedSensibleHeatRatio.to_f > 0
-            @DX_coil_single_speed_sensibleHeatRatio <<
-              component.ratedSensibleHeatRatio.to_f
-          end
-          if component.ratedAirFlowRate.to_f > 0
-            @DX_coil_single_speed_airFlowRate <<
-              component.ratedAirFlowRate.to_f
-          end
+        next if component.empty?
+        component = component.get
+        @DX_coil_single_speed_name << component.name.to_s
+        if component.ratedCOP.to_f > 0
+          @DX_coil_single_speed_COP << component.ratedCOP.to_f
+        end
+        if component.ratedTotalCoolingCapacity.to_f > 0
+          @DX_coil_single_speed_totalCapacity <<
+            component.ratedTotalCoolingCapacity.to_f
+        end
+        if component.ratedSensibleHeatRatio.to_f > 0
+          @DX_coil_single_speed_sensibleHeatRatio <<
+            component.ratedSensibleHeatRatio.to_f
+        end
+        if component.ratedAirFlowRate.to_f > 0
+          @DX_coil_single_speed_airFlowRate <<
+            component.ratedAirFlowRate.to_f
         end
       end
     end
@@ -108,15 +108,14 @@ class DXCoilUncertainty
       supply_components.each do |supply_component|
         # Find DX cooiling coil two speed in the air loop
         component = supply_component.to_CoilCoolingDXTwoSpeed
-        unless component.empty?
-          component = component.get
-          @DX_coil_two_speed_name << component.name.to_s
-          if component.ratedHighSpeedCOP.to_f > 0
-            @DX_coil_two_speed_highCOP << component.ratedHighSpeedCOP.to_f
-          end
-          if component.ratedLowSpeedCOP.to_f > 0
-            @DX_coil_two_speed_lowCOP << component.ratedLowSpeedCOP.to_f
-          end
+        next if component.empty?
+        component = component.get
+        @DX_coil_two_speed_name << component.name.to_s
+        if component.ratedHighSpeedCOP.to_f > 0
+          @DX_coil_two_speed_highCOP << component.ratedHighSpeedCOP.to_f
+        end
+        if component.ratedLowSpeedCOP.to_f > 0
+          @DX_coil_two_speed_lowCOP << component.ratedLowSpeedCOP.to_f
         end
       end
     end
@@ -135,32 +134,30 @@ class DXCoilUncertainty
       param_get, param_set =
         case type
         when /DXCoolingCoilSingleSpeedRatedTotalCapacity/
-          ['to_CoilCoolingDXSingleSpeed', 'setRatedTotalCoolingCapacity']
+          %w[to_CoilCoolingDXSingleSpeed setRatedTotalCoolingCapacity]
         when /DXCoolingCoilSingleSpeedRatedSenisbleHeatRatio/
-          ['to_CoilCoolingDXSingleSpeed', 'setRatedSensibleHeatRatio']
+          %w[to_CoilCoolingDXSingleSpeed setRatedSensibleHeatRatio]
         when /DXCoolingCoilSingleSpeedRatedCOP/
-          ['to_CoilCoolingDXSingleSpeed', 'setRatedCOP']
+          %w[to_CoilCoolingDXSingleSpeed setRatedCOP]
         when /DXCoolingCoilSingleSpeedRatedAirFlowRate/
-          ['to_CoilCoolingDXSingleSpeed', 'setRatedAirFlowRate']
+          %w[to_CoilCoolingDXSingleSpeed setRatedAirFlowRate]
         when /DXCoolingCoilTwoSpeedRatedHighSpeedCOP/
-          ['to_CoilCoolingDXTwoSpeed', 'setRatedHighSpeedCOP']
+          %w[to_CoilCoolingDXTwoSpeed setRatedHighSpeedCOP]
         when /DXCoolingCoilTwoSpeedRatedLowSpeedCOP/
-          ['to_CoilCoolingDXTwoSpeed', 'setRatedLowSpeedCOP']
+          %w[to_CoilCoolingDXTwoSpeed setRatedLowSpeedCOP]
         else
           [nil, nil]
         end
-      unless param_get.nil?
-        model.getAirLoopHVACs.each do |air_loop|
-          air_loop.supplyComponents.each do |supply_component|
-            unless supply_component.send(param_get.to_sym).empty?
-              component = supply_component.send(param_get.to_sym).get
-              component.send(param_set.to_sym, param_values[index])
-            end
+      next if param_get.nil?
+      model.getAirLoopHVACs.each do |air_loop|
+        air_loop.supplyComponents.each do |supply_component|
+          unless supply_component.send(param_get.to_sym).empty?
+            component = supply_component.send(param_get.to_sym).get
+            component.send(param_set.to_sym, param_values[index])
           end
         end
       end
     end
   end
-
-end 
- 
+  # rubocop:enable Naming/MethodName
+end

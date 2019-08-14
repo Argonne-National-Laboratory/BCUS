@@ -91,13 +91,12 @@ R.echo(enabled = false)
 
 # Module to perform Bayesian calibration in R
 module BCRunner
-  # rubocop:disable Metrics/ParameterLists
+  # rubocop:disable Naming/MethodName
   def self.run_BC(
     code_path, params_filename, com_filename, field_filename,
     num_output_vars, num_weather_vars, num_mcmc_steps,
-    pvals_filename, posterior_dists_filename, randseed = 0, verbose = false 
+    pvals_filename, posterior_dists_filename, randseed = 0, verbose = false
   )
-    # rubocop:enable Metrics/ParameterLists
 
     # R in ruby doesn't allow one to assign boolean values, so we need to
     # kludge the passing
@@ -130,4 +129,5 @@ module BCRunner
       )'
     )
   end
+  # rubocop:enable Naming/MethodName
 end
