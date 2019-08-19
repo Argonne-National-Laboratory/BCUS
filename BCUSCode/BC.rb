@@ -52,18 +52,18 @@ parser = OptionParser.new do |opts|
   opts.banner = 'Usage: BC.rb [options]'
 
   # osmName: OpenStudio Model Name in .osm
-  opts.on('-o', '--osm osmName', 'osmName') do |osm_name|
+  opts.on('-o', '--osm OSMNAME', 'osmName') do |osm_name|
     options[:osmName] = osm_name
   end
 
   # epwName: weather file used to run simulation in .epw
-  opts.on('-e', '--epw epwName', 'epwName') do |epw_name|
+  opts.on('-e', '--epw EPWNAME', 'epwName') do |epw_name|
     options[:epwName] = epw_name
   end
 
   options[:priorsFile] = 'Parameter_Priors.csv'
   opts.on(
-    '--priorsFile priorsFile',
+    '--priorsFile PRIORSFILE',
     'Prior uncertainty information file, default "Parameter_Priors.csv"'
   ) do |priors_file|
     options[:priorsFile] = priors_file
@@ -71,7 +71,7 @@ parser = OptionParser.new do |opts|
 
   options[:utilityData] = 'Utility_Data.csv'
   opts.on(
-    '--utilityData utilityData',
+    '--utilityData UTILITYDATA',
     'Utility data file, default "Utility_Data.csv"'
   ) do |utility_data|
     options[:utilityData] = utility_data
@@ -79,7 +79,7 @@ parser = OptionParser.new do |opts|
 
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
   opts.on(
-    '--outFile outFile',
+    '--outFile OUTFILE',
     'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
   ) do |out_file|
     options[:outFile] = out_file
@@ -87,7 +87,7 @@ parser = OptionParser.new do |opts|
 
   options[:simFile] = 'cal_sim_data.txt'
   opts.on(
-    '--simFile simFile',
+    '--simFile SIMFILE',
     'Filename of simulation outputs, default "cal_sim_data.txt"'
   ) do |sim_file|
     options[:simFile] = sim_file
@@ -95,7 +95,7 @@ parser = OptionParser.new do |opts|
 
   options[:fieldFile] = 'cal_field_data.txt'
   opts.on(
-    '--fieldFile fieldFile',
+    '--fieldFile FIELDFILE',
     'Filename of utility data for comparison, default "cal_field_data.txt"'
   ) do |field_file|
     options[:fieldFile] = field_file
@@ -103,7 +103,7 @@ parser = OptionParser.new do |opts|
 
   options[:postsFile] = 'Parameter_Posteriors.csv'
   opts.on(
-    '--postsFile postsFile',
+    '--postsFile POSTSFILE',
     'Filename of posterior distributions, default "Parameter_Posteriors.csv"'
   ) do |posts_file|
     options[:postsFile] = posts_file
@@ -111,7 +111,7 @@ parser = OptionParser.new do |opts|
 
   options[:pvalsFile] = 'pvals.csv'
   opts.on(
-    '--pvalsFile pvalsFile',
+    '--pvalsFile PVALSFILE',
     'Filename of pvals, default "pvals.csv"'
   ) do |pvals_file|
     options[:pvalsFile] = pvals_file
@@ -119,7 +119,7 @@ parser = OptionParser.new do |opts|
 
   options[:numLHD] = 500
   opts.on(
-    '--numLHD numLHD',
+    '--numLHD NUMLHD',
     'Number of sample points of Monte Carlo simulation ' \
     'with Latin Hypercube Design sampling, default 500'
   ) do |num_lhd|
@@ -128,28 +128,28 @@ parser = OptionParser.new do |opts|
 
   options[:numMCMC] = 30_000
   opts.on(
-    '--numMCMC numMCMC', 'Number of MCMC steps, default 3000'
+    '--numMCMC NUMMCMC', 'Number of MCMC steps, default 3000'
   ) do |num_mcmc|
     options[:numMCMC] = num_mcmc
   end
 
   options[:numOutVars] = 1
   opts.on(
-    '--numOutVars numOutVars',
+    '--numOutVars NUMOUTVARS',
     'Number of output variables, 1 or 2, default 1'
   ) do |num_out_vars|
     options[:numOutVars] = num_out_vars
   end
   options[:numWVars] = 2
   opts.on(
-    '--numWVars numWVars', 'Number of weather variables, default 2'
+    '--numWVars NUMWVARS', 'Number of weather variables, default 2'
   ) do |num_w_vars|
     options[:numWVars] = num_w_vars
   end
 
   options[:numBurnin] = 500
   opts.on(
-    '--numBurnin numBurnin',
+    '--numBurnin NUMBURNIN',
     'Number of burning samples to throw out, default 500'
   ) do |num_burnin|
     options[:numBurnin] = num_burnin
@@ -157,7 +157,7 @@ parser = OptionParser.new do |opts|
 
   options[:randSeed] = 0
   opts.on(
-    '--seed seednum',
+    '--seed SEEDNUM',
     'Integer random number seed, 0 = no seed, default 0'
   ) do |seednum|
     options[:randSeed] = seednum
@@ -165,7 +165,7 @@ parser = OptionParser.new do |opts|
 
   options[:numProcesses] = 0
   opts.on(
-    '--numProcesses numProcesses',
+    '--numProcesses NUMPROCESSES',
     'Number of parallel processes for simulation, 0 = no parallel, default 0'
   ) do |n_processes|
     options[:numProcesses] = n_processes

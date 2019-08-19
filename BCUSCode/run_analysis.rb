@@ -104,7 +104,7 @@ module RunAnalysis
       num_lhd_runs = Integer(options[:numLHD])
       if verbose
         puts 'Running uncertainty analysis'
-        puts "Using number of LHD samples  = #{num_lhd_runs}"
+        puts "Using number of LHD samples = #{num_lhd_runs}"
       end
 
     when 'SA'
@@ -122,7 +122,7 @@ module RunAnalysis
       if run_type == 'BC'
         utility_file = File.absolute_path(options[:utilityData])
         num_lhd_runs = Integer(options[:numLHD])
-        puts "Using number of LHD samples  = #{num_lhd_runs}" if verbose
+        puts "Using number of LHD samples = #{num_lhd_runs}" if verbose
       end
 
       priors_file = File.absolute_path(options[:priorsFile])
@@ -222,7 +222,7 @@ module RunAnalysis
 
       # Step 2: Generate design matrix for analysis
       if verbose
-        puts "\nStep 2: Generating design Matrix and sample for analysis"
+        puts "\nStep 2: Generating design matrix and sample for analysis"
       end
       case run_type
       when 'UA'

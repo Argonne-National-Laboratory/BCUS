@@ -51,18 +51,18 @@ parser = OptionParser.new do |opts|
   opts.banner = 'Usage: UA.rb [options]'
 
   # osmName: OpenStudio Model Name in .osm
-  opts.on('-o', '--osm osmName', 'osmName') do |osm_name|
+  opts.on('-o', '--osm OSMNAME', 'osmName') do |osm_name|
     options[:osmName] = osm_name
   end
 
   # epwName: weather file used to run simulation in .epw
-  opts.on('-e', '--epw epwName', 'epwName') do |epw_name|
+  opts.on('-e', '--epw EPWNAME', 'epwName') do |epw_name|
     options[:epwName] = epw_name
   end
 
   options[:uqRepo] = 'Parameter_UQ_Repository_V1.0.xlsx'
   opts.on(
-    '-u', '--uqRepo uqRepo',
+    '-u', '--uqRepo UQREPO',
     'UQ repository file, default "Parameter_UQ_Repositorty_V1.0.xlsx"'
   ) do |uq_repo|
     options[:uqRepo] = uq_repo
@@ -70,7 +70,7 @@ parser = OptionParser.new do |opts|
 
   options[:numLHD] = 500
   opts.on(
-    '--numLHD numLHD',
+    '--numLHD NUMLHD',
     'Number of sample points of Monte Carlo simulation ' \
     'with Latin Hypercube Design sampling, default 500'
   ) do |num_lhd|
@@ -79,7 +79,7 @@ parser = OptionParser.new do |opts|
 
   options[:outFile] = 'Simulation_Output_Settings.xlsx'
   opts.on(
-    '--outFile outFile',
+    '--outFile OUTFILE',
     'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
   ) do |out_file|
     options[:outFile] = out_file
@@ -87,7 +87,7 @@ parser = OptionParser.new do |opts|
 
   options[:randSeed] = 0
   opts.on(
-    '--seed seednum',
+    '--seed SEEDNUM',
     'Integer random number seed, 0 = no seed, default 0'
   ) do |seednum|
     options[:randSeed] = seednum
@@ -95,7 +95,7 @@ parser = OptionParser.new do |opts|
 
   options[:numProcesses] = 0
   opts.on(
-    '--numProcesses numProcesses',
+    '--numProcesses NUMPROCESSES',
     'Number of parallel processes for simulation, 0 = no parallel, default 0'
   ) do |n_processes|
     options[:numProcesses] = n_processes
