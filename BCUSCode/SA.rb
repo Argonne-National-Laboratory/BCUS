@@ -72,6 +72,14 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uq_repo
   end
 
+  options[:outFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on(
+    '--outFile OUTFILE',
+    'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
+  ) do |out_file|
+    options[:outFile] = out_file
+  end
+
   options[:morrisR] = 5
   opts.on(
     '--morrisR MORRISR',
@@ -86,14 +94,6 @@ parser = OptionParser.new do |opts|
     'Number of levels for each parameter for morris method, default 20'
   ) do |morris_l|
     options[:morrisL] = morris_l
-  end
-
-  options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on(
-    '--outFile OUTFILE',
-    'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
-  ) do |out_file|
-    options[:outFile] = out_file
   end
 
   options[:randSeed] = 0

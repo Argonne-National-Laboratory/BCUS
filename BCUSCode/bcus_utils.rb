@@ -212,7 +212,6 @@ end
 
 def get_cal_sim_data(y_sim, y_length, lhs_table, temp, solar)
   lhs_table = lhs_table.to_a
-  lhs_table.delete_at(0)
   samples_table = lhs_table.transpose
   2.times { samples_table.delete_at(0) }
 

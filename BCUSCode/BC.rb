@@ -133,6 +133,14 @@ parser = OptionParser.new do |opts|
     options[:numMCMC] = num_mcmc
   end
 
+  options[:numBurnin] = 500
+  opts.on(
+    '--numBurnin NUMBURNIN',
+    'Number of burning samples to throw out, default 500'
+  ) do |num_burnin|
+    options[:numBurnin] = num_burnin
+  end
+
   options[:numOutVars] = 1
   opts.on(
     '--numOutVars NUMOUTVARS',
@@ -145,14 +153,6 @@ parser = OptionParser.new do |opts|
     '--numWVars NUMWVARS', 'Number of weather variables, default 2'
   ) do |num_w_vars|
     options[:numWVars] = num_w_vars
-  end
-
-  options[:numBurnin] = 500
-  opts.on(
-    '--numBurnin NUMBURNIN',
-    'Number of burning samples to throw out, default 500'
-  ) do |num_burnin|
-    options[:numBurnin] = num_burnin
   end
 
   options[:randSeed] = 0

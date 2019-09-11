@@ -40,7 +40,7 @@ a root directory such as C:\OpenStudio-2.7.0*
 
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents
 `require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
-	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\OpenStudio_2.7.0"
+	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\openstudio-2.7.0"
 
 #### R Install
 
@@ -56,7 +56,7 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
 
     `set BCUSCODE=C:\BCUS\BCUSCode`  
     `set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%`  
-	`setx BCUSCODE "C:BCUS\BCUSCode"`  
+	`setx BCUSCODE "C:\BCUS\BCUSCode"`  
 	`setx RUBYPATH "C:\BCUS\BCUSCode;%RUBYPATH%"`  
 	
     *NOTE: In windows, to permanently set the environmental variables you also need to use the setx command*
@@ -79,9 +79,9 @@ You can do a basic test of the installation by downloading the TestInstall direc
 Test installation by downloading the TestInstall directory and running the testinstall.bat or testinstall.sh file
 This script will test Sensitivity Analysis, Uncertainty Analysis, and then Bayesian Calibration scripts.  
 
-* The Uncertainty Analysis test will generate and run 3 models using RunManager  
-* The Sensitivity Analysis test will generate and run 6 models using RunManager  
-* The Bayesian Calibration test will generate and run 6 models using RunManager  
+* The Uncertainty Analysis test will generate and run 3 models
+* The Sensitivity Analysis test will generate and run 6 models
+* The Bayesian Calibration test will generate and run 6 models
 
 
 ## Documentation
@@ -91,7 +91,7 @@ Instructions on how to use/run/modify are in the Tutorials directory
 
 ## Usage
 
-Use the example directory as a base for your project.  Modify the files as discussed in the tutorials.
+Use the example directory as a base for your project. Modify the files as discussed in the tutorials.
 
 
 ## Caveats and Todos

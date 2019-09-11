@@ -68,6 +68,14 @@ parser = OptionParser.new do |opts|
     options[:uqRepo] = uq_repo
   end
 
+  options[:outFile] = 'Simulation_Output_Settings.xlsx'
+  opts.on(
+    '--outFile OUTFILE',
+    'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
+  ) do |out_file|
+    options[:outFile] = out_file
+  end
+
   options[:numLHD] = 500
   opts.on(
     '--numLHD NUMLHD',
@@ -75,14 +83,6 @@ parser = OptionParser.new do |opts|
     'with Latin Hypercube Design sampling, default 500'
   ) do |num_lhd|
     options[:numLHD] = num_lhd
-  end
-
-  options[:outFile] = 'Simulation_Output_Settings.xlsx'
-  opts.on(
-    '--outFile OUTFILE',
-    'Simulation output setting file, default "Simulation_Output_Settings.xlsx"'
-  ) do |out_file|
-    options[:outFile] = out_file
   end
 
   options[:randSeed] = 0
