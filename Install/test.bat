@@ -14,5 +14,5 @@ echo ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --see
 ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --seed 1 --numProcesses 3
 echo.
 
-echo ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --seed 1 --noSim
-ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --seed 1 --noSim
+echo ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --seed 1 --noSim --noRunCal
+ruby -S BC.rb test.osm test.epw --numLHD 6 --numMCMC 30 --numBurnin 3 --seed 1 --noSim --noRunCal

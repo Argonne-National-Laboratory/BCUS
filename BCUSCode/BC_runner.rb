@@ -45,7 +45,7 @@
 # This is the function to call Bayesian Calibration code in R
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 #===============================================================%
 #     author: Matt Riddle                                       %

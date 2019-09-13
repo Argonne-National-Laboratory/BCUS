@@ -47,7 +47,7 @@
 # Thermostat dual setpoint uncertainty works for SI unit only
 
 # 2. Call structure
-# Refer to 'Function Call Structure_UA.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 # Class to describe thermostat uncertainty
 class ThermostatUncertainty < OpenStudio::Model::Model
