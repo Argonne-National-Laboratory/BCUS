@@ -60,7 +60,7 @@ require_relative 'graph_generator'
 require_relative 'calibrated_osm'
 
 # Module to perform main analysis functions
-module RunAnalysis
+module Main
   def self.run(run_type, options)
     # If the user didn't give the --osmName option, parse the rest of the input
     # arguments for a *.osm

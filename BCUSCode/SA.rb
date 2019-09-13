@@ -47,7 +47,7 @@
 
 require 'optparse'
 
-require_relative 'run_analysis'
+require_relative 'main'
 
 # Parse command line inputs from the user
 options = {:osmName => nil, :epwName => nil}
@@ -147,6 +147,6 @@ end
 parser.parse!
 
 # Run main analysis function
-RunAnalysis.run('SA', options)
+Main.run('SA', options)
 
 puts 'SA.rb completed successfully!'

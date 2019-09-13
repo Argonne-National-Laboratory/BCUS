@@ -72,7 +72,7 @@ require 'rubyXL'
 # uncertain_parameters
 require_relative 'uncertainty_boiler'
 require_relative 'uncertainty_chiller'
-require_relative 'uncertainty_design_specific_outdoor_air'
+require_relative 'uncertainty_outdoor_air'
 require_relative 'uncertainty_DX_coil'
 require_relative 'uncertainty_envelop'
 require_relative 'uncertainty_fan_pump'
