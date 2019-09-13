@@ -48,7 +48,7 @@
 #           3. Repeat for specified number of iterations
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 #===============================================================%
 #     author: Matt Riddle                                       %
@@ -62,8 +62,7 @@
 #           2. Use M-H algorithm to accept or reject
 #           3. Repeat for specified number of iterations
 
-# CALLS: logpost.R, gendist.R, gaspchcov.R, gaspcovTri.R, genUTInds.R,
-# genRectInds.R
+# CALLS: logpost.R, gendist.R, gaspchcov.R
 # CALLED BY: runmcmc.R
 
 #==============================================================%
@@ -548,4 +547,55 @@ gaspmcmc = function(params, verbose=0, randseed=0) {
     }
   }
   return (pvals)
+}
+
+
+# GASPCOVTRI Generate triangular part of GASP covariance matrix 
+#
+#         Use this function to:
+#           1. Evaluate GASP covariance matrix, save triangular 
+#              part in vector form
+
+#==============================================================%
+#                        REQUIRED INPUTS                       %
+#==============================================================%
+# d: ({n choose 2} x p) distance matrix (x(k)-x'(k))^alpha
+#      for an n x p design matrix x
+
+# beta: parameters for strength of dependencies
+                                           
+# lam: precision parameter
+                                           
+#===============================================================%
+#                           OUTPUTS                             %
+#===============================================================%
+# sigmaTri: vector length {n choose 2} with off-diagonal upper
+#   triangular portion of nxn GASP covariance matrix 
+                                           
+#===============================================================%
+#                          MODEL DETAILS                        %
+#===============================================================%
+                                           
+# sigma = 1/lam C(x,x')
+# C(x,x') = exp{-sum_{k=1:p}beta(k)(x(k)-x'(k))^alpha}
+
+# COMMENTS: Generally assume alpha = 2
+
+#===============================================================#
+
+gaspcovTri <- function(d, beta, lam) {
+
+  # n = dist$n
+  # d = dist$d
+  # odut = dist$odut
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Specify size of covariance matrix corresponding to design matrix
+  # sigma <- matrix (0, nrow = n, ncol=n)    # indi=zeros(inds,1)
+
+  # temp1 <- exp(-d%*%beta)/lam
+  # Set upper triangle of C(x,x')
+  sigmaTri = exp(-d%*%beta) / lam
+
+  return(sigmaTri)
 }

@@ -48,7 +48,7 @@
 #               3. Call MCMC algorithm
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 
 #===============================================================%
@@ -65,7 +65,7 @@
 #               2. Call function to setup params structure
 #               3. Call MCMC algorithm
 
-# CALLS: readFromParamFile.R, setupParams.R, gaspmcmc.R
+# CALLS: Params.R, gaspmcmc.R
 
 #==============================================================#
 #                        REQUIRED INPUTS                       #
@@ -198,18 +198,11 @@ runmcmc <- function(params_filename, com_filename, field_filename, numYVars,
 #  pvals_filename = "../../Output/pvals2.csv"
 #  posterior_dists_filename = "../../Output/posteriorDists2.csv"
 
+  source("setupParams.R")
   source("gendist.R")
   source("gaspmcmc.R")
   source("logpost.R")
-  source("genODUTInds.R")
-  source("genRectInds.R")
-  source("gaspcovTri.R")
   source("gaspchcov.R")
-  source("gaspcov.R")
-  source("gaspcovFromTri.R")
-  source("density.R")
-  source("setupParams.R")
-  source("readFromParamFile.R")
 
   theta_info <- readFromParamFile(params_filename)
 

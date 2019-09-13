@@ -49,7 +49,7 @@
 #            2. Create and store distance array
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 #===============================================================%
 #     author: Matt Riddle                                       %
@@ -62,7 +62,7 @@
 #            1. Store information on size of original design matrix
 #            2. Create and store distance array
 
-# CALLED BY: etaxpred.R, yxpred.R, gaspmcmc.R, setupParams.R
+# CALLED BY: setupParams.R, gaspmcmc.R
 
 #==============================================================%
 #                        REQUIRED INPUTS                       %

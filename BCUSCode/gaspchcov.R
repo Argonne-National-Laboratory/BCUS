@@ -46,15 +46,14 @@
 # covariance matrix sigma_y
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
-
-
+# Refer to 'Function Call Structure.pptx'
 
 #===============================================================%
 #     author: Matt Riddle                                       %
 #     date: Feb 27, 2015										                    %
 #===============================================================%
-  
+
+
 # GASPCHCOV Function to generate cholesky factorization of model 
 #           specific covariance matrix sigma_y
 
@@ -155,4 +154,115 @@ gaspchcov <- function(distz, hyperparams, params, sigma_eta_tri) {
   sigmayCh <- chol(sigma_y)
 
   return(sigmayCh)
+}
+
+
+# GASPCOVFromTri Generate full GASP covariance matrix from trangular form
+
+#==============================================================%
+#                        REQUIRED INPUTS                       %
+#==============================================================%
+# n: original dimension of design matrix
+# odut: indices of off-diagonal-upper-triangle elements of
+#         an nxn matrix
+# odlt: indices of off-diagonal-lower-triangle elements of
+#         an nxn matrix
+# lam: precision parameter
+# tri: containing values for upper and lower triangular cov matrix
+#   in vector form (length {n choose 2} distance matrix (x(k)-x'(k))^alpha
+
+#===============================================================%
+#                           OUTPUTS                             %
+#===============================================================%
+# sigma: GASP covariance matrix  (n x n)
+                                           
+#===============================================================%
+#                          MODEL DETAILS                        %
+#===============================================================%
+                                           
+# sigma = 1/lam C(x,x')
+# C(x,x') = exp{-sum_{k=1:p}beta(k)(x(k)-x'(k))^alpha}
+
+# COMMENTS: Generally assume alpha = 2
+
+#===============================================================#
+
+gaspcovFromTri <- function(n, odut, odlt, lam, tri) {
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Specify size of covariance matrix corresponding to design matrix
+  sigma <- matrix (0, nrow=n, ncol=n)    # indi=zeros(inds,1)
+
+  # Set upper triangle of C(x,x')
+  sigma[odut] = tri
+
+  # Set lower triangle of C(x,x')
+  sigma[odlt] = tri
+
+  # Set diagonal elements of C(x,x')
+  diags = 1:n
+  diags <- diags * (n+1) - n
+  sigma[diags] = 1 / lam
+
+  return(sigma)
+}
+
+
+# GASPCOV Generate GASP covariance matrix
+
+#==============================================================%
+#                        REQUIRED INPUTS                       %
+#==============================================================%
+# dist structure containing 
+#   d: ({n choose 2} x p) distance matrix (x(k)-x'(k))^alpha
+#      for an n x p design matrix x
+#   n: original dimension of design matrix
+# 
+# odut: indices of off-diagonal-upper-triangle elements of
+#         an nxn matrix
+
+# beta: parameters for strength of dependencies
+                                           
+# lam: precision parameter
+                                           
+#===============================================================%
+#                           OUTPUTS                             %
+#===============================================================%
+# sigma: GASP covariance matrix  (n x n)
+                                           
+#===============================================================%
+#                          MODEL DETAILS                        %
+#===============================================================%
+                                           
+# sigma = 1/lam C(x,x')
+# C(x,x') = exp{-sum_{k=1:p}beta(k)(x(k)-x'(k))^alpha}
+
+# COMMENTS: Generally assume alpha = 2
+
+#===============================================================#
+
+gaspcov <- function(dist, odut, beta, lam) {
+
+  n = dist$n
+  d = dist$d
+  # odut = dist$odut
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Specify size of covariance matrix corresponding to design matrix
+  sigma <- matrix (0, nrow=n, ncol=n)    # indi=zeros(inds,1)
+
+  # temp1 <- exp(-d%*%beta)/lam
+  # Set upper triangle of C(x,x')
+  sigma[odut] = exp(-d%*%beta) / lam
+
+  # Set lower triangle of C(x,x')
+  sigma <- sigma + t(sigma)
+
+  # Set diagonal elements of C(x,x')
+  diags = 1:n
+  diags <- diags * (n+1) - n
+  # diags = [0:n:n*(n-1)] + [1:n]
+  sigma[diags] = 1 / lam
+
+  return(sigma)
 }

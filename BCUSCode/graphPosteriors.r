@@ -48,13 +48,13 @@
 # showing posterior distributions, with comparison to priors
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
-
+# Refer to 'Function Call Structure.pptx'
 
 #===============================================================%
 #     author: Matt Riddle, Yuming Sun                           %
 #     date: Feb 27, 2015										                    %
 #===============================================================%
+
 
 # GraphPosteriors Function to generate histograms and scatterplot
 #   matrices showing posterior distributions, with comparison
@@ -63,11 +63,9 @@
 
 #         Use this function to:
 #            1. Generate histograms and scatterplot
-#   matrices showing posterior distributions, with comparison
-#   to priors
 
 # CALLS: density.R
-# CALLED BY: GraphGenerator.rb
+# CALLED BY: graph_generator.rb
 
 #==============================================================%
 #                        REQUIRED INPUTS                       %
@@ -99,6 +97,8 @@
 #		with more than 6 parameters
 
 #===============================================================%
+source("setupParams.R")
+source("logpost.R")
 
 graphPosteriors <- function(params_filename, pvals_filename, burnin,
                             graphs_output_folder, verbose=FALSE) {
@@ -107,9 +107,6 @@ graphPosteriors <- function(params_filename, pvals_filename, burnin,
   # pvals_filename = "../Output/pvals.csv"
   # params_filename = "../Input/Calibration_Parameters_Prior.csv"
   # burnin = 1
-
-  source("readFromParamFile.R")
-  source("density.R")
 
   #------------------------
   library(ggplot2)
