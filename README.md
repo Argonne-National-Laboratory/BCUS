@@ -74,7 +74,7 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
 
 * Install R packages  
 
-Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra.
+	Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra.
 
 
 ### Testing the installation
