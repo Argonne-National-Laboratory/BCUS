@@ -38,22 +38,46 @@
 
 # ******************************************************************************
 
-# Modified Date and By:
-# - Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
+require 'fileutils'
+require 'pathname'
+require 'csv'
+require 'parallel'
+require 'openstudio'
 
-# 1. Introduction
-# This is the script to install R packages required by BCUS. Using this should
-# ensure that rinruby can find the packages because they are installed by it
+# Class for running osms
+class RunOSM
+  def run_osm(
+    model_dir, weather_dir, output_dir,
+    n_runs = 1, n_processes = 0, verbose = false
+  )
+    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
+    FileUtils.mkdir_p(output_dir)
+    filepaths = Dir.glob(model_dir + '/*.osm')
 
-# 10-Aug-2015 Ralph Muehleisen
+    Parallel.each(
+      filepaths, in_threads: n_processes, progress: "Running #{n_runs} osms"
+    ) do |filepath|
+      # Copy osm file
+      filename = File.basename(filepath)
+      puts "Queuing simulation job for #{filename}" if verbose
+      original_osm_path = File.join(model_dir, filename)
+      output_osm_path = File.join(output_dir, filename)
+      puts "Copying #{original_osm_path} to #{output_osm_path}" if verbose
+      FileUtils.copy_file(original_osm_path, output_osm_path)
 
-require 'rinruby'
+      # Create workflow
+      output_dir_inst = File.join(output_dir, File.basename(filename, '.*'))
+      FileUtils.mkdir(output_dir_inst)
+      osw_path = File.join(output_dir_inst, 'in.osw')
+      workflow = OpenStudio::WorkflowJSON.new
+      workflow.setSeedFile(output_osm_path)
+      workflow.setWeatherFile(weather_dir)
+      workflow.setOswDir(output_dir_inst)
+      workflow.saveAs(osw_path)
 
-R.eval <<-RCODE
-  install.packages("sensitivity",lib = "../Rlib")
-  install.packages("ggplot2",lib = "../Rlib")
-  install.packages("triangle",lib = "../Rlib")
-  install.packages("gridExtra",lib = "../Rlib")
-  install.packages("lhs",lib = "../Rlib")
-  install.packages("car",lib = "../Rlib")
-RCODE
+      cli_path = OpenStudio.getOpenStudioCLI
+      cmd = "\"#{cli_path}\" run -w \"#{osw_path}\""
+      system(cmd)
+    end
+  end
+end

@@ -1,39 +1,42 @@
-#                    Copyright © 2016 , UChicago Argonne, LLC
-#                              All Rights Reserved
-#                               OPEN SOURCE LICENSE
+# Copyright © 2019, UChicago Argonne, LLC
+# All Rights Reserved
+# OPEN SOURCE LICENSE
 
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 
-# 1. Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.  Software changes, modifications, or 
-# derivative works, should be noted with comments and the author and organization’s name.
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.  Software changes,
+#    modifications, or derivative works, should be noted with comments and the
+#    author and organization's name.
 
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list
-# of conditions and the following disclaimer in the documentation and/or other materials 
-# provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
 
-# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor the names
-# of its contributors may be used to endorse or promote products derived from this software 
-# without specific prior written permission.
+# 3. Neither the names of UChicago Argonne, LLC or the Department of Energy nor
+#    the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
 
-# 4. The software and the end-user documentation included with the redistribution, if any, 
-# must include the following acknowledgment:
+# 4. The software and the end-user documentation included with the
+#    redistribution, if any, must include the following acknowledgment:
 
-# "This product includes software produced by UChicago Argonne, LLC under Contract 
-# No. DE-AC02-06CH11357 with the Department of Energy.”
+#    "This product includes software produced by UChicago Argonne, LLC under
+#     Contract No. DE-AC02-06CH11357 with the Department of Energy."
 
-# ******************************************************************************************************
-#                                             DISCLAIMER
+# ******************************************************************************
+# DISCLAIMER
 
 # THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
 
-# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR UCHICAGO ARGONNE, 
-# LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY 
-# OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, DATA, APPARATUS, 
-# PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
+# NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT OF
+# ENERGY, NOR UCHICAGO ARGONNE, LLC, NOR ANY OF THEIR EMPLOYEES, MAKES ANY
+# WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR
+# RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+# INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+# THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
-# ***************************************************************************************************
+# ******************************************************************************
 
 # Modified Date and By:
 # - Created on Feb 27, 2015 by Matt Riddle from Argonne National Laboratory
@@ -45,12 +48,12 @@
 #               3. Call MCMC algorithm
 
 # 2. Call structure
-# Refer to 'Function Call Structure_Bayesian Calibration.pptx'
+# Refer to 'Function Call Structure.pptx'
 
 
 #===============================================================%
-#     author: Matt Riddle										%
-#     date: Feb 27, 2015										%
+#     author: Matt Riddle                                       %
+#     date: Feb 27, 2015										                    %
 #===============================================================%
 #
 # runmcmc: Driver function for using GASP model to combine
@@ -62,7 +65,7 @@
 #               2. Call function to setup params structure
 #               3. Call MCMC algorithm
 
-# CALLS: readFromParamFile.R, setupParams.R, gaspmcmc.R
+# CALLS: Params.R, gaspmcmc.R
 
 #==============================================================#
 #                        REQUIRED INPUTS                       #
@@ -177,11 +180,14 @@
 
 #===============================================================#
 
-runmcmc <- function(params_filename, com_filename, field_filename, numYVars, numXVars, numMCMCSteps, pvals_filename, posterior_dists_filename, verbose = 0, randseed = 0){
+runmcmc <- function(params_filename, com_filename, field_filename, numYVars,
+                    numXVars, numMCMCSteps,
+                    pvals_filename, posterior_dists_filename,
+                    verbose = 0, randseed = 0) {
   
   
 
-  #for testing, can use values below for parameters that are passed in
+  # for testing, can use values below for parameters that are passed in
   
 #  params_filename = "../../Input/Calibration_Parameters_Prior.csv"
 #  com_filename = "../../Input/cal_sim_runs.txt"
@@ -192,31 +198,28 @@ runmcmc <- function(params_filename, com_filename, field_filename, numYVars, num
 #  pvals_filename = "../../Output/pvals2.csv"
 #  posterior_dists_filename = "../../Output/posteriorDists2.csv"
 
+  source("setupParams.R")
   source("gendist.R")
   source("gaspmcmc.R")
   source("logpost.R")
-  source("genODUTInds.R")
-  source("genRectInds.R")
-  source("gaspcovTri.R")
   source("gaspchcov.R")
-  source("gaspcov.R")
-  source("gaspcovFromTri.R")
-  source("density.R")
-  source("setupParams.R")
-  source("readFromParamFile.R")
 
   theta_info <- readFromParamFile(params_filename)
-  
-  params <- setupParams(theta_info, com_filename, field_filename, numYVars, numXVars, numMCMCSteps)  
+
+  params <- setupParams(theta_info, com_filename, field_filename,
+                        numYVars, numXVars, numMCMCSteps, verbose)  
   pvals <- gaspmcmc(params, verbose, randseed)
-  
   posterior_dists <- matrix(nrow = nrow(pvals), ncol = length(theta_info))
-  for (i in 1:length(theta_info)){
+  for (i in 1:length(theta_info)) {
     tmin <- theta_info[[i]]$min
     tmax <- theta_info[[i]]$max
-    posterior_dists[,i] <- pvals[,i]*(tmax - tmin) + tmin
+    posterior_dists[,i] <- pvals[, i]*(tmax - tmin) + tmin
   }
-  
+  if (verbose == 1) {
+    message(sprintf("Writing %s", pvals_filename))
+	  message(sprintf("writing %s", posterior_dists_filename)) 
+  }
+
   write.csv(pvals, pvals_filename, row.names = FALSE)
   write.csv(posterior_dists, posterior_dists_filename, row.names = FALSE)
   

@@ -6,18 +6,17 @@
 [Oo]bj/
 
 # BCUS Output Folders
-**/PreRuns_Simulations/
-**/PreRuns_Output/
+**/BC_Simulations/
+**/BC_Output/
+**/BC_Result/
 **/SA_Output/
 **/SA_Simulations/
 **/UA_output/
 **/UA_Simulations/
-**/Calibrated_Model/
-**/Calibration_Output/
 
 # BCUS Output Files
-**/cal_sim_runs.txt
-**/cal_utility_data.txt
+**/cal_sim_data.txt
+**/cal_field_data.txt
 
 # Backup files from MS software (word, ppt, excel)
 **/~*
@@ -31,5 +30,5 @@
 # Mac temporary files
 .DS_Store
 
-# VS Code file
+# VS code files
 .vscode

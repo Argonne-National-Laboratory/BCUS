@@ -1,7 +1,6 @@
-@ECHO "Bayesian Calibration"
-@ECHO "This bash file will run the Bayesian Calibration Setup and Bayesian Calibration in following commands:"
-@ECHO "ruby -S BC_Setup.rb  --osmName --epwName --outfile --priorsFile --utilityData --numLHS --seed 1  --noCleanup --verbose"
-@ECHO "ruby -S BC.rb  --osmName --epwName --comFile --fieldFile --numMCMC --numOutVars --numWVars --numBurnin --priorsFile --postsFile --seed --noRunCal --noCleanup --verbose"
+@echo off
+echo Bayesian Calibration
+echo This bash file will run the Bayesian calibration in following commands:
+echo ruby -S BC.rb --osm --epw --priorsFile --utilityData --outFile --simFile --fieldFile --postsFile --pvalsFile --numLHD --numMCMC --numBurnin --numOutVars --numWVars --seed --numProcesses --noSim --noEP --noCleanup --noPlots --noRunCal --interactive --verbose
 
-ruby -S BC_Setup.rb --osmName ExampleBuilding.osm --epwName Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numLHS 10 --priors Prior.csv --utilityData Utility.csv
-ruby -S BC.rb ExampleBuilding.osm Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numMCMC 200 --numBurnin 3  --noRunCal --priorsFile Prior.csv 
+ruby -S BC.rb ExampleBuilding.osm Weather_USA_PA_Willow.Grove.NAS.724086_TMY3.epw --numLHD 20 --numMCMC 500 --numBurnin 100 --seed 1 --numProcesses 4 --noRunCal --verbose

@@ -39,21 +39,48 @@
 # ******************************************************************************
 
 # Modified Date and By:
-# - Created on 10-Aug-2015 by Ralph Muehleisen from Argonne National Laboratory
+# - Created on July 2015 by Yuna Zhang from Argonne National Laboratory
 
 # 1. Introduction
-# This is the script to install R packages required by BCUS. Using this should
-# ensure that rinruby can find the packages because they are installed by it
+# This is the subfunction called by uncertain_parameters to generate
+# chiller efficiency uncertainty distribution.
 
-# 10-Aug-2015 Ralph Muehleisen
+# Class to describe chiller uncertainty
+class ChillerUncertainty < OpenStudio::Model::Model
+  attr_reader :chiller_name
+  attr_reader :chiller_ref_COPs
 
-require 'rinruby'
+  def initialize
+    # rubocop:disable Naming/VariableName
+    @chiller_name = []
+    @chiller_ref_COPs = []
+    # rubocop:enable Naming/VariableName
+  end
 
-R.eval <<-RCODE
-  install.packages("sensitivity",lib = "../Rlib")
-  install.packages("ggplot2",lib = "../Rlib")
-  install.packages("triangle",lib = "../Rlib")
-  install.packages("gridExtra",lib = "../Rlib")
-  install.packages("lhs",lib = "../Rlib")
-  install.packages("car",lib = "../Rlib")
-RCODE
+  def chiller_find(model)
+    # Loop through to find chiller
+    model.getLoops.each do |loop|
+      loop.supplyComponents.each do |supply_component|
+        next if supply_component.to_ChillerElectricEIR.empty?
+        chiller = supply_component.to_ChillerElectricEIR.get
+        @chiller_name << chiller.name.to_s
+        @chiller_ref_COPs << chiller.referenceCOP.to_f
+      end
+    end
+  end
+
+  # Set chiller COP
+  def chiller_set(model, param_types, _param_names, param_values)
+    param_types.each_with_index do |type, index|
+      next unless type =~ /ChillerElectricEIRReferenceCOP/
+      model.getLoops.each do |loop|
+        loop.supplyComponents.each do |supply_component|
+          unless supply_component.to_ChillerElectricEIR.empty?
+            chiller = supply_component.to_ChillerElectricEIR.get
+            chiller.setReferenceCOP(param_values[index])
+          end
+        end
+      end
+    end
+  end
+end
