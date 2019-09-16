@@ -1,4 +1,4 @@
 Parameter Type,Object in the model,Parameter Base Value,Distribution,Mean or Mode,Std Dev,Min,Max
-Infiltration,FlowPerExteriorArea,,Triangle Absolute,0.00095,,0.000319444,0.002894444
 Lights_WattsPerSpaceFloorArea,Office_Space_Type,15.17433543,Normal Absolute,15.17433543,7.587167717,0,50
 PlugLoad_WattsPerSpaceFloorArea,Office_Space_Type,8.072932813,Normal Absolute,8.072932813,4.036466406,0,50
+DesignSpecificOutdoorAirFlowPerZoneFloorArea,Office_Outdoor_Air,0.0004318,Normal Absolute,0.0004318,0.000004318,0.0004,0.0005
