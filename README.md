@@ -27,10 +27,13 @@ Download and install the latest OpenStudio from https://www.openstudio.net/downl
 #### Ruby Install
 
 * Install Ruby 2.2.4  
+
 	For windows users it is recommended to use RubyInstaller obtained from http://rubyinstaller.org/downloads/.  
+	
 	For OSX and Linux users it is recommended that you use the ruby version manager (rvm) or rbenv: https://github.com/rbenv/rbenv.
 
-* Intall the required ruby gems with the command:   
+* Intall the required ruby gems with the command:  
+
 	`gem install nokogiri -v 1.9.1`  
 	`gem install rubyXL`  
 	`gem install rinruby`  
@@ -52,7 +55,9 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
 
 * Copy the BCUSCode directory to your location of choice and set the environmental variable "BCUSCODE" to that directory.
 * Add the same directory to your RUBYPATH.  
+
     For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following:   
+    
     `set BCUSCODE=C:\BCUS\BCUSCode`  
     `set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%`  
 	`setx BCUSCODE "C:\BCUS\BCUSCode"`  
@@ -61,12 +66,14 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
     *NOTE: In windows, to permanently set the environmental variables you also need to use the setx command.*
 
     On a MacOS system you would set the following:  
+    
     `export BCUSCODE=C:\BCUS\BCUSCode`  
     `export RUBYPATH=C:\BCUS\BCUSCode:$RUBYPATH` 
 
     *To make the setting permanently, add the above statements to the `~/.bash_profile` file.*
 
 * Install R packages  
+
 Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra.
 
 
