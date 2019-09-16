@@ -23,12 +23,14 @@ The software has been developed in Windows 10 and has been tested on OS-X Mojave
 Download and install the latest OpenStudio from https://www.openstudio.net/downloads
 
 *To make it easier to reference/access the OpenStudio Path, some users like to install OpenStudio in 
-a root directory such as C:\OpenStudio-2.7.0*
+a root directory such as C:\openstudio-2.7.0*
 
 #### Ruby Install
 
 * Install Ruby 2.2.4
+
 	For windows users it is recommended to use RubyInstaller obtained from http://rubyinstaller.org/downloads/
+	
 	For OSX and Linux users it is recommended that you use the ruby version manager (rvm) or rbenv: https://github.com/rbenv/rbenv
 
 * Intall the required ruby gems with the command:   
@@ -38,8 +40,10 @@ a root directory such as C:\OpenStudio-2.7.0*
 	`gem install parallel`  
 	`gem install ruby-progressbar`
 
-* Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents
-`require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
+* Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:
+
+	`require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
+	
 	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\openstudio-2.7.0"
 
 #### R Install
@@ -74,10 +78,9 @@ Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra
 
 ### Testing the installation
 
-You can do a basic test of the installation by downloading the TestInstall directory, opening a command line, and running the TestInstall.bat or TestInstall.sh file
+You can do a basic test of the installation by downloading the Install directory, opening a command line, and running the test.bat or test.sh file.
 
-Test installation by downloading the TestInstall directory and running the testinstall.bat or testinstall.sh file
-This script will test Sensitivity Analysis, Uncertainty Analysis, and then Bayesian Calibration scripts.  
+This script will test Uncertainty Analysis, Sensitivity Analysis, and then Bayesian Calibration scripts.  
 
 * The Uncertainty Analysis test will generate and run 3 models
 * The Sensitivity Analysis test will generate and run 6 models
