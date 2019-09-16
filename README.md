@@ -38,7 +38,9 @@ Download and install the latest OpenStudio from https://www.openstudio.net/downl
 	`gem install ruby-progressbar`
 
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:  
+
 	`require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`  
+	
 	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\openstudio-2.7.0".
 
 #### R Install
