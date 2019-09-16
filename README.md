@@ -16,21 +16,18 @@ The software has been developed in Windows 10 and has been tested on OS-X 10.14.
 * R (>=3.1.0)
 * R packages: sensitivity, ggplot2, lhs, car, triangle, gridextra 
 
-* BCUS makes use of .xlsx spreadsheets.  While these can be read and written using OpenOffice or LibreOffice, some of the 
+* BCUS makes use of .xlsx spreadsheets. While these can be read and written using OpenOffice or LibreOffice, some of the functions, i.e. drop down list, will be eliminated.
 
 #### OpenStudio Install
 
 Download and install the latest OpenStudio from https://www.openstudio.net/downloads.
 
-*To make it easier to reference/access the OpenStudio Path, some users like to install OpenStudio in 
-a root directory such as C:\openstudio-2.7.0.*
+*To make it easier to reference/access the OpenStudio Path, some users like to install OpenStudio in a root directory such as C:\openstudio-2.7.0.*
 
 #### Ruby Install
 
-* Install Ruby 2.2.4
-
-	For windows users it is recommended to use RubyInstaller obtained from http://rubyinstaller.org/downloads/.
-	
+* Install Ruby 2.2.4  
+	For windows users it is recommended to use RubyInstaller obtained from http://rubyinstaller.org/downloads/.  
 	For OSX and Linux users it is recommended that you use the ruby version manager (rvm) or rbenv: https://github.com/rbenv/rbenv.
 
 * Intall the required ruby gems with the command:   
@@ -40,10 +37,8 @@ a root directory such as C:\openstudio-2.7.0.*
 	`gem install parallel`  
 	`gem install ruby-progressbar`
 
-* Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:
-
-	`require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`
-	
+* Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:  
+	`require 'OPENSTUDIO_ROOT_DIR\Ruby\openstudio.rb'`  
 	where you replace OPENSTUDIO_ROOT_DIR with the root directory for your OpenStudio installation, e.g. something like "C:\openstudio-2.7.0".
 
 #### R Install
@@ -54,10 +49,8 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
 #### BCUS Installation
 
 * Copy the BCUSCode directory to your location of choice and set the environmental variable "BCUSCODE" to that directory.
-* Add the same directory to your RUBYPATH.
-
-    For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following:  
-
+* Add the same directory to your RUBYPATH.  
+    For example, on a Windows system where BCUSCode is in C:\BCUS\BCUSCode you would set the following:   
     `set BCUSCODE=C:\BCUS\BCUSCode`  
     `set RUBYPATH=C:\BCUS\BCUSCode;%RUBYPATH%`  
 	`setx BCUSCODE "C:\BCUS\BCUSCode"`  
@@ -65,8 +58,7 @@ You can obtain an R install from the Comprehensive R Archive Network (http://cra
 	
     *NOTE: In windows, to permanently set the environmental variables you also need to use the setx command.*
 
-    On a MacOS system you would set the following:
-
+    On a MacOS system you would set the following:  
     `export BCUSCODE=C:\BCUS\BCUSCode`  
     `export RUBYPATH=C:\BCUS\BCUSCode:$RUBYPATH` 
 
@@ -78,9 +70,7 @@ Install the R packages sensitivity, ggplot2, lhs, car, triangle, gridextra.
 
 ### Testing the installation
 
-You can do a basic test of the installation by downloading the Install directory, opening a command line, and running the test.bat or test.sh file.
-
-This script will test Uncertainty Analysis, Sensitivity Analysis, and then Bayesian Calibration scripts.  
+You can do a basic test of the installation by downloading the Install directory, opening a command line, and running the test.bat or test.sh file. This script will test Uncertainty Analysis, Sensitivity Analysis, and then Bayesian Calibration scripts.  
 
 * The Uncertainty Analysis test will generate and run 3 models
 * The Sensitivity Analysis test will generate and run 6 models
