@@ -1,10 +1,10 @@
 # BCUS: Bayesian Calibration, Uncertainty, and Sensitivity
+
 BCUS: Bayesian Calibration, Uncertainty, and Sensitivity is a cross platform set of Ruby and R scripts to support sensitivity analysis, uncertainty analysis, and Bayesian calibration of OpenStudio energy models.
 
 Tutorials explaining installation and use of BCUS are found within the tutorials directory.
 
 The software has been developed in Windows 10 and has been tested on OS-X 10.14.
-
 
 ## Installation
 
@@ -39,6 +39,21 @@ Download and install the latest OpenStudio from https://www.openstudio.net/downl
 	`gem install rinruby`  
 	`gem install parallel`  
 	`gem install ruby-progressbar`
+
+Note: When using gem to insall the Ruby gems if you get the following problem or similar:
+
+~~~powershell
+ERROR:  Could not find a valid gem 'nokogiri' (= 1.9.1), here is why:
+          Unable to download data from https://rubygems.org/ - SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed (https://api.rubygems.org/specs.4.8.gz)
+~~~
+
+Please follow the steps below:
+
+* Manually downloading the latest .zip or .tgz file from [here](https://rubygems.org/pages/download).
+* Unpack into a directory and cd there
+* Installing it using `ruby setup.rb` (you may need admin/root privilege)
+
+After that, you can try to install ruby gems again with the commands above.
 
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:  
 
