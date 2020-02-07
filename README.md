@@ -40,20 +40,22 @@ Download and install the latest OpenStudio from https://www.openstudio.net/downl
 	`gem install parallel`  
 	`gem install ruby-progressbar`
 
-Note: When using gem to insall the Ruby gems if you get the following problem or similar:
+*Note: When using gem to insall the Ruby gems if you get the following problem or similar:*
 
 ~~~powershell
 ERROR:  Could not find a valid gem 'nokogiri' (= 1.9.1), here is why:
           Unable to download data from https://rubygems.org/ - SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed (https://api.rubygems.org/specs.4.8.gz)
 ~~~
 
-Please follow the steps below:
+*Please follow the steps below:*
 
-* Manually downloading the latest .zip or .tgz file from [here](https://rubygems.org/pages/download).
-* Unpack into a directory and cd there
-* Installing it using `ruby setup.rb` (you may need admin/root privilege)
+* *Follow steps 1-3 in "Updating CA certificates" in [here](https://bundler.io/v2.0/guides/rubygems_tls_ssl_troubleshooting_guide.html#automated-ssl-check) to add the new trust certificate.*
+* *Install rubygems-update 2.7.10 (newer versions are not compatible with Ruby 2.2.4):*
 
-After that, you can try to install ruby gems again with the commands above.
+	`gem install rubygems-update -v 2.7.10`  
+	`update_rubygems`  
+
+*After that, you can try to install ruby gems again with the commands above.*
 
 * Create a textfile called OpenStudio.rb in the Ruby lib/ruby/site_ruby directory with the contents:  
 
